@@ -1,0 +1,91 @@
+=================================================
+Getting Started
+=================================================
+
+It is required that the environment variable PATH_GOLOG is set to root
+directory of this software, e.g. via
+
+$ export PATH_GOLOG=/home/user/esgolog/
+
+=================================================
+Directories
+=================================================
+
+The code is divided into the following subdirectories:
+
+- agents:
+
+  Contains agents interfaces. These are required for the actual
+  execution of and interaction with an agent program.
+
+- examples:
+
+  Example domain definitions for agents.
+
+- external:
+
+  Contains source code packages for external tools used in this
+  software (see 'Dependencies' below).
+
+- projection:
+
+  Code implementing regression and progression methods.
+
+- reasoning:
+
+  Contains different implementations and interfaces for backend
+  reasoners (propositional and FOL).
+
+- temp:
+
+  Temporary files are put here.
+
+- transfinal:
+
+  Contains various definitions for Golog program semantics.
+
+- lib:
+
+  Various libraries (utilities, environment variables).
+
+- verification:
+
+  Contains implementations of different verification methods.
+
+
+=================================================
+Dependencies
+=================================================
+
+There are the following dependencies to external tools and systems:
+
+1. The E Theorem Prover
+
+   To use FOL theorem proving, we require that the 'eprover'
+   executable is visible in $PATH. The system has been developed and
+   tested with the (currently) most recent version "1.8-001
+   Gopaldhara". E can be downloaded from 
+
+   http://www.eprover.org 
+
+   and installed manually. For some distributions such as Fedora,
+   there are also prepackaged versions. Installation on Fedora then
+   for example is via
+
+   $ sudo yum install E.x86_64
+ 
+2. The NuSMV Model Checker
+
+   To use verification based on abstraction and model checking, we
+   require that the 'nusmv' executable is visible in $PATH. The system
+   has been developed and tested with the (currently) most recent
+   version 2.5.4, which can be downloaded from
+
+   http://nusmv.fbk.eu
+
+   and installed manually according to the installation instructions
+   given there.
+
+3. Graphviz/dot
+
+   for visualization
