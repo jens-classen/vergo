@@ -5,7 +5,7 @@
 :- use_module('../lib/utils').
 
 % poss if A is a variable => big disjunction over all cases
-poss(A,Precondition) :- var(A), !, 
+precond(A,Precondition) :- var(A), !, 
         % action+precondition with free variables => quantify
         findall(some(Vars,((C=B)*Phi)),
                  (poss(B,Phi),
@@ -21,6 +21,8 @@ poss(A,Precondition) :- var(A), !,
         append(QuantifiedPreconds,NonQuantifiedPreconds,Preconds),
         bind_action_variable(Preconds,Preconds2,A), % unify the Cs with A
         make_disjunction(Preconds2,Precondition).
+precond(A,Precondition) :- nonvar(A), !,
+        poss(A,Precondition).
 
 bind_action_variable([],[],_).
 bind_action_variable([some(Vars,((_C=B)*Phi))|D1],[some(Vars,((A=B)*Phi))|D2],A) :-
@@ -40,7 +42,7 @@ primitive_action(A) :- nonvar(A), precondition(A,_).
 primitive_action(A) :- var(A).
 
 regress(S,poss(A),Result) :- 
-        poss(A,Precondition), !, 
+        precond(A,Precondition), !, 
         regress(S,Precondition,Result).
 regress(S,exo(A),Result) :- 
         exo(A,ExoCondition), !, 
