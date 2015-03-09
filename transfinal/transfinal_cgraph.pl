@@ -28,7 +28,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 trans(A,A,[],true,[],true) :-
         prim_action(A).
 trans([D1|D2],A,DP,F1,Vars,F2) :-
-        trans(D1,A,D1P,F1,Vars,F2)
+        trans(D1,A,D1P,F1,Vars,F2),
         flatten([D1P|D2],DP).
 trans([D1|D2],A,DP,F2,Vars,F1*F2P) :-
         final(D1,F1),
