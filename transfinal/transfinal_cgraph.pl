@@ -2,8 +2,8 @@
  
 transfinal_cgraph
 
-This file provides predicates for the construction of the transition
-system according to what is described
+This file provides predicates for determining transitions according to
+what is described in
 
 Jens Claßen: Planning and Verification in the Agent Language Golog.
 PhD Thesis, Department of Computer Science, RWTH Aachen University,

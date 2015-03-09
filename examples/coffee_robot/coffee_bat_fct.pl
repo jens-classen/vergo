@@ -55,6 +55,8 @@ exo(requestCoffee(_),true).
 stdname(e).
 stdname(q(_,_)).
 
+% todo: executability!
+
 program(coffee,
         loop(if(-empty(queue),
                 pick(P,[selectRequest(P),
@@ -71,8 +73,6 @@ program(exog,
 
 program(main,
         conc(coffee,exog)).
-
-program(coffee_exo_p,executable(coffee_exo)).
 
 property(prop1,
          main,
