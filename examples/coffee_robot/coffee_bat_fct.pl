@@ -2,48 +2,84 @@
 % Basic Action Theory for coffee delivery robot, queue size 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% action preconditions
-precondition(wait,$true).
-precondition(requestCoffee(_P),~full(queue)).
-precondition(selectRequest(P),isFirst(P,queue)).
-precondition(pickupCoffee,~holdingCoffee).
-precondition(bringCoffee(_P),holdingCoffee).
+:- discontiguous causes_true/3.
+:- discontiguous causes_false/3.
+:- discontiguous rel_fluent/1.
 
-% successor state axioms
-ssa(holdingCoffee,A, A=pickupCoffee | holdingCoffee & ~ ? [P] : A = bringCoffee(P)).
-ssa(queue=Y, requestCoffee(P), enqueue(queue,P,Y)).
-ssa(queue=Y, selectRequest(P), dequeue(queue,P,Y)).
-ssa(queue=Y,             wait, queue=Y).
-ssa(queue=Y,     pickupCoffee, queue=Y).
-ssa(queue=Y,  bringCoffee(_P), queue=Y).
+initially(empty(queue)).
+initially(forall(A,-occ(A))).
 
-%ssa(queue=Y,      A, (?[P1] : (A = requestCoffee(P1) & enqueue(queue,P1,Y)) |
-%                      ?[P2] : (A = selectRequest(P2) & dequeue(queue,P2,Y)) |
-%                      (queue = Y & ~ (?[P3] : (A = requestCoffee(P3) | A = selectRequest(P3)))))).
+prim_action(wait).
+prim_action(requestCoffee(_)).
+prim_action(selectRequest(_)).
+prim_action(pickupCoffee).
+prim_action(bringCoffee(_)).
 
-% definitions
-def(isFirst(P,Q),         (~(P = e) & ?[P2] : Q = q(P,P2))).
-def(empty(Q),              Q = q(e,e)).
-def(full(Q),               ?[P1,P2] : ~(P1 = e) & ~(P2 = e) & Q = q(P1,P2)).
-def(enqueue(Qold,P,Qnew), (~(P = e) & (Qold = q(e,e) & Qnew = q(P,e))|
-                                         (?[X1] : ~(X1 = e) & Qold = q(X1,e) & Qnew = q(X1,P)))).
-def(dequeue(Qold,P,Qnew), (~(P = e) & ?[X2] : (Qold = q(P,X2) & Qnew = q(X2,e)))).
+rel_fluent(holdingCoffee).
+fun_fluent(queue).
+rel_fluent(occ(_)).
 
-% exogenous actions
-exo(A,?[P] : A = requestCoffee(P)).
+poss(wait,true).
+poss(requestCoffee(P),-(P=e)*lastFree(queue)).
+poss(selectRequest(P),-(P=e)*isFirst(queue,P)).
+poss(pickupCoffee,-holdingCoffee).
+poss(bringCoffee(_P),holdingCoffee).
 
-program(coffee,loop(if(empty(queue),do(wait),pi(P,do(selectRequest(P));do(pickupCoffee);do(bringCoffee(P)))))).
-program(exo,star(pi(A,?exo(A);do(A)))).
+causes_true(pickupCoffee,holdingCoffee,true).
+causes_false(bringCoffee(_),holdingCoffee,true).
 
-program(coffee_exo,conc(coffee,exo)).
+causes(requestCoffee(P),queue,Y,enqueue(queue,P,Y)).
+causes(selectRequest(P),queue,Y,dequeue(queue,P,Y)).
+
+causes_true(A,occ(A),true).
+causes_false(A,occ(B),-(A=B)).
+
+def(isFirst(Q,P),
+    (some(P2,Q=q(P,P2)))).
+def(empty(Q),    
+    Q=q(e,e)).
+def(lastFree(Q),
+    some(P,Q=q(P,e))).
+def(full(Q),     
+    some([P1,P2],(-(P1=e))*(-(P2=e))*(Q=q(P1,P2)))).
+def(enqueue(Qold,P,Qnew),
+    ((Qold=q(e,e))*(Qnew=q(P,e)))
+    +(some(X1,(-(X1=e))*(Qold=q(X1,e))*(Qnew=q(X1,P))))).
+def(dequeue(Qold,P,Qnew), 
+    some(X2,(Qold=q(P,X2))*(Qnew=q(X2,e)))).
+
+exo(requestCoffee(_),true).
+
+axiom(forall(X1,Y1,X2,Y2,(q(X1,Y1)=q(X2,Y2))=>((X1=X2)*(Y1=Y2)))).
+axiom(forall(X,Y),-(q(X,Y)=e)).
+
+stdname(e).
+
+program(coffee,
+        loop(if(-empty(queue),
+                pick(P,[selectRequest(P),
+                        pickupCoffee,
+                        bringCoffee(P)
+                       ]
+                    ),
+                wait)
+            )
+       ).
+
+program(exog,
+        loop(pick(A,[test(exo(A)),A]))).
+
+program(main,
+        conc(coffee,exog)).
+
 program(coffee_exo_p,executable(coffee_exo)).
 
-property(prop2,somepath(always(~(?[P]:occ(selectRequest(P)))))).
+property(prop1,
+         main,
+         allpaths(always((occ(requestCoffee(X))
+                          =>(eventually(occ(selectRequest(X)))))))).
 
-%axiom(![X1,Y1,X2,Y2]:((q(X1,Y1) = q(X2,Y2)) => (X1=X2 & Y1=Y2))).
-%axiom(![X,Y]:(~(q(X,Y) = e))).
-axiom(?[X,Y]:(queue=q(X,Y))).
+property(prop2,
+         main,
+         somepath(always(-some(P,occ(selectRequest(P)))))).
 
-% unique names assumption for q/2.
-uno(q(_,_)).
-uno(e).
