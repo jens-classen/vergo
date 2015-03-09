@@ -24,6 +24,26 @@ precond(A,Precondition) :- var(A), !,
 precond(A,Precondition) :- nonvar(A), !,
         poss(A,Precondition).
 
+% exo if A is a variable => big disjunction over all cases
+exocond(A,Exocondition) :- var(A), !, 
+        % action+exocondition with free variables => quantify
+        findall(some(Vars,((C=B)*Phi)),
+                 (exo(B,Phi),
+                  term_variables((B,Phi),Vars),
+                  Vars \= []),
+                 QuantifiedExoconds),
+        % action+exocondition without free vars
+        findall(((C=B)*Phi),
+                (exo(B,Phi),
+                 term_variables((B,Phi),[])),
+                NonQuantifiedExoconds),
+        % combine them in big disjunction
+        append(QuantifiedExoconds,NonQuantifiedExoconds,Exoconds),
+        bind_action_variable(Exoconds,Exoconds2,A), % unify the Cs with A
+        make_disjunction(Exoconds2,Exocondition).
+exocond(A,Exocondition) :- nonvar(A), !,
+        exo(A,Exocondition).
+
 bind_action_variable([],[],_).
 bind_action_variable([some(Vars,((_C=B)*Phi))|D1],[some(Vars,((A=B)*Phi))|D2],A) :-
         bind_action_variable(D1,D2,A).
@@ -34,18 +54,14 @@ make_disjunction([P],P) :- !.
 make_disjunction([P|Ps], (P+D)) :- make_disjunction(Ps,D).
 make_disjunction([],false).
 
-isfluent(F) :- rel_fluent(F); fun_fluent(F).
-
-% action: everything that has a precondition axiom...
-primitive_action(A) :- nonvar(A), precondition(A,_).
-% ... or that is an action variable
-primitive_action(A) :- var(A).
+isfluent(F) :- rel_fluent(F).
+isfluent((F=Y)) :- fun_fluent(F).
 
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
         regress(S,Precondition,Result).
 regress(S,exo(A),Result) :- 
-        exo(A,ExoCondition), !, 
+        exocond(A,ExoCondition), !, 
         regress(S,ExoCondition,Result).
 %regress([A|S],occ(T),Result) :- !, 
 %        regress(S,A=T,Result).
@@ -103,7 +119,6 @@ regress(Fml,Res) :- !, regress([],Fml,Res).
 
 apply_una(poss(A),poss(A)).
 apply_una(exo(A),exo(A)).
-apply_una(occ(A),occ(A)).
 apply_una(F,F) :- isfluent(F).
 apply_una(true,true).
 apply_una(false,false).
