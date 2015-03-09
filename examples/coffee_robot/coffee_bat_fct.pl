@@ -2,6 +2,8 @@
 % Basic Action Theory for coffee delivery robot, queue size 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+:- use_module('../../reasoning/fol').
+
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rel_fluent/1.
@@ -50,9 +52,6 @@ def(dequeue(Qold,P,Qnew),
 
 exo(requestCoffee(_),true).
 
-axiom(forall(X1,Y1,X2,Y2,q(X1,Y1)=q(X2,Y2)=>((X1=X2)*(Y1=Y2)))).
-axiom(forall(X,Y),-(q(X,Y)=e)).
-
 stdname(e).
 stdname(q(_,_)).
 
@@ -78,7 +77,7 @@ program(coffee_exo_p,executable(coffee_exo)).
 property(prop1,
          main,
          allpaths(always(occ(requestCoffee(X))
-                          =>eventually(occ(selectRequest(X)))))).
+                         =>eventually(occ(selectRequest(X)))))).
 
 property(prop2,
          main,

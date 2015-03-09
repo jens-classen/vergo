@@ -3,6 +3,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- use_module('../lib/utils').
+:- use_module('../reasoning/fol').
 
 % poss if A is a variable => big disjunction over all cases
 precond(A,Precondition) :- var(A), !, 
@@ -20,7 +21,7 @@ precond(A,Precondition) :- var(A), !,
         % combine them in big disjunction
         append(QuantifiedPreconds,NonQuantifiedPreconds,Preconds),
         bind_action_variable(Preconds,Preconds2,A), % unify the Cs with A
-        make_disjunction(Preconds2,Precondition).
+        disjoin(Preconds2,Precondition).
 precond(A,Precondition) :- nonvar(A), !,
         poss(A,Precondition).
 
@@ -40,9 +41,13 @@ exocond(A,Exocondition) :- var(A), !,
         % combine them in big disjunction
         append(QuantifiedExoconds,NonQuantifiedExoconds,Exoconds),
         bind_action_variable(Exoconds,Exoconds2,A), % unify the Cs with A
-        make_disjunction(Exoconds2,Exocondition).
+        disjoin(Exoconds2,Exocondition).
 exocond(A,Exocondition) :- nonvar(A), !,
         exo(A,Exocondition).
+
+% todo: construct ssa out of effect axioms
+% ssa(Fluent,A,Formula).
+        
 
 bind_action_variable([],[],_).
 bind_action_variable([some(Vars,((_C=B)*Phi))|D1],[some(Vars,((A=B)*Phi))|D2],A) :-
@@ -50,12 +55,8 @@ bind_action_variable([some(Vars,((_C=B)*Phi))|D1],[some(Vars,((A=B)*Phi))|D2],A)
 bind_action_variable([((_C=B)*Phi)|D1],[((A=B)*Phi)|D2],A) :-
         bind_action_variable(D1,D2,A).
 
-make_disjunction([P],P) :- !.
-make_disjunction([P|Ps], (P+D)) :- make_disjunction(Ps,D).
-make_disjunction([],false).
-
 isfluent(F) :- rel_fluent(F).
-isfluent((F=Y)) :- fun_fluent(F).
+isfluent((F=_)) :- fun_fluent(F).
 
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
@@ -205,4 +206,3 @@ make_inequalities([],[],false).
 make_inequalities([X],[Y],-(X=Y)).
 make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :-
         make_equalities(Xs,Ys,Equ).
-

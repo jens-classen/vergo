@@ -14,10 +14,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
  **/
 
-% trans(Prog1,Act,Prog2,Cond1,Vars,Cond2)
-
 /**
- * trans(Prog1,Act,Prog2,Cond1,Vars:List,Cond2) is nondet
+ * trans(+Prog1,?Act,?Prog2,?Cond1,?Vars:List,?Cond2) is nondet
  *
  * There is a transition from program Prog1 to program Prog2
  * via action Act, where Vars is the list of variables to be
@@ -26,7 +24,14 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
  * after variable instantiation.
  **/
 trans(A,A,[],true,[],true) :-
-        prim_action(A).
+        var(A), !.
+trans(A,A,[],true,[],true) :-
+        nonvar(A),
+        prim_action(A), !.
+trans(test(_),_,_,_,_,_) :- !, 
+        fail.
+trans([],_,_,_,_,_) :- !, 
+        fail.
 trans([D1|D2],A,DP,F1,Vars,F2) :-
         trans(D1,A,D1P,F1,Vars,F2),
         flatten([D1P|D2],DP).
@@ -58,11 +63,13 @@ trans(D,A,DP,F1,Vars,F2) :-
         trans(M,A,DP,F1,Vars,F2).
 
 /**
-  * final(Prog,Cond) is nondet
+  * final(+Prog,?Cond) is nondet
   *
   * The program Prog is final (may terminate) if condition Cond
   * holds.
   **/
+final(F,_) :-
+        var(F), !, fail.
 final(test(F),F).
 final([],true).
 final([D1|D2],F1*F2) :-
@@ -85,6 +92,12 @@ final(D,F) :-
         progdef(D,M),
         final(M,F).
 
+is_action(A) :- 
+        var(A), !.
+is_action(A) :-
+        nonvar(A), !,
+        prim_action(A).
+
 progdef(if(C,T,E),
         nondet([test(C),T],[test(-C),E])).
 progdef(while(C,D),
@@ -94,6 +107,8 @@ progdef(loop(D),
 progdef(Name,Def) :-
         program(Name,Def).
 
+simplify_program(A,P) :-
+        var(A), !, P=A.
 simplify_program(A,A) :-
         prim_action(A), !.
 simplify_program(L,P) :-
