@@ -54,6 +54,7 @@ axiom(forall(X1,Y1,X2,Y2,(q(X1,Y1)=q(X2,Y2))=>((X1=X2)*(Y1=Y2)))).
 axiom(forall(X,Y),-(q(X,Y)=e)).
 
 stdname(e).
+stdname(q(_,_)).
 
 program(coffee,
         loop(if(-empty(queue),
