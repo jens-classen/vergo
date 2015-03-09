@@ -17,6 +17,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 
+% todo: cg_nodes with final conditions
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEX
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
