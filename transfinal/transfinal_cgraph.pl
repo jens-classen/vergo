@@ -113,8 +113,9 @@ simplify_program(star(P),star(NP)) :-
         simplify_program(P,NP), !.
 simplify_program(pick(Var,P),pick(Var,NP)) :-
         simplify_program(P,NP), !.
+simplify_program(pick(Var,D,P),pick(Var,D,NP)) :-
+        simplify_program(P,NP), !.
 simplify_program(test(true),[]) :- !.
-simplify_program(test(false),fail) :- !.
 simplify_program(test(F),NP) :-
         simplify_max(F,R), not(F=R), !,
         simplify_program(test(R),NP).

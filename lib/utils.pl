@@ -5,10 +5,10 @@
            count/2,
            atom_string/2,
            string_codes/2,
-           subset/2,
-           intersection/2,
-           disjoint/2,
-           member/2,
+           subset2/2,
+           intersection2/3,
+           disjoint2/2,
+           member2/2,
            forall/2]).
 
 /*  T2 is T1 with X1 replaced by X2  */
