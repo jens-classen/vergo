@@ -1,9 +1,9 @@
 /**
  
-verify_abstraction
+verify_cgraphs_fol
 
 This file implements a verification algorithm for Golog programs based
-on the construction described in
+on the methods described in
 
 Jens Claßen: Planning and Verification in the Agent Language Golog.
 PhD Thesis, Department of Computer Science, RWTH Aachen University,
@@ -17,27 +17,97 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 
+:- discontiguous(check_label/5).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Verification Algorithms
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEX
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/**
+  * check(+Program,+Property,-Result)
+  **/
+check(P,ex(Phi),Result) :-
+        cg_label(P,ex(Phi),1,0,Result).
+
+/**
+  * check_label(+Program,+Property,+Iteration,+Node,-Formula)
+  **/
+check_label(P,ex(Phi),0,N,F) :-
+        path_label(P,N,Path),
+        simplify_max(Phi*Path,F).
+
+check_label(P,ex(Phi),1,N,F) :-
+        preimage(P,ex(Phi),I,N,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+check_label(_P,eg(_Phi),-1,_N,false).
+
+check_label(_P,eg(Phi),0,_N,F) :-
+        simplify_max(Phi,F).
+
+check_label(P,eg(Phi),I,N,F) :-
+        I > 0, !,
+        I1 is I-1,
+        cg_label(P,eg(Phi),I1,N,F1),
+        preimage(P,eg(Phi),I1,F,F2),        
+        simplify_max(F1*F2,F).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEU
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+check_label(_P,eu(_Phi1,_Phi2),-1,_N,true).
+
+check_label(P,eu(_Phi1,Phi2),0,N,F) :-
+        path_label(P,N,Path),
+        simplify_max(Phi2*Path,F).
+
+check_label(P,eu(Phi1,Phi2),I,N,F) :-
+        I > 0, !,
+        I1 is I-1,
+        cg_label(P,eu(Phi1,Phi2),I1,N,Old),
+        preimage(P,eu(Phi1,Phi2),I1,F,Pre),        
+        simplify_max(Old+(Phi1*Pre),F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkPost
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Preimage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+preimage(P,Phi,I,N,F) :-
+        findall(Pre,
+                (cg_edge(P,N,A,M,C1,V,C2),
+                 cg_label(P,Phi,I,M,Psi),
+                 regress(C1*some(V,C2*after(A,Psi)),R),
+                 simplify_max(R,Pre)),
+                PreList),
+        disjoin(PreList,PreDis),
+        simplify_max(PreDis,F).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Path
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% todo: implement this!
+path_label(_,_,true).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Characteristic Graphs
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 construct_characteristic_graph(ProgramName) :-
         
