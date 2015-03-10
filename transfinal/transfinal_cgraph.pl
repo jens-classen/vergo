@@ -68,8 +68,10 @@ trans(D,A,DP,F1,Vars,F2) :-
   * The program Prog is final (may terminate) if condition Cond
   * holds.
   **/
-final(F,_) :-
-        var(F), !, fail.
+final(A,F) :-
+        var(A), !, F=false.
+final(A,F) :-
+        prim_action(A), !, F=false.
 final(test(F),F).
 final([],true).
 final([D1|D2],F1*F2) :-

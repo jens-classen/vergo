@@ -44,7 +44,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 construct_characteristic_graph(ProgramName) :-
         
         % eliminate previous instances
-        retractall(cg_node(_,_)),
+        retractall(cg_node(_,_,_)),
         retractall(cg_edge(_,_,_,_,_,_)),
         retractall(cg_number_of_nodes(_)),
         
@@ -69,12 +69,14 @@ iterate_cg_construction.
 cg_construction_step :-
         
         % there is some node
-        cg_node(Program,ID),
+        cg_node(Program,_Final,ID),
         
         % whose program has a possible transition
         trans(Program,Action,NewProgram,Condition1,Vars,Condition2),
         simplify_max(Condition1,SimplifiedCondition1),
+        SimplifiedCondition1\=false,
         simplify_max(Condition2,SimplifiedCondition2),
+        SimplifiedCondition2\=false,
         simplify_program(NewProgram,NewSimplifiedProgram),
         cg_get_node_id(NewSimplifiedProgram,NewID),
         
@@ -90,12 +92,14 @@ cg_construction_step :-
                        SimplifiedCondition2)).
 
 cg_get_node_id(Program,ID) :-
-        cg_node(Program,ID), !.
+        cg_node(Program,_Final,ID), !.
 cg_get_node_id(Program,ID) :-
         retract(cg_number_of_nodes(ID)),
         NextID is ID+1,
         assert(cg_number_of_nodes(NextID)),
-        assert(cg_node(Program,ID)).
+        final(Program,Final),
+        simplify_max(Final,FinalS),
+        assert(cg_node(Program,FinalS,ID)).
 
 % draw characteristic graph using dot
 cg_draw_graph :-
@@ -108,7 +112,7 @@ cg_draw_graph :-
         close(Stream).
 
 cg_write_nodes(Stream) :-
-        cg_node(_Program,ID),
+        cg_node(_Program,_Final,ID),
         write(Stream, '\t'),
         write(Stream, ID),
         write(Stream, ';\n'),
