@@ -33,7 +33,7 @@ causes_false(bringCoffee(_),holdingCoffee,true).
 causes(requestCoffee(P),queue,Y,enqueue(queue,P,Y)).
 causes(selectRequest(P),queue,Y,dequeue(queue,P,Y)).
 
-causes_true(A,occ(A),true).
+causes_true(A,occ(B),(A=B)).
 causes_false(A,occ(B),-(A=B)).
 
 def(isFirst(Q,P),
