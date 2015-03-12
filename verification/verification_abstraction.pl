@@ -340,7 +340,7 @@ cg_construction_step :-
         
         % whose program has a possible transition
         step(Program,Action,NewProgram,Condition),
-        simplify_max(Condition,SimplifiedCondition),
+        simplify(Condition,SimplifiedCondition),
         simplify_program(NewProgram,NewSimplifiedProgram),
         cg_get_node_id(NewSimplifiedProgram,NewID),
         
@@ -428,7 +428,7 @@ extract_subformulas(next(P)) :- !,
         extract_subformulas(P).
 extract_subformulas(F) :- 
         no_temporal_operators(F), !,
-        simplify_max(F,FS),
+        simplify(F,FS),
         assert(property_subformula(FS)).
 
 no_temporal_operators(F) :-
@@ -554,7 +554,7 @@ regression(F,E,R) :-
         regression_cached(F,E,R), !.
 regression(F,E,R) :- !,
         regress(F,E,R1),
-        simplify_max(R1,R),
+        simplify(R1,R),
         assert(regression_cached(F,E,R)).
 
 regress(F1<=>F2,E,R1<=>R2) :- !,
@@ -891,7 +891,7 @@ writeSpecProperty(Stream,next(P)) :- !,
         write(Stream, ')').
 writeSpecProperty(Stream, F) :-
         no_temporal_operators(F),
-        simplify_max(F,FS),
+        simplify(F,FS),
         property_subformula(FS),
         map_subformula(FormulaN,FS), !,
         write(Stream, FormulaN).

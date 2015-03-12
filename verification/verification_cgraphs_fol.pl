@@ -40,7 +40,7 @@ check(P,ex(Phi),Result) :-
   **/
 check_label(P,ex(Phi),0,N,F) :-
         path_label(P,N,Path),
-        simplify_max(Phi*Path,F).
+        simplify(Phi*Path,F).
 
 check_label(P,ex(Phi),1,N,F) :-
         preimage(P,ex(Phi),I,N,F).
@@ -52,14 +52,14 @@ check_label(P,ex(Phi),1,N,F) :-
 check_label(_P,eg(_Phi),-1,_N,false).
 
 check_label(_P,eg(Phi),0,_N,F) :-
-        simplify_max(Phi,F).
+        simplify(Phi,F).
 
 check_label(P,eg(Phi),I,N,F) :-
         I > 0, !,
         I1 is I-1,
         cg_label(P,eg(Phi),I1,N,F1),
         preimage(P,eg(Phi),I1,F,F2),        
-        simplify_max(F1*F2,F).
+        simplify(F1*F2,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEU
@@ -69,14 +69,14 @@ check_label(_P,eu(_Phi1,_Phi2),-1,_N,true).
 
 check_label(P,eu(_Phi1,Phi2),0,N,F) :-
         path_label(P,N,Path),
-        simplify_max(Phi2*Path,F).
+        simplify(Phi2*Path,F).
 
 check_label(P,eu(Phi1,Phi2),I,N,F) :-
         I > 0, !,
         I1 is I-1,
         cg_label(P,eu(Phi1,Phi2),I1,N,Old),
         preimage(P,eu(Phi1,Phi2),I1,F,Pre),        
-        simplify_max(Old+(Phi1*Pre),F).
+        simplify(Old+(Phi1*Pre),F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkPost
@@ -91,10 +91,10 @@ preimage(P,Phi,I,N,F) :-
                 (cg_edge(P,N,A,M,C1,V,C2),
                  cg_label(P,Phi,I,M,Psi),
                  regress(C1*some(V,C2*after(A,Psi)),R),
-                 simplify_max(R,Pre)),
+                 simplify(R,Pre)),
                 PreList),
         disjoin(PreList,PreDis),
-        simplify_max(PreDis,F).
+        simplify(PreDis,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Path
@@ -141,9 +141,9 @@ cg_construction_step(ProgramName) :-
         
         % whose program has a possible transition
         trans(Program,Action,NewProgram,Condition1,Vars,Condition2),
-        simplify_max(Condition1,SimplifiedCondition1),
+        simplify(Condition1,SimplifiedCondition1),
         SimplifiedCondition1\=false,
-        simplify_max(Condition2,SimplifiedCondition2),
+        simplify(Condition2,SimplifiedCondition2),
         SimplifiedCondition2\=false,
         simplify_program(NewProgram,NewSimplifiedProgram),
         cg_get_node_id(ProgramName,NewSimplifiedProgram,NewID),
@@ -166,7 +166,7 @@ cg_get_node_id(ProgramName,Program,ID) :-
         NextID is ID+1,
         assert(cg_number_of_nodes(ProgramName,NextID)),
         final(Program,Final),
-        simplify_max(Final,FinalS),
+        simplify(Final,FinalS),
         assert(cg_node(ProgramName,Program,FinalS,ID)).
 
 % draw characteristic graph using dot

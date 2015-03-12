@@ -4,7 +4,6 @@
                 consistent/2,
                 equivalent/2,
                 simplify/2,
-                simplify_max/2,
                 disjoin/2,
                 conjoin/2,
                 op(1130, xfy, <=>),
@@ -47,6 +46,8 @@
 % :- op( 299, fx, $).     % for $true/$false
 
 :- use_module('../lib/env').
+
+:- discontiguous(simplify/2).
 
 /* Succeeds if ListOfAxioms entails Conjecture. */
 entails(ListOfAxioms,Conjecture) :-
@@ -167,109 +168,102 @@ write_binary_formula(Stream, F1, Symbol, F2) :-
         write_formula(Stream, F2),
         write(Stream, ' )').
 
-/* simplify_max(+F,-R)
-   apply simplify(F,R) until nothing changes anymore */
-simplify_max(F,R) :-
-        simplify(F,R1),
-        R1 \= F, !,
-        simplify_max(R1,R).
-simplify_max(F,F) :-
-        simplify(F,F).
-
 /* simplify(+F,-R)
    simplify formula F to obtain R
    makes 'obvious' simplifications like F&$true => F */
+
+% true, false
 simplify(true,true) :- !.
 simplify(false,false) :- !.
-simplify(F1<=>F2,true) :- 
-        simplify(F1, F),
-        simplify(F2, F), !.
-simplify(F1<=>F2,false) :-
-        simplify(F1,true),
-        simplify(F2,false), !.
-simplify(F1<=>F2,false) :-
-        simplify(F1,false),
-        simplify(F2,true), !.
-simplify(F1<=>F2,R1<=>R2) :- !,
-        simplify(F1,R1),
-        simplify(F2,R2).
-simplify(_F1=>F2,true) :- 
-        simplify(F2,true), !.
-simplify(F1=>_F2,true) :- 
-        simplify(F1,false), !.
-simplify(F1=>F2,R1=>R2) :- !,
-        simplify(F1,R1),
-        simplify(F2,R2).
-simplify(F2<=_F1,true) :- 
-        simplify(F2,true), !.
-simplify(_F2<=F1,true) :- 
-        simplify(F1,false), !.
-simplify(F2<=F1,R2<=R1) :- !,
-        simplify(F1,R1),
-        simplify(F2,R2).
+
+% equivalence
+simplify(F1<=>F2,R) :- 
+        simplify(F1,FS1),
+        simplify(F2,FS2), !,
+        simplify_equiv(FS1,FS2,R).
+
+simplify_equiv(true,false,false) :- !.
+simplify_equiv(false,true,false) :- !.
+simplify_equiv(F1,F2,true) :-
+        F1 == F2, !.
+simplify_equiv(F1,F2,F1<=>F2).
+             
+% implication
+simplify(F1=>F2,R) :-
+        simplify(F1,FS1),
+        simplify(F2,FS2), !,
+        simplify_impl(FS1,FS2,R).
+
+simplify_impl(_,true,true) :- !.
+simplify_impl(false,_,true) :- !.
+simplify_impl(F1,F2,true) :-
+        F1 == F2, !.
+simplify_impl(F1,F2,F1=>F2).
+
+simplify(F1<=F2,R) :- !,
+        simplify(F2=>F1,R).
+
+% disjunction
 simplify(F1+F2,R) :-
-        simplify(F1,R),
-        simplify(F2,R), !.
-simplify(-F1+F2,true) :-
-        simplify(F1,R1),
-        simplify(F2,R2),
-        R1=R2, !.
-simplify(F1+(-F2),$true) :-
-        simplify(F1,R1),
-        simplify(F2,R2),
-        R1=R2, !.
-simplify(F1+F2,R) :-
-        simplify(F1,false),
-        simplify(F2,R), !.
-simplify(F1+F2,R) :-
-        simplify(F2,false),
-        simplify(F1,R), !.
-simplify(F1+_F2,true) :-
-        simplify(F1,true), !.
-simplify(_F1+F2,true) :-
-        simplify(F2,true), !.
-simplify(F1+F2,R1+R2) :-
-        simplify(F1,R1),
-        simplify(F2,R2), !.
+        simplify(F1,FS1),
+        simplify(F2,FS2), !,
+        simplify_disj(FS1,FS2,R).
+
+simplify_disj(true,_,true) :- !.
+simplify_disj(_,true,true) :- !.
+simplify_disj(false,F2,F2) :- !.
+simplify_disj(F1,false,F1) :- !.
+simplify_disj(-F1,F2,true) :-
+        F1 == F2, !.
+simplify_disj(F1,-F2,true) :-
+        F1 == F2, !.
+simplify_disj(F1,F2,R) :-
+        F1 == F2, !, R=F1.
+simplify_disj(F1,F2,F1+F2).
+
+%conjunction
 simplify(F1*F2,R) :-
-        simplify(F1,R),
-        simplify(F2,R), !.
-simplify(-F1*F2,false) :-
-        simplify(F1,R1),
-        simplify(F2,R2),
-        R1=R2, !.
-simplify(F1*(-F2),false) :-
-        simplify(F1,R1),
-        simplify(F2,R2),
-        R1=R2, !.
-simplify(F1*F2,R) :-
-        simplify(F1,true),
-        simplify(F2,R), !.
-simplify(F1*F2,R) :-
-        simplify(F2,true),
-        simplify(F1,R), !.
-simplify(F1*_F2,false) :-
-        simplify(F1,false), !.
-simplify(_F1*F2,false) :-
-        simplify(F2,false), !.
-simplify(F1*F2,R1*R2) :-
-        simplify(F1,R1),
-        simplify(F2,R2), !.
-simplify(-F, false) :- 
-        simplify(F,true), !.
-simplify(-F, true) :- 
-        simplify(F,false), !.
-simplify(-(-F),R) :- !,
-        simplify(F,R).
-simplify(-F,-R) :-
-        simplify(F,R), !.
+        simplify(F1,FS1),
+        simplify(F2,FS2), !,
+        simplify_conj(FS1,FS2,R).
+
+simplify_conj(false,_,false) :- !.
+simplify_conj(_,false,false) :- !.
+simplify_conj(true,F2,F2) :- !.
+simplify_conj(F1,true,F1) :- !.
+simplify_conj(-F1,F2,false) :-
+        F1 == F2, !.
+simplify_conj(F1,-F2,false) :-
+        F1 == F2, !.
+simplify_conj(F1,F2,R) :-
+        F1 == F2, !, R=F1.
+simplify_conj(F1,F2,F1*F2).
+
+%negation
+simplify(-F,R) :-
+        simplify(F,FS), !,
+        simplify_neg(FS,R).
+
+simplify_neg(true,false) :- !.
+simplify_neg(false,true) :- !.
+simplify_neg(-F,F) :- !.
+simplify_neg(F,-F).
+
+% quantification
 simplify(some(Xs,F1),some(Xs,R1)) :- !,
         simplify(F1,R1).
 simplify(all(Xs,F1),all(Xs,R1)) :- !,
         simplify(F1,R1).
+
+% equality
 simplify(X=Y,true) :- 
         X==Y, !.
-simplify(F,F).
+
+% base case.
+simplify(F,FS) :-
+        var(FS), !, FS=F.
+simplify(F,FS) :-
+        F == FS.
 
 /* conjoin(+L,-F)
    F is the conjunction of the list of formulas L */
