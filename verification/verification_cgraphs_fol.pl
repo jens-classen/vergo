@@ -43,7 +43,7 @@ check_label(P,ex(Phi),0,N,F) :-
         simplify(Phi*Path,F).
 
 check_label(P,ex(Phi),1,N,F) :-
-        preimage(P,ex(Phi),I,N,F).
+        preimage(P,ex(Phi),0,N,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEG
