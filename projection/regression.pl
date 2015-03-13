@@ -45,9 +45,69 @@ exocond(A,Exocondition) :- var(A), !,
 exocond(A,Exocondition) :- nonvar(A), !,
         exo(A,Exocondition).
 
-% todo: construct ssa out of effect axioms
-% ssa(Fluent,A,Formula).
-        
+ssa(Fluent,A,Condition) :- rel_fluent(Fluent), var(A), !, 
+        % action+poscondition with free variables => quantify
+        findall(some(Vars,((C=B)*Phi)),
+                 (causes_true(B,Fluent,Phi),
+                  term_variables((B,Phi),Vars),
+                  Vars \= []),
+                 QuantifiedPosconds),
+        % action+poscondition without free vars
+        findall(((C=B)*Phi),
+                (causes_true(B,Fluent,Phi),
+                 term_variables((B,Phi),[])),
+                NonQuantifiedPosconds),
+        % combine them in big disjunction
+        append(QuantifiedPosconds,NonQuantifiedPosconds,Posconds),
+        bind_action_variable(Posconds,Posconds2,A), % unify the Cs with A
+        disjoin(Posconds2,Poscondition),
+        % action+negcondition with free variables => quantify
+        findall(some(Vars,((C=B)*Phi)),
+                 (causes_false(B,Fluent,Phi),
+                  term_variables((B,Phi),Vars),
+                  Vars \= []),
+                 QuantifiedNegconds),
+        % action+negcondition without free vars
+        findall(((C=B)*Phi),
+                (causes_false(B,Fluent,Phi),
+                 term_variables((B,Phi),[])),
+                NonQuantifiedNegconds),
+        % combine them in big disjunction
+        append(QuantifiedNegconds,NonQuantifiedNegconds,Negconds),
+        bind_action_variable(Negconds,Negconds2,A), % unify the Cs with A
+        disjoin(Negconds2,Negcondition),
+        Condition2 = Poscondition+Fluent*(-Negcondition),
+        simplify(Condition2,Condition).
+ssa(Fluent,A,Condition) :- rel_fluent(Fluent), nonvar(A), !,
+        ssa(Fluent,B,Condition3),
+        B=A,
+        apply_una(Condition3,Condition2),
+        simplify(Condition2,Condition).
+ 
+ssa((Fluent=Y),A,Condition) :- fun_fluent(Fluent), var(A), !, 
+        % action+condition with free variables => quantify
+        findall(some(Vars,((C=B)*Phi)),
+                 (causes(B,Fluent,Y,Phi),
+                  term_variables((B,Phi),Vars),
+                  Vars \= []),
+                 QuantifiedConds),
+        % action+condition without free vars
+        findall(((C=B)*Phi),
+                (causes(B,Fluent,Y,Phi),
+                 term_variables((B,Phi),[])),
+                NonQuantifiedConds),
+        % combine them in big disjunction
+        append(QuantifiedConds,NonQuantifiedConds,Conds),
+        bind_action_variable(Conds,Conds2,A), % unify the Cs with A
+        disjoin(Conds2,Cond),
+        copy_term((Cond,Y),(CondC,X)),
+        Condition2 = Cond+(Fluent=Y)*(-some(X,CondC)),
+        simplify(Condition2,Condition).
+ssa((Fluent=Y),A,Condition) :- fun_fluent(Fluent), nonvar(A), !,
+        ssa((Fluent=Y),B,Condition3),
+        B=A,
+        apply_una(Condition3,Condition2),
+        simplify(Condition2,Condition).       
 
 bind_action_variable([],[],_).
 bind_action_variable([some(Vars,((_C=B)*Phi))|D1],[some(Vars,((A=B)*Phi))|D2],A) :-
