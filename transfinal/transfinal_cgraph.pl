@@ -24,8 +24,17 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
  * after variable instantiation.
  **/
 trans(A,A,[],true,[],true) :-
+        not(include_preconditions),
         var(A), !.
 trans(A,A,[],true,[],true) :-
+        not(include_preconditions),
+        nonvar(A),
+        prim_action(A), !.
+trans(A,A,[],true,[],poss(A)) :-
+        include_preconditions,
+        var(A), !.
+trans(A,A,[],true,[],poss(A)) :-
+        include_preconditions,
         nonvar(A),
         prim_action(A), !.
 trans(test(_),_,_,_,_,_) :- !, 

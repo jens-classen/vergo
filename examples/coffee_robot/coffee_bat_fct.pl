@@ -55,7 +55,7 @@ exo(requestCoffee(_),true).
 stdname(e).
 stdname(q(_,_)).
 
-% todo: executability!
+include_preconditions. % everything is precondition-extended
 
 program(coffee,
         loop(if(-empty(queue),
