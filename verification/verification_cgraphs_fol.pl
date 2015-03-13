@@ -19,11 +19,28 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- discontiguous(check_label/5).
 
+:- dynamic cached_label/5.
+:- dynamic cg_node/4.
+:- dynamic cg_edge/7.
+:- dynamic cg_number_of_nodes/2.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Verification Algorithms
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+check(Program,Property,Result) :-
+        property(Property,Program,somepath(next(Phi))), !,
+        check(Program,ex(Phi),Result).
+        
+check(Program,Property,Result) :-
+        property(Property,Program,somepath(always(Phi))), !,
+        check(Program,eg(Phi),Result).
+
+check(Program,Property,Result) :-
+        property(Property,Program,somepath(until(Phi1,Phi2))), !,
+        check(Program,eu(Phi1,Phi2),Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEX
@@ -102,6 +119,17 @@ preimage(P,Phi,I,N,F) :-
 
 % todo: implement this!
 path_label(_,_,true).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Label caching
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cg_label(P,Phi,I,M,Psi) :-
+        cached_label(P,Phi,I,M,Psi), !.
+
+cg_label(P,Phi,I,M,Psi) :-
+        check_label(P,Phi,I,M,Psi), !,
+        assert(cached_label(P,Phi,I,M,Psi)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

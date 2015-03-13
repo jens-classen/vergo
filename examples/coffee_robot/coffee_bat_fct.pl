@@ -76,10 +76,14 @@ program(main,
 
 property(prop1,
          main,
+         somepath(next(empty(queue)))).
+
+property(prop2,
+         main,
          allpaths(always(occ(requestCoffee(X))
                          =>eventually(occ(selectRequest(X)))))).
 
-property(prop2,
+property(prop3,
          main,
          somepath(always(-some(P,occ(selectRequest(P)))))).
 
