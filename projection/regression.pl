@@ -63,7 +63,7 @@ construct_disjuncts([E|D1],[Cond|D2],A,FreeVars) :-
         construct_disjuncts(D1,D2,A,FreeVars).
 
 isfluent(F) :- rel_fluent(F).
-isfluent((F=_)) :- fun_fluent(F).
+isfluent((F=_)) :- nonvar(F), fun_fluent(F).
 
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
@@ -131,52 +131,33 @@ apply_una(exo(A),exo(A)) :- !.
 apply_una(F,F) :- isfluent(F), !.
 apply_una(F,F) :- def(F,_), !.
 
-apply_una((X=Y),true) :- X==Y,!.
-apply_una(-(X=Y),false) :- X==Y,!.
+apply_una((X=Y),true) :- X==Y, !.
+apply_una(-(X=Y),false) :- X==Y, !.
 
 apply_una(-(X=Y),InEqualities) :-
         nonvar(X), nonvar(Y),
-        prim_action(X),
-        prim_action(Y),
-        X =.. [A|XArgs], Y =..[A|YArgs],!,
-        make_inequalities(XArgs,YArgs,InEqualities).
+        unique_name(X),
+        unique_name(Y),
+        X =.. [A|XArgs], Y =..[A|YArgs], !,
+        make_inequalities(XArgs,YArgs,InEqualities2),
+        apply_una(InEqualities2,InEqualities).
 apply_una(-(X=Y),true) :-
         nonvar(X), nonvar(Y),
-        prim_action(X),
-        prim_action(Y),
+        unique_name(X),
+        unique_name(Y),
         X =.. [A|_], Y =.. [B|_],
         A \= B, !.
 apply_una((X=Y),Equalities) :-
         nonvar(X), nonvar(Y),
-        prim_action(X),
-        prim_action(Y),
-        X =.. [A|XArgs], Y =..[A|YArgs],!,
-        make_equalities(XArgs,YArgs,Equalities).
+        unique_name(X),
+        unique_name(Y),
+        X =.. [A|XArgs], Y =..[A|YArgs], !,
+        make_equalities(XArgs,YArgs,Equalities2),
+        apply_una(Equalities2,Equalities).
 apply_una((X=Y),false) :-
         nonvar(X), nonvar(Y),
-        prim_action(X),
-        prim_action(Y),
-        X =.. [A|_], Y =.. [B|_],
-        A \= B, !.
-
-apply_una(-(X=Y),InEqualities) :-
-        nonvar(X), nonvar(Y),
-        stdname(X), stdname(Y),
-        X =.. [F|XArgs], Y =..[F|YArgs],!,
-        make_inequalities(XArgs,YArgs,InEqualities).
-apply_una(-(X=Y),true) :-
-        nonvar(X), nonvar(Y),
-        stdname(X), stdname(Y),
-        X =.. [A|_], Y =.. [B|_],
-        A \= B, !.
-apply_una((X=Y),Equalities) :-
-        nonvar(X), nonvar(Y),
-        stdname(X), stdname(Y),
-        X =.. [A|XArgs], Y =..[A|YArgs],!,
-        make_equalities(XArgs,YArgs,Equalities).
-apply_una((X=Y),false) :-
-        nonvar(X), nonvar(Y),
-        stdname(X), stdname(Y),
+        unique_name(X),
+        unique_name(Y),
         X =.. [A|_], Y =.. [B|_],
         A \= B, !.
 
@@ -204,11 +185,15 @@ apply_una((F1<=F2),(F3<=F4)) :- !,
 
 apply_una(F,F) :- !.
 
-make_equalities([],[],true).
-make_equalities([X],[Y],(X=Y)).
-make_equalities([X|Xs],[Y|Ys],(X=Y)*Equ) :-
+make_equalities([],[],true) :- !.
+make_equalities([X],[Y],(X=Y)) :- !.
+make_equalities([X|Xs],[Y|Ys],(X=Y)*Equ) :- 
         make_equalities(Xs,Ys,Equ).
-make_inequalities([],[],false).
-make_inequalities([X],[Y],-(X=Y)).
+make_inequalities([],[],false) :- !.
+make_inequalities([X],[Y],-(X=Y)) :- !.
 make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :-
         make_equalities(Xs,Ys,Equ).
+
+unique_name(X) :-
+        prim_action(X);
+        stdname(X).
