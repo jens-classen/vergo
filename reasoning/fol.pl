@@ -250,10 +250,20 @@ simplify_neg(-F,F) :- !.
 simplify_neg(F,-F).
 
 % quantification
-simplify(some(Xs,F1),some(Xs,R1)) :- !,
-        simplify(F1,R1).
-simplify(all(Xs,F1),all(Xs,R1)) :- !,
-        simplify(F1,R1).
+simplify(some(Xs,F1),R) :- !,
+        simplify(F1,R1),
+        simplify_some(Xs,R1,R).
+simplify(all(Xs,F1),R) :- !,
+        simplify(F1,R1),
+        simplify_all(Xs,R1,R).
+
+simplify_some(_Xs,false,false) :- !.
+simplify_some(_Xs,true,true) :- !.
+simplify_some(Xs,F,some(Xs,F)).
+
+simplify_all(_Xs,false,false) :- !.
+simplify_all(_Xs,true,true) :- !.
+simplify_all(Xs,F,all(Xs,F)).
 
 % equality
 simplify(X=Y,true) :- 
