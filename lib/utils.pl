@@ -34,6 +34,7 @@ count(G, Count) :-
 atom_string(A,S) :- string_to_atom(S,A).
 string_codes(S,C) :- string_to_list(S,C).
 
+/* Set operations based on _term_ equality, not unification */
 subset2([X|Xs],Ys) :-
         member2(X,Ys),
         subset2(Xs,Ys).
@@ -61,7 +62,6 @@ disjoint2([],_Ys).
 member2(X,[Y|_L]) :- X == Y.
 member2(X,[_|L]) :- member2(X,L).
 member2(_,[]) :- fail.
-
 
 % do Action for each Goal
 forall(Goal,Action):-
