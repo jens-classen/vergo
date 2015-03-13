@@ -7,6 +7,7 @@
            string_codes/2,
            subset2/2,
            intersection2/3,
+           setminus2/3,
            disjoint2/2,
            member2/2,
            forall/2]).
@@ -44,6 +45,13 @@ intersection2([X|Xs],Ys,[X|Zs]) :-
 intersection2([_|Xs],Ys,Zs) :-
         intersection2(Xs,Ys,Zs).
 intersection2([],_,[]).
+
+setminus2([X|Xs],Ys,[X|Zs]) :-
+        not(member2(X,Ys)), !,
+        setminus2(Xs,Ys,Zs).
+setminus2([_X|Xs],Ys,Zs) :-
+        setminus2(Xs,Ys,Zs).
+setminus2([],_,[]).
 
 disjoint2([X|Xs],Ys) :-
         not(member2(X,Ys)),
