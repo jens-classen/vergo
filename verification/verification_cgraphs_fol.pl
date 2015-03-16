@@ -116,8 +116,10 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
 
 check_iterate(P,Phi,I,K) :- 
         check_not_converged(P,Phi,I), !,
+        report_message(['Not yet converged, doing another iteration...\n\n']),
         I1 is I+1,
         check_labels(P,Phi,I1),
+        report_labels(P,Phi,I1),
         check_iterate(P,Phi,I1,K).
 
 check_iterate(P,Phi,I,I) :- !.
@@ -135,6 +137,17 @@ check_labels(P,Phi,I) :-
         cg_label(P,Phi,I,N,_),
         fail.
 check_labels(_,_,_).
+
+report_labels(P,Phi,I) :-
+        report_message(['Labels in iteration ', I, ':\n']),
+        report_labels(P,Phi,I,0).
+report_labels(P,Phi,I,N) :-
+        cg_node(P,_,_N),
+        cg_label(P,Phi,I,N,L), !,
+        report_message([N, ': ',L, '\n']),
+        N1 is N+1,
+        report_labels(P,Phi,I,N1).
+report_labels(_,_,_,_) :- !.        
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preimage
