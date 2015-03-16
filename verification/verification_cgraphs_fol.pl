@@ -122,7 +122,7 @@ check_iterate(P,Phi,I,K) :-
         report_labels(P,Phi,I1),
         check_iterate(P,Phi,I1,K).
 
-check_iterate(P,Phi,I,I) :- !.
+check_iterate(_P,_Phi,I,I) :- !.
 
 check_not_converged(P,Phi,I) :-
         I1 is I-1,
@@ -142,7 +142,7 @@ report_labels(P,Phi,I) :-
         report_message(['Labels in iteration ', I, ':\n']),
         report_labels(P,Phi,I,0).
 report_labels(P,Phi,I,N) :-
-        cg_node(P,_,_N),
+        cg_node(P,_,_,N),
         cg_label(P,Phi,I,N,L), !,
         report_message([N, ': ',L, '\n']),
         N1 is N+1,
