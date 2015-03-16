@@ -18,6 +18,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../lib/env').
 
 :- discontiguous(check_label/5).
+:- discontiguous(check/3).
 
 :- dynamic cached_label/5.
 :- dynamic cg_node/4.
@@ -66,6 +67,10 @@ check_label(P,ex(Phi),1,N,F) :-
 % checkEG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+check(P,eg(Phi),Result) :-
+        check_iterate(P,eg(Phi),0,K),
+        cg_label(P,eg(Phi),K,0,Result).
+
 check_label(_P,eg(_Phi),-1,_N,false).
 
 check_label(_P,eg(Phi),0,_N,F) :-
@@ -81,6 +86,10 @@ check_label(P,eg(Phi),I,N,F) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEU
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+check(P,eu(Phi1,Phi2),Result) :-
+        check_iterate(P,eu(Phi1,Phi2),0,K),
+        cg_label(P,eu(Phi1,Phi2),K,0,Result).
 
 check_label(_P,eu(_Phi1,_Phi2),-1,_N,true).
 
@@ -98,6 +107,34 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkPost
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Iteration
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% todo: report labels, convergence
+
+check_iterate(P,Phi,I,K) :- 
+        check_not_converged(P,Phi,I), !,
+        I1 is I+1,
+        check_labels(P,Phi,I1),
+        check_iterate(P,Phi,I1,K).
+
+check_iterate(P,Phi,I,I) :- !.
+
+check_not_converged(P,Phi,I) :-
+        I1 is I-1,
+        cg_node(P,_,_,N),
+        cg_label(P,Phi,I,N,L),
+        cg_label(P,Phi,I1,N,L1),
+        not(equivalent(L,L1)).
+        
+% compute labels for all nodes
+check_labels(P,Phi,I) :-
+        cg_node(P,_,_,N),
+        cg_label(P,Phi,I,N,_),
+        fail.
+check_labels(_,_,_).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preimage
