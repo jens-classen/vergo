@@ -109,6 +109,22 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
 % checkPost
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+check(P,post(Phi),Result) :-
+        check_iterate(P,post(Phi),0,K),
+        cg_label(P,post(Phi),K,0,Result).
+
+check_label(_P,post(_Phi),-1,_N,true).
+
+check_label(P,post(Phi),0,N,F) :-
+        simplify(Phi,F).
+
+check_label(P,post(Phi),I,N,F) :-
+        I > 0,
+        I1 is I-1,
+        cg_label(P,post(Phi),I1,N,Old),
+        preimage(P,post(Phi),I1,F,Pre),        
+        simplify(Old+Pre,F).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Path
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
