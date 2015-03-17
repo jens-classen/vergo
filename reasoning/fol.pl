@@ -259,10 +259,12 @@ simplify(all(Xs,F1),R) :- !,
 
 simplify_some(_Xs,false,false) :- !.
 simplify_some(_Xs,true,true) :- !.
+simplify_some([],F,F) :- !.
 simplify_some(Xs,F,some(Xs,F)).
 
 simplify_all(_Xs,false,false) :- !.
 simplify_all(_Xs,true,true) :- !.
+simplify_all([],F,F) :- !.
 simplify_all(Xs,F,all(Xs,F)).
 
 % equality
