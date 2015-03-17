@@ -5,6 +5,19 @@
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
 
+:- multifile prim_action/1.
+:- multifile rel_fluent/1.
+:- multifile fun_fluent/1.
+:- multifile poss/1.
+:- multifile causes_true/3.
+:- multifile causes_false/3.
+:- multifile causes/4.
+:- multifile def/2.
+:- multifile exo/2.
+:- multifile stdname/1.
+:- multifile include_preconditions/0.
+
+
 % poss if A is a variable => big disjunction over all cases
 precond(A,Precondition) :- var(A), !, 
         condition(poss(B,Phi),Phi,B,A,Precondition).
@@ -98,9 +111,9 @@ regress(S,F1*F2,Result) :- !,
 regress(S,some(Vars,Formula),Result) :- !,
         regress(S,Formula,Result1),
         Result=some(Vars,Result1).
-regress(S,forall(Vars,Formula),Result) :- !,
+regress(S,all(Vars,Formula),Result) :- !,
         regress(S,Formula,Result1),
-        Result=forall(Vars,Result1).
+        Result=all(Vars,Result1).
 regress(S,F1<=>F2,Result) :- !, 
         regress(S,F1,Result1), 
         regress(S,F2,Result2),
