@@ -44,6 +44,31 @@ check(Program,Property,Result) :-
         property(Property,Program,somepath(until(Phi1,Phi2))), !,
         check(Program,eu(Phi1,Phi2),Result).
 
+check(Program,Property,Result) :-
+        property(Property,Program,somepath(eventually(Phi))), !,
+        check(Program,eu(true,Phi),Result).
+        
+check(Program,Property,Result) :-
+        property(Property,Program,allpaths(next(Phi))), !,
+        check(Program,ex(-Phi),R),
+        simplify(-R,Result).
+        
+check(Program,Property,Result) :-
+        property(Property,Program,allpaths(always(Phi))), !,
+        check(Program,eu(true,-Phi),R),
+        simplify(-R,Result).
+
+check(Program,Property,Result) :-
+        property(Property,Program,allpaths(until(Phi1,Phi2))), !,
+        check(Program,eu(-Phi2,(-Phi1)*(-Phi2)),R1),
+        check(Program,eg(-Phi2),R2),
+        simplify((-R1)*(-R2),Result).
+
+check(Program,Property,Result) :-
+        property(Property,Program,allpaths(eventually(Phi))), !,
+        check(Program,eg(-Phi),R),
+        simplify(-R,Result).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEX
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
