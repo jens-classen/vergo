@@ -20,10 +20,11 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).
 
-:- dynamic cached_label/5.
 :- dynamic cg_node/4.
 :- dynamic cg_edge/7.
 :- dynamic cg_number_of_nodes/2.
+:- dynamic cached_label/5.
+:- dynamic cg_max_iteration/3.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,7 +78,7 @@ check_label(_P,eg(Phi),0,_N,F) :-
         simplify(Phi,F).
 
 check_label(P,eg(Phi),I,N,F) :-
-        I > 0, !,
+        I > 0,
         I1 is I-1,
         cg_label(P,eg(Phi),I1,N,F1),
         preimage(P,eg(Phi),I1,F,F2),        
@@ -98,7 +99,7 @@ check_label(P,eu(_Phi1,Phi2),0,N,F) :-
         simplify(Phi2*Path,F).
 
 check_label(P,eu(Phi1,Phi2),I,N,F) :-
-        I > 0, !,
+        I > 0,
         I1 is I-1,
         cg_label(P,eu(Phi1,Phi2),I1,N,Old),
         preimage(P,eu(Phi1,Phi2),I1,F,Pre),        
@@ -109,6 +110,19 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Path
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+path_label(P,N,L) :-
+        cg_max_iteration(P,eg(true),K),
+        cg_label(P,eg(true),K,N,L).
+
+path_label(P,N,L) :-
+        not(cg_max_iteration(P,eg(true),_)),
+        check(P,eg(true),_),
+        path_label(P,N,L).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Iteration
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -116,13 +130,15 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
 
 check_iterate(P,Phi,I,K) :- 
         check_not_converged(P,Phi,I), !,
-        report_message(['Not yet converged, doing another iteration...\n\n']),
+        report_labels(P,Phi,I),
         I1 is I+1,
         check_labels(P,Phi,I1),
-        report_labels(P,Phi,I1),
         check_iterate(P,Phi,I1,K).
 
-check_iterate(_P,_Phi,I,I) :- !.
+check_iterate(P,Phi,I,I) :- !,
+        report_message(['--------------------------------------']),
+        report_message(['Labels have converged.\n']),
+        assert(cg_max_iteration(P,Phi,I)).
 
 check_not_converged(P,Phi,I) :-
         I1 is I-1,
@@ -139,6 +155,7 @@ check_labels(P,Phi,I) :-
 check_labels(_,_,_).
 
 report_labels(P,Phi,I) :-
+        report_message(['--------------------------------------']),
         report_message(['Labels in iteration ', I, ':\n']),
         report_labels(P,Phi,I,0).
 report_labels(P,Phi,I,N) :-
@@ -164,21 +181,15 @@ preimage(P,Phi,I,N,F) :-
         simplify(PreDis,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Path
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% todo: implement this!
-path_label(_,_,true).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Label caching
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cg_label(P,Phi,I,M,Psi) :-
-        cached_label(P,Phi,I,M,Psi), !.
+        cached_label(P,Phi,I,M,Psi).
 
 cg_label(P,Phi,I,M,Psi) :-
-        check_label(P,Phi,I,M,Psi), !,
+        check_label(P,Phi,I,M,Psi),
+        not(cached_label(P,Phi,I,M,Psi)),
         assert(cached_label(P,Phi,I,M,Psi)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -201,7 +212,7 @@ construct_characteristic_graph(ProgramName) :-
         % create initial node
         assert(cg_number_of_nodes(ProgramName,0)),
         cg_get_node_id(ProgramName,SimplifiedProgram,0),
-        cg_draw_graph(ProgramName),
+        cg_draw_graph(ProgramName), !,
         
         iterate_cg_construction(ProgramName).
         
