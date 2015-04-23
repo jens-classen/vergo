@@ -24,101 +24,101 @@ formula2bdd(Fml,BDD) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % push negation inwards to try the other cases
-preprocess(?Vars:(~Fml),R) :-
-        push_negation_inside((~Fml),Fml2),
-        (~Fml) \= Fml2, !,
-        preprocess(?Vars:Fml2,R).
-preprocess(!Vars:(~Fml),R) :-
-        push_negation_inside((~Fml),Fml2),
-        (~Fml) \= Fml2, !,
-        preprocess(!Vars:Fml2,R).
+preprocess(some(Vars,-Fml),R) :-
+        push_negation_inside(-Fml,Fml2),
+        -Fml \= Fml2, !,
+        preprocess(some(Vars,Fml2),R).
+preprocess(all(Vars,-Fml),R) :-
+        push_negation_inside(-Fml,Fml2),
+        -Fml \= Fml2, !,
+        preprocess(all(Vars,Fml2),R).
 
 % ?[X]:(X=T)&F --> F with X replaced by T
-preprocess(?[X|Vars]:Fml,R) :-
+preprocess(some([X|Vars],Fml),R) :-
         equality_conjunct(X,Y,Fml),!,
         subv(X,Y,Fml,Fml2),
-        preprocess(?Vars:Fml2,R).
+        preprocess(some(Vars,Fml2),R).
 % ![X]:~(X=T)|F --> F with X replaced by T
-preprocess(![X|Vars]:Fml,R) :-
+preprocess(all([X|Vars],Fml),R) :-
         inequality_disjunct(X,Y,Fml),!,
         subv(X,Y,Fml,Fml2),
-        preprocess(!Vars:Fml2,R).
+        preprocess(all(Vars,Fml2),R).
 
 % distribute "exists" over disjunction
-preprocess(?Vars:(Fml1|Fml2),R) :- !,
-        preprocess((?Vars:Fml1)|(?Vars:Fml2),R).
+preprocess(some(Vars,Fml1+Fml2),R) :- !,
+        preprocess(some(Vars,Fml1)+some(Vars,Fml2),R).
 % distribute "forall" over conjunction
-preprocess(!Vars:(Fml1&Fml2),R) :- !,
-        preprocess((!Vars:Fml1)&(!Vars:Fml2),R).
+preprocess(all(Vars,Fml1*Fml2),R) :- !,
+        preprocess(all(Vars,Fml1)*all(Vars,Fml2),R).
 
 % drop quantifiers for non-appearing variables
-preprocess(?[X|Vars]:Fml,R) :-
+preprocess(some([X|Vars],Fml),R) :-
         term_variables(Fml,Vars1),
         not(member2(X,Vars1)), !,
-        preprocess(?Vars:Fml,R).
-preprocess(![X|Vars]:Fml,R) :-
+        preprocess(some(Vars,Fml),R).
+preprocess(all([X|Vars],Fml),R) :-
         term_variables(Fml,Vars1),
         not(member2(X,Vars1)), !,
-        preprocess(!Vars:Fml,R).
+        preprocess(all(Vars,Fml),R).
 
 % drop empty quantifiers
-preprocess(?[]:Fml,R) :- !,
+preprocess(some([],Fml),R) :- !,
         preprocess(Fml,R).
-preprocess(![]:Fml,R) :- !,
+preprocess(all([],Fml),R) :- !,
         preprocess(Fml,R).
 
 % combine quantifiers
-preprocess(?Vars1:(?Vars2:Fml),R) :- !,
+preprocess(some(Vars1,some(Vars2,Fml)),R) :- !,
         append(Vars1,Vars2,Vars),
-        preprocess(?Vars:Fml,R).
-preprocess(!Vars1:(!Vars2:Fml),R) :- !,
+        preprocess(some(Vars,Fml),R).
+preprocess(all(Vars1,all(Vars2,Fml)),R) :- !,
         append(Vars1,Vars2,Vars),
-        preprocess(!Vars:Fml,R).
+        preprocess(all(Vars,Fml),R).
 
 % reduce scope of existential to conjuncts where that variable appears
-preprocess(?Vars:Fml,R) :-
+preprocess(some(Vars,Fml),R) :-
         conjuncts_with_without(Vars,Fml,ConW,ConWO),
-        ConWO \= $true, !,
-        preprocess((?Vars:ConW)&ConWO,R).
+        ConWO \= true, !,
+        preprocess(some(Vars,ConW)*ConWO,R).
 % reduce scope of universal to conjuncts where that variable appears
-preprocess(!Vars:Fml,R) :-
+preprocess(all(Vars,Fml),R) :-
         disjuncts_with_without(Vars,Fml,DisW,DisWO),
-        DisWO \= $false, !,
-        preprocess((!Vars:DisW)|DisWO,R).
+        DisWO \= false, !,
+        preprocess(all(Vars,DisW)+DisWO,R).
 
 % recursive preprocessing of subformulas
-preprocess(?Vars:Fml,R) :-
-        simplify_atom(?Vars:Fml,S),
-        S \= ?Vars:Fml, !,
+preprocess(some(Vars,Fml),R) :-
+        simplify_atom(some(Vars,Fml),S),
+        S \= some(Vars,Fml), !,
         preprocess(S,R).
-preprocess(!Vars:Fml,R) :-
-        simplify_atom(!Vars:Fml,S),
-        S \= !Vars:Fml, !,
+preprocess(all(Vars,Fml),R) :-
+        simplify_atom(all(Vars,Fml),S),
+        S \= all(Vars,Fml), !,
         preprocess(S,R).
 
-preprocess(?Vars:Fml,?Vars:R) :- !,
+preprocess(some(Vars,Fml),some(Vars,R)) :- !,
         preprocess(Fml,R).
-preprocess(!Vars:Fml,!Vars:R) :- !,
+preprocess(all(Vars,Fml),all(Vars,R)) :- !,
         preprocess(Fml,R).
 
-preprocess(Fml1 <=> Fml2,R) :- !,
-        preprocess((Fml1=>Fml2)&(Fml2=>Fml1),R).
-preprocess(Fml1 => Fml2,R) :- !,
-        preprocess((~Fml1)|Fml2,R).
-preprocess(Fml1 <= Fml2,R) :- !,
-        preprocess(Fml1|(~Fml2),R).
-preprocess(~(?Vars:Fml),R) :- !,
-        push_negation_inside(~Fml,Fml2),
-        preprocess(!Vars:Fml2,R).
-preprocess(~(!Vars:Fml),R) :- !,
-        push_negation_inside(~Fml,Fml2),
-        preprocess(?Vars:Fml2,R).
-preprocess(~Fml,~R) :- !,
+preprocess(Fml1<=>Fml2,R) :- !,
+        preprocess((Fml1=>Fml2)*(Fml2=>Fml1),R).
+preprocess(Fml1=>Fml2,R) :- !,
+        preprocess((-Fml1)+Fml2,R).
+preprocess(Fml1<=Fml2,R) :- !,
+        preprocess(Fml1+(-Fml2),R).
+preprocess(-some(Vars,Fml),R) :- !,
+        push_negation_inside(-Fml,Fml2),
+        preprocess(all(Vars,Fml2),R).
+preprocess(-all(Vars,Fml),R) :- !,
+        push_negation_inside(-Fml,Fml2),
+        preprocess(some(Vars,Fml2),R).
+preprocess(-Fml,-R) :- !,
         preprocess(Fml,R).
-preprocess(Fml1|Fml2,R1|R2) :- !,
+preprocess(Fml1+Fml2,R1+R2) :- !,
         preprocess(Fml1,R1),
         preprocess(Fml2,R2).
-preprocess(Fml1&Fml2,R1&R2) :- !,
+preprocess(Fml1*Fml2,R1*R2) :- !,
         preprocess(Fml1,R1),
         preprocess(Fml2,R2).
 
@@ -131,145 +131,145 @@ equality_conjunct(X,Y,(A=B)) :-
 equality_conjunct(X,Y,(A=B)) :-
         X==B,
         Y=A.
-equality_conjunct(X,Y,Fml1&Fml2) :-
+equality_conjunct(X,Y,Fml1*Fml2) :-
         equality_conjunct(X,Y,Fml1);
         equality_conjunct(X,Y,Fml2).
 
-inequality_disjunct(X,Y,~(A=B)) :-
+inequality_disjunct(X,Y,-(A=B)) :-
         X==A,
         Y=B.
-inequality_disjunct(X,Y,~(A=B)) :-
+inequality_disjunct(X,Y,-(A=B)) :-
         X==B,
         Y=A.
-inequality_disjunct(X,Y,Fml1|Fml2) :-
+inequality_disjunct(X,Y,Fml1+Fml2) :-
         inequality_disjunct(X,Y,Fml1);
         inequality_disjunct(X,Y,Fml2).
 
-conjuncts_with_without(Vars,(Fml1&Fml2),ConW,ConWO) :- !,
+conjuncts_with_without(Vars,Fml1*Fml2,ConW,ConWO) :- !,
         conjuncts_with_without(Vars,Fml1,ConW1,ConWO1),
         conjuncts_with_without(Vars,Fml2,ConW2,ConWO2),
-        ConW3 = (ConW1 & ConW2),
-        ConWO3 = (ConWO1 & ConWO2),
+        ConW3 = (ConW1 * ConW2),
+        ConWO3 = (ConWO1 * ConWO2),
         remove_true(ConW3,ConW),
         remove_true(ConWO3,ConWO).
-conjuncts_with_without(Vars,Fml,Fml,$true) :-
+conjuncts_with_without(Vars,Fml,Fml,true) :-
         term_variables(Fml,FVars), 
         not(disjoint2(Vars,FVars)), !.
-conjuncts_with_without(Vars,Fml,$true,Fml) :-
+conjuncts_with_without(Vars,Fml,true,Fml) :-
         term_variables(Fml,FVars),
         disjoint2(Vars,FVars).
 
-remove_true(Fml&($true),Fml) :- !.
-remove_true(($true)&Fml,Fml) :- !.
+remove_true(Fml*true,Fml) :- !.
+remove_true(true*Fml,Fml) :- !.
 remove_true(Fml,Fml).
 
-disjuncts_with_without(Vars,(Fml1|Fml2),DisW,DisWO) :- !,
+disjuncts_with_without(Vars,Fml1+Fml2,DisW,DisWO) :- !,
         disjuncts_with_without(Vars,Fml1,DisW1,DisWO1),
         disjuncts_with_without(Vars,Fml2,DisW2,DisWO2),
-        DisW3 = (DisW1 & DisW2),
-        DisWO3 = (DisWO1 & DisWO2),
+        DisW3 = (DisW1 * DisW2),
+        DisWO3 = (DisWO1 * DisWO2),
         remove_false(DisW3,DisW),
         remove_false(DisWO3,DisWO).
-disjuncts_with_without(Vars,Fml,Fml,$false) :-
+disjuncts_with_without(Vars,Fml,Fml,false) :-
         term_variables(Fml,FVars), 
         not(disjoint2(Vars,FVars)), !.
-disjuncts_with_without(Vars,Fml,$false,Fml) :-
+disjuncts_with_without(Vars,Fml,false,Fml) :-
         term_variables(Fml,FVars),
         disjoint2(Vars,FVars).
 
-remove_false(Fml|($false),Fml) :- !.
-remove_false(($false)|Fml,Fml) :- !.
+remove_false(Fml+false,Fml) :- !.
+remove_false(false+Fml,Fml) :- !.
 remove_false(Fml,Fml).
 
-push_negation_inside(~(Fml1|Fml2),R1&R2) :- !,
-        push_negation_inside(~Fml1,R1),
-        push_negation_inside(~Fml2,R2).
-push_negation_inside(~(Fml1&Fml2),R1|R2) :- !,
-        push_negation_inside(~Fml1,R1),
-        push_negation_inside(~Fml2,R2).
-push_negation_inside(~(!Vars:Fml),?Vars:R) :- !,
-        push_negation_inside(~Fml,R).
-push_negation_inside(~(?Vars:Fml),!Vars:R) :- !,
-        push_negation_inside(~Fml,R).
-push_negation_inside(~(~Fml),R) :- !,
+push_negation_inside(-(Fml1+Fml2),R1*R2) :- !,
+        push_negation_inside(-Fml1,R1),
+        push_negation_inside(-Fml2,R2).
+push_negation_inside(-(Fml1*Fml2),R1+R2) :- !,
+        push_negation_inside(-Fml1,R1),
+        push_negation_inside(-Fml2,R2).
+push_negation_inside(-all(Vars,Fml),some(Vars,R)) :- !,
+        push_negation_inside(-Fml,R).
+push_negation_inside(-some(Vars,Fml),all(Vars,R)) :- !,
+        push_negation_inside(-Fml,R).
+push_negation_inside(-(-Fml),R) :- !,
         push_negation_inside(Fml,R).
-push_negation_inside(~(Fml1=>Fml2),R1&R2) :- !,
+push_negation_inside(-(Fml1=>Fml2),R1*R2) :- !,
         push_negation_inside(Fml1,R1),
-        push_negation_inside(~Fml2,R2).
-push_negation_inside(~(Fml1<=Fml2),R1&R2) :- !,
-        push_negation_inside(~Fml1,R1),
+        push_negation_inside(-Fml2,R2).
+push_negation_inside(-(Fml1<=Fml2),R1*R2) :- !,
+        push_negation_inside(-Fml1,R1),
         push_negation_inside(Fml2,R2).
-push_negation_inside(~(Fml1<=>Fml2),R1|R2) :- !,
-        push_negation_inside(~(Fml1=>Fml2),R1),
-        push_negation_inside(~(Fml1<=Fml2),R2).
+push_negation_inside(-(Fml1<=>Fml2),R1+R2) :- !,
+        push_negation_inside(-(Fml1=>Fml2),R1),
+        push_negation_inside(-(Fml1<=Fml2),R2).
 push_negation_inside(Fml,Fml).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bdd2formula($false,0) :- !.
-bdd2formula($true,1) :- !.
+bdd2formula(false,0) :- !.
+bdd2formula(true,1) :- !.
 
 bdd2formula(Label,BDD) :-
         bdd_node(Label,1,0,BDD),!.
-bdd2formula(~Label,BDD) :-
+bdd2formula(-Label,BDD) :-
         bdd_node(Label,0,1,BDD),!.
 bdd2formula(Fml,BDD) :-
         bdd_node(Label,1,E,BDD),!,
         bdd2formula(FmlE,E),
-        Fml = (Label|(~Label&FmlE)).
+        Fml = Label+((-Label)*FmlE).
 bdd2formula(Fml,BDD) :-
         bdd_node(Label,0,E,BDD),!,
         bdd2formula(FmlE,E),
-        Fml = (~Label&FmlE).
+        Fml = (-Label)*FmlE.
 bdd2formula(Fml,BDD) :-
         bdd_node(Label,T,1,BDD),!,
         bdd2formula(FmlT,T),
-        Fml=((Label&FmlT)|~Label).
+        Fml = (Label*FmlT)+(-Label).
 bdd2formula(Fml,BDD) :-
         bdd_node(Label,T,0,BDD),!,
         bdd2formula(FmlT,T),
-        Fml=(Label&FmlT).
+        Fml = Label*FmlT.
 
 bdd2formula(Fml,BDD) :-
         bdd_node(Label,Then,Else,BDD),
         bdd2formula(Fml1,Then),
         bdd2formula(Fml2,Else),!,
-        Fml = ((Label&Fml1)|(~Label&Fml2)).
+        Fml = (Label*Fml1)+((-Label)*Fml2).
 
 simplify_formula_bdd(Fml1,Fml2) :-
         formula2bdd(Fml1,BDD),
         bdd2formula(Fml2,BDD).
 
-construct_bdd(Fml1 <=> Fml2,BDD) :- !,
+construct_bdd(Fml1<=>Fml2,BDD) :- !,
         construct_bdd(Fml1,BDD1),
         construct_bdd(Fml2,BDD2),
-        construct_bdd(~Fml2,BDD3),
+        construct_bdd(-Fml2,BDD3),
         ite(BDD1,BDD2,BDD3,BDD).
-construct_bdd(Fml1 => Fml2,BDD) :- !,
+construct_bdd(Fml1=>Fml2,BDD) :- !,
         construct_bdd(Fml1,BDD1),
         construct_bdd(Fml2,BDD2),
         ite(BDD1,BDD2,1,BDD).
-construct_bdd(Fml1 <= Fml2,BDD) :- !,
+construct_bdd(Fml1<=Fml2,BDD) :- !,
         construct_bdd(Fml1,BDD1),
-        construct_bdd(~Fml2,BDD2),
+        construct_bdd(-Fml2,BDD2),
         ite(BDD1,1,BDD2,BDD).
-construct_bdd(~Fml1,BDD) :- !,
+construct_bdd(-Fml1,BDD) :- !,
         construct_bdd(Fml1,BDD1),
         ite(BDD1,0,1,BDD).
-construct_bdd(Fml1 | Fml2,BDD) :- !,
+construct_bdd(Fml1+Fml2,BDD) :- !,
         construct_bdd(Fml1,BDD1),
         construct_bdd(Fml2,BDD2),
         ite(BDD1,1,BDD2,BDD).
-construct_bdd(Fml1 & Fml2,BDD) :- !,
+construct_bdd(Fml1*Fml2,BDD) :- !,
         construct_bdd(Fml1,BDD1),
         construct_bdd(Fml2,BDD2),
         ite(BDD1,BDD2,0,BDD).
-construct_bdd($true,1) :- !.
-construct_bdd($false,0) :- !.
-construct_bdd(~($true),0) :- !.
-construct_bdd(~($false),1) :- !.
+construct_bdd(true,1) :- !.
+construct_bdd(false,0) :- !.
+construct_bdd(-true,0) :- !.
+construct_bdd(-false,1) :- !.
 construct_bdd((X=Y),1) :- X==Y,!.
-construct_bdd(~(X=Y),0) :- X==Y, !.
+construct_bdd(-(X=Y),0) :- X==Y, !.
 construct_bdd(Atom,BDD) :- !,
         bdd_atom(Atom),
         simplify_atom(Atom,AtomS),
@@ -338,32 +338,32 @@ branch(Node,Label,0,Result) :-
 cache_ite(F,G,H,R) :-
         assert(cached_ite(F,G,H,R)).
 
-bdd_atom(?_Vars:_Fml).
-bdd_atom(!_Vars:_Fml).
+bdd_atom(some(_Vars,_Fml)).
+bdd_atom(all(_Vars,_Fml)).
 bdd_atom(Fml) :-
         Fml \= (_ <=> _),
         Fml \= (_  => _),
         Fml \= (_ <=  _),
-        Fml \= (~_),
-        Fml \= (_ | _),
-        Fml \= (_ & _).
+        Fml \= (-_),
+        Fml \= (_ + _),
+        Fml \= (_ * _).
 
-simplify_atom(?[X|Vars]:Fml,?[X|Vars]:Fml2) :- !,
+simplify_atom(some([X|Vars],Fml),some([X|Vars],Fml2)) :- !,
         term_string(X,XS),
         atom_string(A,XS),
         subv(X,A,Fml,Fml3),
-        simplify_atom(?Vars:Fml3,?Vars:Fml4),
+        simplify_atom(some(Vars,Fml3),some(Vars,Fml4)),
         subv(A,X,Fml4,Fml2).
-simplify_atom(?[]:Fml,?[]:Fml2) :- !,
+simplify_atom(some([],Fml),some([],Fml2)) :- !,
         simplify_formula_bdd(Fml,Fml2).
 
-simplify_atom(![X|Vars]:Fml,![X|Vars]:Fml2) :- !,
+simplify_atom(all([X|Vars],Fml),all([X|Vars],Fml2)) :- !,
         term_string(X,XS),
         atom_string(A,XS),
         subv(X,A,Fml,Fml3),
-        simplify_atom(!Vars:Fml3,!Vars:Fml4),
+        simplify_atom(all(Vars,Fml3),all(Vars,Fml4)),
         subv(A,X,Fml4,Fml2).
-simplify_atom(![]:Fml,![]:Fml2) :- !,
+simplify_atom(all([],Fml),all([],Fml2)) :- !,
         simplify_formula_bdd(Fml,Fml2).
 
 simplify_atom(Atom,Atom).
