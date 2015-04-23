@@ -166,8 +166,8 @@ remove_true(Fml,Fml).
 disjuncts_with_without(Vars,Fml1+Fml2,DisW,DisWO) :- !,
         disjuncts_with_without(Vars,Fml1,DisW1,DisWO1),
         disjuncts_with_without(Vars,Fml2,DisW2,DisWO2),
-        DisW3 = (DisW1 * DisW2),
-        DisWO3 = (DisWO1 * DisWO2),
+        DisW3 = (DisW1 + DisW2),
+        DisWO3 = (DisWO1 + DisWO2),
         remove_false(DisW3,DisW),
         remove_false(DisWO3,DisWO).
 disjuncts_with_without(Vars,Fml,Fml,false) :-
