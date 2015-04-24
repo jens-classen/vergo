@@ -1,10 +1,10 @@
 %:- module(bdd).
 
-:- use_module(tptp).
-:- use_module(utils).
+:- use_module(fol).
+:- use_module('../lib/utils').
 
-:- use_module(library(graph_algorithms)).
-:- use_module(library(graphviz)).
+%:- use_module(library(graph_algorithms)).
+%:- use_module(library(graphviz)).
 
 :- dynamic bdd_node/4. % table entries
 :- dynamic nodes/1.    % highest table index
