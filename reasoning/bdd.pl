@@ -52,14 +52,16 @@ preprocess(all(Vars,Fml1*Fml2),R) :- !,
         preprocess(all(Vars,Fml1)*all(Vars,Fml2),R).
 
 % drop quantifiers for non-appearing variables
-preprocess(some([X|Vars],Fml),R) :-
-        term_variables(Fml,Vars1),
-        not(member2(X,Vars1)), !,
-        preprocess(some(Vars,Fml),R).
-preprocess(all([X|Vars],Fml),R) :-
-        term_variables(Fml,Vars1),
-        not(member2(X,Vars1)), !,
-        preprocess(all(Vars,Fml),R).
+preprocess(some(Vars1,Fml),R) :-
+        term_variables(Fml,Vars2),
+        intersection2(Vars1,Vars2,Vars3),
+        Vars1 \= Vars3, !,
+        preprocess(some(Vars3,Fml),R).
+preprocess(all(Vars1,Fml),R) :-
+        term_variables(Fml,Vars2),
+        intersection2(Vars1,Vars2,Vars3),
+        Vars1 \= Vars3, !,
+        preprocess(all(Vars3,Fml),R).
 
 % drop empty quantifiers
 preprocess(some([],Fml),R) :- !,
@@ -275,6 +277,7 @@ construct_bdd(Atom,BDD) :- !,
         simplify_atom(Atom,AtomS),
         find_or_add_unique(AtomS,1,0,BDD).
 
+find_or_add_unique(_Label,B,B,B) :- !.
 find_or_add_unique(Label,Then,Else,BDD) :-
         bdd_node(Label,Then,Else,BDD),!.
 find_or_add_unique(Label,Then,Else,BDD) :-
@@ -349,8 +352,7 @@ bdd_atom(Fml) :-
         Fml \= (_ * _).
 
 simplify_atom(some([X|Vars],Fml),some([X|Vars],Fml2)) :- !,
-        term_string(X,XS),
-        atom_string(A,XS),
+        term_to_atom(X,A),
         subv(X,A,Fml,Fml3),
         simplify_atom(some(Vars,Fml3),some(Vars,Fml4)),
         subv(A,X,Fml4,Fml2).
@@ -358,8 +360,7 @@ simplify_atom(some([],Fml),some([],Fml2)) :- !,
         simplify_formula_bdd(Fml,Fml2).
 
 simplify_atom(all([X|Vars],Fml),all([X|Vars],Fml2)) :- !,
-        term_string(X,XS),
-        atom_string(A,XS),
+        term_to_atom(X,A),
         subv(X,A,Fml,Fml3),
         simplify_atom(all(Vars,Fml3),all(Vars,Fml4)),
         subv(A,X,Fml4,Fml2).
@@ -393,7 +394,7 @@ print_bdd_tree2(BDD,N) :-
 
 print_tabs(0) :- !.
 print_tabs(N) :- !,
-        write("\t"),
+        write(' '),
         N1 is N-1,
         print_tabs(N1).
 
