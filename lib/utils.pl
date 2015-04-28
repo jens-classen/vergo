@@ -30,10 +30,6 @@ report_message(M) :- report_message([M]).
 count(G, Count) :-
         aggregate_all(count, G, Count).
 
-/* Renaming SWI 6.4.1 -> 6.6.0 */
-atom_string(A,S) :- string_to_atom(S,A).
-string_codes(S,C) :- string_to_list(S,C).
-
 /* Set operations based on _term_ equality, not unification */
 subset2([X|Xs],Ys) :-
         member2(X,Ys),
