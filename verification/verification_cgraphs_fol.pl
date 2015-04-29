@@ -16,6 +16,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
+:- ['../reasoning/bdd'].
 
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).
@@ -51,23 +52,23 @@ check(Program,Property,Result) :-
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(next(Phi))), !,
         check(Program,ex(-Phi),R),
-        simplify(-R,Result).
+        simplify_fml(-R,Result).
         
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(always(Phi))), !,
         check(Program,eu(true,-Phi),R),
-        simplify(-R,Result).
+        simplify_fml(-R,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(until(Phi1,Phi2))), !,
         check(Program,eu(-Phi2,(-Phi1)*(-Phi2)),R1),
         check(Program,eg(-Phi2),R2),
-        simplify((-R1)*(-R2),Result).
+        simplify_fml((-R1)*(-R2),Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(eventually(Phi))), !,
         check(Program,eg(-Phi),R),
-        simplify(-R,Result).
+        simplify_fml(-R,Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEX
@@ -84,7 +85,7 @@ check(P,ex(Phi),Result) :-
   **/
 check_label(P,ex(Phi),0,N,F) :-
         path_label(P,N,Path),
-        simplify(Phi*Path,F).
+        simplify_fml(Phi*Path,F).
 
 check_label(P,ex(Phi),1,N,F) :-
         preimage(P,ex(Phi),0,N,F).
@@ -100,14 +101,14 @@ check(P,eg(Phi),Result) :-
 check_label(_P,eg(_Phi),-1,_N,false).
 
 check_label(_P,eg(Phi),0,_N,F) :-
-        simplify(Phi,F).
+        simplify_fml(Phi,F).
 
 check_label(P,eg(Phi),I,N,F) :-
         I > 0,
         I1 is I-1,
         cg_label(P,eg(Phi),I1,N,F1),
         preimage(P,eg(Phi),I1,F,F2),        
-        simplify(F1*F2,F).
+        simplify_fml(F1*F2,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEU
@@ -121,14 +122,14 @@ check_label(_P,eu(_Phi1,_Phi2),-1,_N,true).
 
 check_label(P,eu(_Phi1,Phi2),0,N,F) :-
         path_label(P,N,Path),
-        simplify(Phi2*Path,F).
+        simplify_fml(Phi2*Path,F).
 
 check_label(P,eu(Phi1,Phi2),I,N,F) :-
         I > 0,
         I1 is I-1,
         cg_label(P,eu(Phi1,Phi2),I1,N,Old),
         preimage(P,eu(Phi1,Phi2),I1,F,Pre),        
-        simplify(Old+(Phi1*Pre),F).
+        simplify_fml(Old+(Phi1*Pre),F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkPost
@@ -141,14 +142,14 @@ check(P,post(Phi),Result) :-
 check_label(_P,post(_Phi),-1,_N,true).
 
 check_label(P,post(Phi),0,N,F) :-
-        simplify(Phi,F).
+        simplify_fml(Phi,F).
 
 check_label(P,post(Phi),I,N,F) :-
         I > 0,
         I1 is I-1,
         cg_label(P,post(Phi),I1,N,Old),
         preimage(P,post(Phi),I1,F,Pre),        
-        simplify(Old+Pre,F).
+        simplify_fml(Old+Pre,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Path
@@ -216,10 +217,10 @@ preimage(P,Phi,I,N,F) :-
                 (cg_edge(P,N,A,M,C1,V,C2),
                  cg_label(P,Phi,I,M,Psi),
                  regress(C1*some(V,C2*after(A,Psi)),R),
-                 simplify(R,Pre)),
+                 simplify_fml(R,Pre)),
                 PreList),
         disjoin(PreList,PreDis),
-        simplify(PreDis,F).
+        simplify_fml(PreDis,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Label caching
@@ -271,9 +272,9 @@ cg_construction_step(ProgramName) :-
         
         % whose program has a possible transition
         trans(Program,Action,NewProgram,Condition1,Vars,Condition2),
-        simplify(Condition1,SimplifiedCondition1),
+        simplify_fml(Condition1,SimplifiedCondition1),
         SimplifiedCondition1\=false,
-        simplify(Condition2,SimplifiedCondition2),
+        simplify_fml(Condition2,SimplifiedCondition2),
         SimplifiedCondition2\=false,
         simplify_program(NewProgram,NewSimplifiedProgram),
         cg_get_node_id(ProgramName,NewSimplifiedProgram,NewID),
@@ -296,7 +297,7 @@ cg_get_node_id(ProgramName,Program,ID) :-
         NextID is ID+1,
         assert(cg_number_of_nodes(ProgramName,NextID)),
         final(Program,Final),
-        simplify(Final,FinalS),
+        simplify_fml(Final,FinalS),
         assert(cg_node(ProgramName,Program,FinalS,ID)).
 
 % draw characteristic graph using dot
@@ -337,3 +338,17 @@ cgraph_file(File,ProgramName) :-
         string_concat('/', ProgramNameS, S),
         string_concat(S, '_cgraph.dot', FileName),
         string_concat(TempDir, FileName, File).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Formula Representation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% use fol simplification
+% simplify_fml(F,R) :- simplify(F,R).
+
+% use bdd simplification
+simplify_fml(F,R) :- 
+        simplify(F,S), % first b/c of UNA
+        simplify_formula_bdd(S,R).
