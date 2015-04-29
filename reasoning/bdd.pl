@@ -23,6 +23,14 @@ formula2bdd(Fml,BDD) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% always use variable *lists* in quantifiers
+preprocess(some(X,Fml),R) :-
+        var(X), !,
+        preprocess(some([X],Fml),R).
+preprocess(all(X,Fml),R) :-
+        var(X), !,
+        preprocess(all([X],Fml),R).
+
 % push negation inwards to try the other cases
 preprocess(some(Vars,-Fml),R) :-
         push_negation_inside(-Fml,Fml2),
