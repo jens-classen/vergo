@@ -107,7 +107,7 @@ check_label(P,eg(Phi),I,N,F) :-
         I > 0,
         I1 is I-1,
         cg_label(P,eg(Phi),I1,N,F1),
-        preimage(P,eg(Phi),I1,F,F2),        
+        preimage(P,eg(Phi),I1,N,F2),        
         simplify_fml(F1*F2,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,7 +141,7 @@ check_post(P,Phi,Result) :-
 
 check_label(_P,post(_Phi),-1,_N,true).
 
-check_label(P,post(Phi),0,N,F) :-
+check_label(_P,post(Phi),0,_N,F) :-
         simplify_fml(Phi,F).
 
 check_label(P,post(Phi),I,N,F) :-
@@ -174,7 +174,7 @@ check_iterate(P,Phi,I,K) :-
         check_not_converged(P,Phi,I), !,
         report_labels(P,Phi,I),
         I1 is I+1,
-        check_labels(P,Phi,I1),
+        compute_labels(P,Phi,I1),
         check_iterate(P,Phi,I1,K).
 
 check_iterate(P,Phi,I,I) :- !,
@@ -190,11 +190,14 @@ check_not_converged(P,Phi,I) :-
         not(equivalent(L,L1)).
         
 % compute labels for all nodes
-check_labels(P,Phi,I) :-
-        cg_node(P,_,_,N),
+compute_labels(P,Phi,I) :-
+        compute_labels2(P,Phi,I,0).
+compute_labels2(P,_Phi,_I,N) :-
+        cg_number_of_nodes(P,N), !.
+compute_labels2(P,Phi,I,N) :-
         cg_label(P,Phi,I,N,_),
-        fail.
-check_labels(_,_,_).
+        N1 is N+1,
+        compute_labels2(P,Phi,I,N1).
 
 report_labels(P,Phi,I) :-
         report_message(['--------------------------------------']),
@@ -227,11 +230,11 @@ preimage(P,Phi,I,N,F) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cg_label(P,Phi,I,M,Psi) :-
-        cached_label(P,Phi,I,M,Psi).
+        cached_label(P,Phi,I,M,Psi), !.
 
 cg_label(P,Phi,I,M,Psi) :-
         check_label(P,Phi,I,M,Psi),
-        not(cached_label(P,Phi,I,M,Psi)),
+        %not(cached_label(P,Phi,I,M,Psi)),
         assert(cached_label(P,Phi,I,M,Psi)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
