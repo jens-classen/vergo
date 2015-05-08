@@ -35,39 +35,39 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
         
 check(Program,Property,Result) :-
         property(Property,Program,somepath(next(Phi))), !,
-        check(Program,ex(Phi),Result).
+        check_ex(Program,Phi,Result).
         
 check(Program,Property,Result) :-
         property(Property,Program,somepath(always(Phi))), !,
-        check(Program,eg(Phi),Result).
+        check_eg(Program,Phi,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,somepath(until(Phi1,Phi2))), !,
-        check(Program,eu(Phi1,Phi2),Result).
+        check_eu(Program,Phi1,Phi2,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,somepath(eventually(Phi))), !,
-        check(Program,eu(true,Phi),Result).
+        check_eu(Program,true,Phi,Result).
         
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(next(Phi))), !,
-        check(Program,ex(-Phi),R),
+        check_ex(Program,-Phi,R),
         simplify_fml(-R,Result).
         
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(always(Phi))), !,
-        check(Program,eu(true,-Phi),R),
+        check_eu(Program,true,-Phi,R),
         simplify_fml(-R,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(until(Phi1,Phi2))), !,
-        check(Program,eu(-Phi2,(-Phi1)*(-Phi2)),R1),
-        check(Program,eg(-Phi2),R2),
+        check_eu(Program,-Phi2,(-Phi1)*(-Phi2),R1),
+        check_eg(Program,-Phi2,R2),
         simplify_fml((-R1)*(-R2),Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(eventually(Phi))), !,
-        check(Program,eg(-Phi),R),
+        check_eg(Program,-Phi,R),
         simplify_fml(-R,Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,7 +77,7 @@ check(Program,Property,Result) :-
 /**
   * check(+Program,+Property,-Result)
   **/
-check(P,ex(Phi),Result) :-
+check_ex(P,Phi,Result) :-
         cg_label(P,ex(Phi),1,0,Result).
 
 /**
@@ -94,7 +94,7 @@ check_label(P,ex(Phi),1,N,F) :-
 % checkEG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-check(P,eg(Phi),Result) :-
+check_eg(P,Phi,Result) :-
         check_iterate(P,eg(Phi),0,K),
         cg_label(P,eg(Phi),K,0,Result).
 
@@ -114,7 +114,7 @@ check_label(P,eg(Phi),I,N,F) :-
 % checkEU
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-check(P,eu(Phi1,Phi2),Result) :-
+check_eu(P,Phi1,Phi2,Result) :-
         check_iterate(P,eu(Phi1,Phi2),0,K),
         cg_label(P,eu(Phi1,Phi2),K,0,Result).
 
@@ -135,7 +135,7 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
 % checkPost
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-check(P,post(Phi),Result) :-
+check_post(P,Phi,Result) :-
         check_iterate(P,post(Phi),0,K),
         cg_label(P,post(Phi),K,0,Result).
 
