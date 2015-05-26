@@ -16,7 +16,6 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
-:- ['../reasoning/bdd'].
 
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).
@@ -352,9 +351,9 @@ cgraph_file(File,ProgramName) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % use fol simplification
-% simplify_fml(F,R) :- simplify(F,R).
+simplify_fml(F,R) :- simplify(F,R).
 
 % use bdd simplification
-simplify_fml(F,R) :- 
-        simplify(F,S), % first b/c of UNA
-        simplify_formula_bdd(S,R).
+%simplify_fml(F,R) :- 
+%        simplify(F,S), % first b/c of UNA
+%        simplify_formula_bdd(S,R).

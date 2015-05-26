@@ -1,8 +1,8 @@
 /**
  
-bdd
+<module> BDD representation module
 
-This file implements a representation and simplification mechanism for
+This module implements a representation and simplification mechanism for
 formulas of first-order logic based on (ordered) binary decision
 diagrams (BDD). The idea was sketched in
 
@@ -27,7 +27,17 @@ built-in term order '@<' is used for ordering nodes.
 
  **/
 
-%:- module(bdd).
+:- module(bdd, [entails/2,
+                inconsistent/1,
+                consistent/1,
+                consistent/2,
+                equivalent/2,
+                simplify/2,
+                disjoin/2,
+                conjoin/2,
+                op(1130, xfy, <=>),
+                op(1110, xfy, <=),
+                op(1110, xfy, =>)]).
 
 :- use_module(fol).
 :- use_module('../lib/utils').
@@ -39,14 +49,15 @@ built-in term order '@<' is used for ordering nodes.
 :- dynamic nodes/1.    % highest table index
 :- dynamic cached_ite/4.
 
-%:- export construct_bdd/3.
-
 nodes(1).
 
 bdd_node('___undef','___undef','___undef',0).
 bdd_node('___undef','___undef','___undef',1).
 
-simplify_formula_bdd(Fml1,Fml2) :- !,
+% overrides fol's simplify/2
+:- abolish(simplify/2).
+
+simplify(Fml1,Fml2) :- !,
         term_variables(Fml1,Vars),
         formula2bdd(Fml1,Vars,BDD),
         bdd2formula(Fml2,Vars,BDD).
@@ -395,9 +406,9 @@ bdd_atom(Fml) :-
         Fml \= (_ * _).
 
 get_label(some(Vars,Fml),AllVars,(some(Vars,SFml),AllVars)) :- !,
-        simplify_formula_bdd(Fml,SFml).
+        simplify(Fml,SFml).
 get_label(all(Vars,Fml),AllVars,(all(Vars,SFml),AllVars)) :- !,
-        simplify_formula_bdd(Fml,SFml).        
+        simplify(Fml,SFml).        
 get_label(Atom,AllVars,(Atom,AllVars)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

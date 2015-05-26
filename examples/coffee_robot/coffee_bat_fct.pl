@@ -2,8 +2,6 @@
 % Basic Action Theory for coffee delivery robot, queue size 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- use_module('../../reasoning/fol').
-
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rel_fluent/1.
