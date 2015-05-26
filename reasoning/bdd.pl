@@ -1,3 +1,32 @@
+/**
+ 
+bdd
+
+This file implements a representation and simplification mechanism for
+formulas of first-order logic based on (ordered) binary decision
+diagrams (BDD). The idea was sketched in
+
+Jens Claßen: Planning and Verification in the Agent Language Golog.
+PhD Thesis, Department of Computer Science, RWTH Aachen University,
+2013.
+
+The construction and manipulation algorithms used herein are based
+upon the ITE algorithm described in
+
+Karl S. Brace, Richard L. Rudell, and Randal E. Bryant. Efficient
+implementation of a BDD package. In Richard C. Smith, editor,
+Proceedings of the Twenty-Seventh ACM/IEEE Design Automation
+Conference (DAC 1990), pages 40–45. IEEE Computer Society Press, 1990.
+
+for propositional BDDs. Instead of a hash table, facts of the
+(dynamic) predicate bdd_node/4 are used to store nodes. Prolog's
+built-in term order '@<' is used for ordering nodes.
+
+@author  Jens Claßen
+@license GPL
+
+ **/
+
 %:- module(bdd).
 
 :- use_module(fol).
@@ -10,18 +39,21 @@
 :- dynamic nodes/1.    % highest table index
 :- dynamic cached_ite/4.
 
-%:- export construct_bdd/2.
+%:- export construct_bdd/3.
 
 nodes(1).
 
 bdd_node('___undef','___undef','___undef',0).
 bdd_node('___undef','___undef','___undef',1).
 
-formula2bdd(Fml,BDD) :-
-        preprocess(Fml,FmlP),
-        construct_bdd(FmlP,BDD).
+simplify_formula_bdd(Fml1,Fml2) :- !,
+        term_variables(Fml1,Vars),
+        formula2bdd(Fml1,Vars,BDD),
+        bdd2formula(Fml2,Vars,BDD).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Preprocessing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % always use variable *lists* in quantifiers
 preprocess(some(X,Fml),R) :-
@@ -97,14 +129,10 @@ preprocess(all(Vars,Fml),R) :-
         preprocess(all(Vars,DisW)+DisWO,R).
 
 % recursive preprocessing of subformulas
-preprocess(some(Vars,Fml),R) :-
-        simplify_atom(some(Vars,Fml),S),
-        S \= some(Vars,Fml), !,
-        preprocess(S,R).
-preprocess(all(Vars,Fml),R) :-
-        simplify_atom(all(Vars,Fml),S),
-        S \= all(Vars,Fml), !,
-        preprocess(S,R).
+preprocess(some(Vars,Fml),some(Vars,R)) :- !,
+        preprocess(Fml,R).
+preprocess(all(Vars,Fml),all(Vars,R)) :- !,
+        preprocess(Fml,R).
 
 preprocess(some(Vars,Fml),some(Vars,R)) :- !,
         preprocess(Fml,R).
@@ -133,7 +161,7 @@ preprocess(Fml1*Fml2,R1*R2) :- !,
         preprocess(Fml2,R2).
 
 % else do nothing
-preprocess(R,R).
+preprocess(R,R) :- !.
 
 equality_conjunct(X,Y,(A=B)) :-
         X==A,
@@ -214,81 +242,84 @@ push_negation_inside(-(Fml1<=>Fml2),R1+R2) :- !,
         push_negation_inside(-(Fml1<=Fml2),R2).
 push_negation_inside(Fml,Fml).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BDD Construction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bdd2formula(false,0) :- !.
-bdd2formula(true,1) :- !.
+formula2bdd(Fml,Vars,BDD) :- !,
+        preprocess(Fml,FmlP),
+        construct_bdd(FmlP,Vars,BDD).
 
-bdd2formula(Label,BDD) :-
-        bdd_node(Label,1,0,BDD),!.
-bdd2formula(-Label,BDD) :-
-        bdd_node(Label,0,1,BDD),!.
-bdd2formula(Fml,BDD) :-
-        bdd_node(Label,1,E,BDD),!,
-        bdd2formula(FmlE,E),
-        Fml = Label+((-Label)*FmlE).
-bdd2formula(Fml,BDD) :-
-        bdd_node(Label,0,E,BDD),!,
-        bdd2formula(FmlE,E),
-        Fml = (-Label)*FmlE.
-bdd2formula(Fml,BDD) :-
-        bdd_node(Label,T,1,BDD),!,
-        bdd2formula(FmlT,T),
-        Fml = (Label*FmlT)+(-Label).
-bdd2formula(Fml,BDD) :-
-        bdd_node(Label,T,0,BDD),!,
-        bdd2formula(FmlT,T),
-        Fml = Label*FmlT.
+bdd2formula(false,_Vars,0) :- !.
+bdd2formula(true,_Vars,1) :- !.
+bdd2formula(Fml,Vars,BDD) :-
+        bdd_node((Fml,Vars),1,0,BDD),!.
+bdd2formula(-Fml,Vars,BDD) :-
+        bdd_node((Fml,Vars),0,1,BDD),!.
+bdd2formula(Fml,Vars,BDD) :-
+        bdd_node((Fml2,Vars),1,E,BDD),!,
+        bdd2formula(FmlE,Vars,E),
+        Fml = Fml2+((-Fml2)*FmlE).
+bdd2formula(Fml,Vars,BDD) :-
+        bdd_node((Fml2,Vars),0,E,BDD),!,
+        bdd2formula(FmlE,Vars,E),
+        Fml = (-Fml2)*FmlE.
+bdd2formula(Fml,Vars,BDD) :-
+        bdd_node((Fml2,Vars),T,1,BDD),!,
+        bdd2formula(FmlT,Vars,T),
+        Fml = (Fml2*FmlT)+(-Fml2).
+bdd2formula(Fml,Vars,BDD) :-
+        bdd_node((Fml2,Vars),T,0,BDD),!,
+        bdd2formula(FmlT,Vars,T),
+        Fml = Fml2*FmlT.
+bdd2formula(Fml,Vars,BDD) :-
+        bdd_node((Fml3,Vars),Then,Else,BDD),
+        bdd2formula(Fml1,Vars,Then),
+        bdd2formula(Fml2,Vars,Else),!,
+        Fml = (Fml3*Fml1)+((-Fml3)*Fml2).
 
-bdd2formula(Fml,BDD) :-
-        bdd_node(Label,Then,Else,BDD),
-        bdd2formula(Fml1,Then),
-        bdd2formula(Fml2,Else),!,
-        Fml = (Label*Fml1)+((-Label)*Fml2).
-
-simplify_formula_bdd(Fml1,Fml2) :-
-        formula2bdd(Fml1,BDD),
-        bdd2formula(Fml2,BDD).
-
-construct_bdd(Fml1<=>Fml2,BDD) :- !,
-        construct_bdd(Fml1,BDD1),
-        construct_bdd(Fml2,BDD2),
-        construct_bdd(-Fml2,BDD3),
+construct_bdd(true,_Vars,1) :- !.
+construct_bdd(false,_Vars,0) :- !.
+construct_bdd(-true,_Vars,0) :- !.
+construct_bdd(-false,_Vars,1) :- !.
+construct_bdd((X=Y),_Vars,1) :- X==Y,!.
+construct_bdd(-(X=Y),_Vars,0) :- X==Y, !.
+construct_bdd(Fml,Vars,BDD) :-
+        bdd_atom(Fml), !,
+        get_label(Fml,Vars,Label),
+        find_or_add_unique(Label,1,0,BDD).
+construct_bdd(Fml1<=>Fml2,Vars,BDD) :- !,
+        construct_bdd(Fml1,Vars,BDD1),
+        construct_bdd(Fml2,Vars,BDD2),
+        construct_bdd(-Fml2,Vars,BDD3),
         ite(BDD1,BDD2,BDD3,BDD).
-construct_bdd(Fml1=>Fml2,BDD) :- !,
-        construct_bdd(Fml1,BDD1),
-        construct_bdd(Fml2,BDD2),
+construct_bdd(Fml1=>Fml2,Vars,BDD) :- !,
+        construct_bdd(Fml1,Vars,BDD1),
+        construct_bdd(Fml2,Vars,BDD2),
         ite(BDD1,BDD2,1,BDD).
-construct_bdd(Fml1<=Fml2,BDD) :- !,
-        construct_bdd(Fml1,BDD1),
-        construct_bdd(-Fml2,BDD2),
+construct_bdd(Fml1<=Fml2,Vars,BDD) :- !,
+        construct_bdd(Fml1,Vars,BDD1),
+        construct_bdd(-Fml2,Vars,BDD2),
         ite(BDD1,1,BDD2,BDD).
-construct_bdd(-Fml1,BDD) :- !,
-        construct_bdd(Fml1,BDD1),
+construct_bdd(-Fml1,Vars,BDD) :- !,
+        construct_bdd(Fml1,Vars,BDD1),
         ite(BDD1,0,1,BDD).
-construct_bdd(Fml1+Fml2,BDD) :- !,
-        construct_bdd(Fml1,BDD1),
-        construct_bdd(Fml2,BDD2),
+construct_bdd(Fml1+Fml2,Vars,BDD) :- !,
+        construct_bdd(Fml1,Vars,BDD1),
+        construct_bdd(Fml2,Vars,BDD2),
         ite(BDD1,1,BDD2,BDD).
-construct_bdd(Fml1*Fml2,BDD) :- !,
-        construct_bdd(Fml1,BDD1),
-        construct_bdd(Fml2,BDD2),
+construct_bdd(Fml1*Fml2,Vars,BDD) :- !,
+        construct_bdd(Fml1,Vars,BDD1),
+        construct_bdd(Fml2,Vars,BDD2),
         ite(BDD1,BDD2,0,BDD).
-construct_bdd(true,1) :- !.
-construct_bdd(false,0) :- !.
-construct_bdd(-true,0) :- !.
-construct_bdd(-false,1) :- !.
-construct_bdd((X=Y),1) :- X==Y,!.
-construct_bdd(-(X=Y),0) :- X==Y, !.
-construct_bdd(Atom,BDD) :- !,
-        bdd_atom(Atom),
-        simplify_atom(Atom,AtomS),
-        find_or_add_unique(AtomS,1,0,BDD).
 
 find_or_add_unique(_Label,B,B,B) :- !.
-find_or_add_unique(Label,Then,Else,BDD) :-
-        bdd_node(Label,Then,Else,BDD),!.
-find_or_add_unique(Label,Then,Else,BDD) :-
+find_or_add_unique(Label1,Then,Else,BDD) :-
+        bdd_node(Label2,Then,Else,BDD),
+        % need this to avoid unifying p(A) with p(f(A))
+        % (by default no occur check)
+        Label1 =@= Label2, !.
+find_or_add_unique(Label,Then,Else,BDD) :- !,
         retract(nodes(N)),
         N1 is N+1,
         assert(nodes(N1)),
@@ -339,12 +370,16 @@ least_label(L1,L2,L2) :-
 
 branch(Node,Label,_Value,Result) :-
         bdd_node(Label2,_Then,_Else,Node),
-        Label \= Label2,
+        Label \=@= Label2,
         Result=Node.
 branch(Node,Label,1,Result) :-
-        bdd_node(Label,Result,_Else,Node).
+        bdd_node(Label2,Then,_Else,Node),
+        Label =@= Label2,
+        Result=Then.
 branch(Node,Label,0,Result) :-
-        bdd_node(Label,_Then,Result,Node).
+        bdd_node(Label2,_Then,Else,Node),
+        Label =@= Label2,
+        Result=Else.
 
 cache_ite(F,G,H,R) :-
         assert(cached_ite(F,G,H,R)).
@@ -359,23 +394,11 @@ bdd_atom(Fml) :-
         Fml \= (_ + _),
         Fml \= (_ * _).
 
-simplify_atom(some([X|Vars],Fml),some([X|Vars],Fml2)) :- !,
-        term_to_atom(X,A),
-        subv(X,A,Fml,Fml3),
-        simplify_atom(some(Vars,Fml3),some(Vars,Fml4)),
-        subv(A,X,Fml4,Fml2).
-simplify_atom(some([],Fml),some([],Fml2)) :- !,
-        simplify_formula_bdd(Fml,Fml2).
-
-simplify_atom(all([X|Vars],Fml),all([X|Vars],Fml2)) :- !,
-        term_to_atom(X,A),
-        subv(X,A,Fml,Fml3),
-        simplify_atom(all(Vars,Fml3),all(Vars,Fml4)),
-        subv(A,X,Fml4,Fml2).
-simplify_atom(all([],Fml),all([],Fml2)) :- !,
-        simplify_formula_bdd(Fml,Fml2).
-
-simplify_atom(Atom,Atom).
+get_label(some(Vars,Fml),AllVars,(some(Vars,SFml),AllVars)) :- !,
+        simplify_formula_bdd(Fml,SFml).
+get_label(all(Vars,Fml),AllVars,(all(Vars,SFml),AllVars)) :- !,
+        simplify_formula_bdd(Fml,SFml).        
+get_label(Atom,AllVars,(Atom,AllVars)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BDD Output
