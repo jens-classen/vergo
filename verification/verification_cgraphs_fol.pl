@@ -216,14 +216,17 @@ report_labels(_,_,_,_) :- !.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 preimage(P,Phi,I,N,F) :-
-        findall(Pre,
-                (cg_edge(P,N,A,M,C1,V,C2),
-                 cg_label(P,Phi,I,M,Psi),
-                 regress(C1*some(V,C2*after(A,Psi)),R),
-                 simplify_fml(R,Pre)),
+        findall(Pre,                
+                preimage_edge(P,Phi,I,N,Pre),
                 PreList),
         disjoin(PreList,PreDis),
         simplify_fml(PreDis,F).
+
+preimage_edge(P,Phi,I,N,Pre) :-
+        cg_edge(P,N,A,M,C1,V,C2),
+        cg_label(P,Phi,I,M,Psi),
+        regress(C1*some(V,C2*after(A,Psi)),R),
+        simplify_fml(R,Pre).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Label caching
