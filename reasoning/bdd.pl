@@ -364,20 +364,20 @@ bdd_conjoin(BDD1,BDD2,BDD) :-
         ite(BDD1,BDD2,0,BDD).
 bdd_disjoin(BDD1,BDD2,BDD) :-
         ite(BDD1,1,BDD2,BDD).
+        
 
 least_label(L1,L2,L3,L) :-
         least_label(L1,L2,L4),
         least_label(L3,L4,L).
 
-least_label('___undef',L,L) :- !.
-least_label(L,'___undef',L) :- !.
-
 least_label(L1,L2,L1) :-
-        L1 @=< L2, !.
+        label_less_than(L1,L2), !.
 least_label(L1,L2,L2) :-
-        L1 @>= L2, !.
+        label_less_than(L2,L1), !.
         
-        
+label_less_than(L1,L2) :-
+        L1 @=< L2.
+
 
 branch(Node,Label,_Value,Result) :-
         bdd_node(Label2,_Then,_Else,Node),
