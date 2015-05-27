@@ -206,7 +206,7 @@ make_equalities([X|Xs],[Y|Ys],(X=Y)*Equ) :-
 make_inequalities([],[],false) :- !.
 make_inequalities([X],[Y],-(X=Y)) :- !.
 make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :-
-        make_equalities(Xs,Ys,Equ).
+        make_inequalities(Xs,Ys,Equ).
 
 unique_name(X) :-
         prim_action(X);
