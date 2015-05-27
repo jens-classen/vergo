@@ -374,8 +374,16 @@ least_label(L1,L2,L1) :-
         label_less_than(L1,L2), !.
 least_label(L1,L2,L2) :-
         label_less_than(L2,L1), !.
-        
-label_less_than(L1,L2) :-
+
+label_less_than(_,'___undef') :- !.
+label_less_than((all(_,F1),_),(all(_,F2),_)) :- !,
+        F1 @=< F2.
+label_less_than((some(_,F1),_),(some(_,F2),_)) :- !,
+        F1 @=< F2.
+label_less_than((all(_,_),_),(some(_,_),_)) :- !.
+label_less_than((all(_,_),_),(_,_)) :- !.
+label_less_than((some(_,_),_),(_,_)) :- !.
+label_less_than((L1,_),(L2,_)) :-
         L1 @=< L2.
 
 
