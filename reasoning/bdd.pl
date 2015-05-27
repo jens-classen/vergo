@@ -440,6 +440,23 @@ print_tabs(N) :- !,
         N1 is N-1,
         print_tabs(N1).
 
+% output all BDD nodes
+print_bdd_nodes :-
+        nodes(N),
+        print_bdd_nodes(N).
+
+print_bdd_nodes(N) :-
+        N > -1, !,
+        bdd_node(L,T,E,N),
+        write(N),
+        write(': '), write(L),
+        write(' T->'), write(T),
+        write(' F->'), write(E),
+        write('\n'),
+        N1 is N-1,
+        print_bdd_nodes(N1).
+print_bdd_nodes(_).
+
 % draw BDD using graphviz interface
 draw_bdd :-
         findall(e(N1,N2,1),(bdd_node(_,N2,_,N1),N1\=0,N1\=1),PosEdges),
