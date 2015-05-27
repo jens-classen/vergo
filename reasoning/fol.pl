@@ -137,21 +137,27 @@ write_formula(Stream, -F) :-
         write_formula(Stream, F),
         write(Stream, ' )').
 write_formula(Stream, some(V,F)) :-
-        is_list(V), !,
+        is_list(V), V \= [], !,
         write(Stream, '?'),
         write(Stream, V),
         write(Stream, ':'),
         write_formula(Stream, F).
 write_formula(Stream, some(V,F)) :-
+        var(V), !,
         write_formula(Stream, some([V],F)).
+write_formula(Stream, some([],F)) :- !,
+        write_formula(Stream, F).
 write_formula(Stream, all(V,F)) :-
-        is_list(V), !,
+        is_list(V), V \= [], !,
         write(Stream, '!'),
         write(Stream, V),
         write(Stream, ':'),
         write_formula(Stream, F).
 write_formula(Stream, all(V,F)) :-
+        var(V), !,
         write_formula(Stream, all([V],F)).
+write_formula(Stream, all([],F)) :- !,
+        write_formula(Stream, F).
 write_formula(Stream, true) :-
         write(Stream, '$true').
 write_formula(Stream, false) :-
