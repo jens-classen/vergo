@@ -270,7 +270,7 @@ bdd2formula(-Fml,Vars,BDD) :-
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),1,E,BDD),!,
         bdd2formula(FmlE,Vars,E),
-        Fml = Fml2+((-Fml2)*FmlE).
+        Fml = Fml2+FmlE.
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),0,E,BDD),!,
         bdd2formula(FmlE,Vars,E),
@@ -278,7 +278,7 @@ bdd2formula(Fml,Vars,BDD) :-
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),T,1,BDD),!,
         bdd2formula(FmlT,Vars,T),
-        Fml = (Fml2*FmlT)+(-Fml2).
+        Fml = FmlT+(-Fml2).
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),T,0,BDD),!,
         bdd2formula(FmlT,Vars,T),
