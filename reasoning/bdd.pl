@@ -58,13 +58,50 @@ bdd_node('___undef','___undef','___undef',1).
 :- abolish(simplify/2).
 
 simplify(Fml1,Fml2) :- !,
-        term_variables(Fml1,Vars),
+        free_variables(Fml1,Vars),
         formula2bdd(Fml1,Vars,BDD),
         bdd2formula(Fml2,Vars,BDD).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preprocessing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+free_variables(Fml1*Fml2,Vars) :- !,
+        free_variables(Fml1,Vars1),
+        free_variables(Fml2,Vars2),
+        union2(Vars1,Vars2,Vars).
+free_variables(Fml1+Fml2,Vars) :- !,
+        free_variables(Fml1,Vars1),
+        free_variables(Fml2,Vars2),
+        union2(Vars1,Vars2,Vars).
+free_variables(-Fml,Vars) :- !,
+        free_variables(Fml,Vars).
+free_variables(Fml1<=>Fml2,Vars) :- !,
+        free_variables(Fml1,Vars1),
+        free_variables(Fml2,Vars2),
+        union2(Vars1,Vars2,Vars).
+free_variables(Fml1=>Fml2,Vars) :- !,
+        free_variables(Fml1,Vars1),
+        free_variables(Fml2,Vars2),
+        union2(Vars1,Vars2,Vars).
+free_variables(Fml1<=Fml2,Vars) :- !,
+        free_variables(Fml1,Vars1),
+        free_variables(Fml2,Vars2),
+        union2(Vars1,Vars2,Vars).
+free_variables(some(X,Fml),Vars) :-
+        var(X), !,
+        free_variables(some([X],Fml),Vars).
+free_variables(all(X,Fml),Vars) :-
+        var(X), !,
+        free_variables(all([X],Fml),Vars).
+free_variables(some(Vars2,Fml),Vars) :- !,
+        free_variables(Fml,Vars3),
+        setminus2(Vars3,Vars2,Vars).
+free_variables(all(Vars2,Fml),Vars) :- !,
+        free_variables(Fml,Vars3),
+        setminus2(Vars3,Vars2,Vars).
+free_variables(Fml,Vars) :- !,
+        term_variables(Fml,Vars).
 
 % always use variable *lists* in quantifiers
 preprocess(some(X,Fml),R) :-
