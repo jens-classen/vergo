@@ -6,6 +6,7 @@
            atom_string/2,
            string_codes/2,
            subset2/2,
+           union2/3,
            intersection2/3,
            setminus2/3,
            disjoint2/2,
@@ -35,6 +36,13 @@ subset2([X|Xs],Ys) :-
         member2(X,Ys),
         subset2(Xs,Ys).
 subset2([],_Ys).
+
+union2([X|Xs],Ys,[X|Zs]) :-
+        not(member2(X,Ys)), !,
+        union2(Xs,Ys,Zs).
+union2([_|Xs],Ys,Zs) :-
+        union2(Xs,Ys,Zs).
+union2([],Ys,Ys).
 
 intersection2([X|Xs],Ys,[X|Zs]) :-
         member2(X,Ys), !,
