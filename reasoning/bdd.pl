@@ -182,11 +182,6 @@ preprocess(some(Vars,Fml),some(Vars,R)) :- !,
 preprocess(all(Vars,Fml),all(Vars,R)) :- !,
         preprocess(Fml,R).
 
-preprocess(some(Vars,Fml),some(Vars,R)) :- !,
-        preprocess(Fml,R).
-preprocess(all(Vars,Fml),all(Vars,R)) :- !,
-        preprocess(Fml,R).
-
 preprocess(Fml1<=>Fml2,R) :- !,
         preprocess((Fml1=>Fml2)*(Fml2=>Fml1),R).
 preprocess(Fml1=>Fml2,R) :- !,
