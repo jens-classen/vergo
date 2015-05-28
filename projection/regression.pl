@@ -183,10 +183,6 @@ apply_una((F1+F2),(F3+F4)) :- !,
 apply_una((F1*F2),(F3*F4)) :- !,
         apply_una(F1,F3),
         apply_una(F2,F4).
-apply_una(some(Vars,F1),some(Vars,F2)) :- !,
-        apply_una(F1,F2).
-apply_una(all(Vars,F1),all(Vars,F2)) :- !,
-        apply_una(F1,F2).
 apply_una((F1<=>F2),(F3<=>F4)) :- !,
         apply_una(F1,F3),
         apply_una(F2,F4).
@@ -196,6 +192,15 @@ apply_una((F1=>F2),(F3=>F4)) :- !,
 apply_una((F1<=F2),(F3<=F4)) :- !,
         apply_una(F1,F3),
         apply_una(F2,F4).
+% ?[A]:(?[X]:(A=f(X))&F) --> ?[X]:F with A replaced by f(X)
+apply_una(some([A],F1),some(Vars,F4)) :- % (*)
+        action_equality_conjunct(A,Act,F1,F2,Vars), !,
+        subv(A,Act,F2,F3),
+        apply_una(F3,F4).
+apply_una(some(Vars,F1),some(Vars,F2)) :- !,
+        apply_una(F1,F2).
+apply_una(all(Vars,F1),all(Vars,F2)) :- !,
+        apply_una(F1,F2).
 
 apply_una(F,F) :- !.
 
@@ -211,3 +216,36 @@ make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :-
 unique_name(X) :-
         prim_action(X);
         stdname(X).
+
+/**
+  * action_equality_conjunct(-A,-Act,+Fml1,-Fml2,-Vars) is nondet
+  *
+  * If A is an existentially quantified variable representing an
+  * action, this predicate looks for a conjunct in formula Fml1 
+  * of the form some(Vars,(A=Act)*F) (modulo ordering) that will be
+  * replaced by F in the process. Act and Vars will be returned such
+  * that A can be substituted by Act and some([A],...) by 
+  * some(Vars,...) in the process in rule (*) of apply_una above.
+  *
+  * @arg A    a (logical) variable, representing an action
+  * @arg Act  a (non-variable) action term
+  * @arg Fml1 a formula
+  * @arg Fml2 resulting formula
+  * @arg Vars quantified variables
+  */
+action_equality_conjunct(A,Act,(X=Y),(X=Y),[]) :-
+        A==X,
+        nonvar(Y),
+        unique_name(Y),
+        Act=Y.
+action_equality_conjunct(A,Act,(X=Y),(X=Y),[]) :-
+        A==Y,
+        nonvar(X),
+        unique_name(X),
+        Act=X.
+action_equality_conjunct(A,Act,some(Vars,F),F,Vars) :-
+        action_equality_conjunct(A,Act,F,F,[]).
+action_equality_conjunct(X,Y,Fml1*Fml2,Fml1P*Fml2,Vars) :-
+        action_equality_conjunct(X,Y,Fml1,Fml1P,Vars).
+action_equality_conjunct(X,Y,Fml1*Fml2,Fml1*Fml2P,Vars) :-
+        action_equality_conjunct(X,Y,Fml2,Fml2P,Vars).
