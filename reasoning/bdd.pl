@@ -187,9 +187,11 @@ equality_conjunct(X,Y,Fml1*Fml2) :-
         equality_conjunct(X,Y,Fml2).
 
 inequality_disjunct(X,Y,-(A=B)) :-
+        not(A==B), % else no substitution necessary
         X==A,
         Y=B.
 inequality_disjunct(X,Y,-(A=B)) :-
+        not(A==B), % else no substitution necessary
         X==B,
         Y=A.
 inequality_disjunct(X,Y,Fml1+Fml2) :-
