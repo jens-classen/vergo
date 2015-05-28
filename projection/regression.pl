@@ -43,8 +43,9 @@ ssa(Fluent,A,Condition) :- rel_fluent(Fluent), nonvar(A), !,
  
 ssa(Fluent=Y,A,Condition) :- fun_fluent(Fluent), var(A), !,
         condition(causes(B,Fluent,Y,Phi),Phi,B,A,Cond),
-        copy_term((Cond,A,Y),(CondC,A,X)),
-        Condition2 = Cond+(Fluent=Y)*(-some(X,CondC)),
+        copy_term((Cond,A),(CondC,A)),
+        subv(Y,X,CondC,CondD), % Y may not be a variable
+        Condition2 = Cond+(Fluent=Y)*(-some(X,CondD)),
         simplify(Condition2,Condition).
 ssa(Fluent=Y,A,Condition) :- fun_fluent(Fluent), nonvar(A), !,
         ssa(Fluent=Y,B,Condition3), B=A,
