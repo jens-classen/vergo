@@ -351,9 +351,8 @@ cgraph_file(File,ProgramName) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % use fol simplification
-simplify_fml(F,R) :- simplify(F,R).
-
-% use bdd simplification
-%simplify_fml(F,R) :- 
-%        simplify(F,S), % first b/c of UNA
-%        simplify_formula_bdd(S,R).
+simplify_fml(F,R) :-
+        apply_una(F,G),
+        simplify(G,H),
+        apply_una(H,I),
+        simplify(I,R).
