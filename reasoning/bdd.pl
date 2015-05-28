@@ -175,9 +175,11 @@ preprocess(Fml1*Fml2,R1*R2) :- !,
 preprocess(R,R) :- !.
 
 equality_conjunct(X,Y,(A=B)) :-
+        not(A==B), % else no substitution necessary
         X==A,
         Y=B.
 equality_conjunct(X,Y,(A=B)) :-
+        not(A==B), % else no substitution necessary
         X==B,
         Y=A.
 equality_conjunct(X,Y,Fml1*Fml2) :-
