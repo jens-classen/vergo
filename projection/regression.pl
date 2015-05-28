@@ -197,6 +197,19 @@ apply_una(some([A],F1),some(Vars,F4)) :- % (*)
         action_equality_conjunct(A,Act,F1,F2,Vars), !,
         subv(A,Act,F2,F3),
         apply_una(F3,F4).
+% simplification using standard names
+apply_una(some([X],-(Y=Z)),true) :-
+        X==Y,
+        unique_name(Z), !.
+apply_una(some([X],-(Z=Y)),true) :-
+        X==Y,
+        unique_name(Z), !.
+apply_una(all([X],(Y=Z)),false) :-
+        X==Y,
+        unique_name(Z), !.
+apply_una(all([X],(Z=Y)),false) :-
+        X==Y,
+        unique_name(Z), !.
 apply_una(some(Vars,F1),some(Vars,F2)) :- !,
         apply_una(F1,F2).
 apply_una(all(Vars,F1),all(Vars,F2)) :- !,
