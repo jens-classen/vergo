@@ -90,11 +90,6 @@ free_variables(all(Vars2,Fml),Vars) :- !,
 free_variables(Fml,Vars) :- !,
         term_variables(Fml,Vars).
 
-preprocess(F,R) :-
-        simplify(F,F2),
-        F \= F2, !,
-        preprocess(F2,R).
-
 % always use variable *lists* in quantifiers
 preprocess(some(X,Fml),R) :-
         var(X), !,
@@ -189,6 +184,12 @@ preprocess(some(Vars,Fml),some(Vars,R)) :- !,
         preprocess(Fml,R).
 preprocess(all(Vars,Fml),all(Vars,R)) :- !,
         preprocess(Fml,R).
+
+% apply simple FOL simplifications if possible
+preprocess(F,R) :-
+        simplify(F,F2),
+        F \= F2, !,
+        preprocess(F2,R).
 
 preprocess(Fml1<=>Fml2,R) :- !,
         preprocess((Fml1=>Fml2)*(Fml2=>Fml1),R).
@@ -477,9 +478,9 @@ bdd_atom(Fml) :-
         Fml \= (_ * _).
 
 get_label(some(Vars,Fml),AllVars,(some(Vars,SFml),AllVars)) :- !,
-        simplify(Fml,SFml).
+        simplify_bdd(Fml,SFml).
 get_label(all(Vars,Fml),AllVars,(all(Vars,SFml),AllVars)) :- !,
-        simplify(Fml,SFml).        
+        simplify_bdd(Fml,SFml).        
 get_label(Atom,AllVars,(Atom,AllVars)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
