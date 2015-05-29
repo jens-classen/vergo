@@ -20,27 +20,17 @@ Conference (DAC 1990), pages 40–45. IEEE Computer Society Press, 1990.
 
 for propositional BDDs. Instead of a hash table, facts of the
 (dynamic) predicate bdd_node/4 are used to store nodes. Prolog's
-built-in term order '@<' is used for ordering nodes.
+built-in term order is used for ordering nodes.
 
 @author  Jens Claßen
 @license GPL
 
  **/
 
-:- module(bdd, [entails/2,
-                inconsistent/1,
-                consistent/1,
-                consistent/2,
-                equivalent/2,
-                simplify/2,
-                disjoin/2,
-                conjoin/2,
-                op(1130, xfy, <=>),
-                op(1110, xfy, <=),
-                op(1110, xfy, =>)]).
+:- module(bdd, [simplify_bdd/2]).
 
-:- use_module(fol).
 :- use_module('../lib/utils').
+:- use_module('../reasoning/fol').
 
 %:- use_module(library(graph_algorithms)).
 %:- use_module(library(graphviz)).
@@ -54,10 +44,7 @@ nodes(1).
 bdd_node('___undef','___undef','___undef',0).
 bdd_node('___undef','___undef','___undef',1).
 
-% overrides fol's simplify/2
-:- abolish(simplify/2).
-
-simplify(Fml1,Fml2) :- !,
+simplify_bdd(Fml1,Fml2) :- !,
         free_variables(Fml1,Vars),
         formula2bdd(Fml1,Vars,BDD),
         bdd2formula(Fml2,Vars,BDD).
@@ -103,6 +90,11 @@ free_variables(all(Vars2,Fml),Vars) :- !,
 free_variables(Fml,Vars) :- !,
         term_variables(Fml,Vars).
 
+preprocess(F,R) :-
+        simplify(F,F2),
+        F \= F2, !,
+        preprocess(F2,R).
+
 % always use variable *lists* in quantifiers
 preprocess(some(X,Fml),R) :-
         var(X), !,
@@ -121,23 +113,34 @@ preprocess(all(Vars,-Fml),R) :-
         -Fml \= Fml2, !,
         preprocess(all(Vars,Fml2),R).
 
-% ?[X]:(X=T)&F --> F with X replaced by T
-preprocess(some([X|Vars],Fml),R) :-
-        equality_conjunct(X,Y,Fml),!,
-        subv(X,Y,Fml,Fml2),
-        preprocess(some(Vars,Fml2),R).
-% ![X]:~(X=T)|F --> F with X replaced by T
-preprocess(all([X|Vars],Fml),R) :-
-        inequality_disjunct(X,Y,Fml),!,
-        subv(X,Y,Fml,Fml2),
-        preprocess(all(Vars,Fml2),R).
-
 % distribute "exists" over disjunction
 preprocess(some(Vars,Fml1+Fml2),R) :- !,
         preprocess(some(Vars,Fml1)+some(Vars,Fml2),R).
 % distribute "forall" over conjunction
 preprocess(all(Vars,Fml1*Fml2),R) :- !,
         preprocess(all(Vars,Fml1)*all(Vars,Fml2),R).
+
+% reduce scope of existential to conjuncts where that variable appears
+preprocess(some(Vars,Fml),R) :-
+        conjuncts_with_without(Vars,Fml,ConW,ConWO),
+        ConWO \= true, !,
+        preprocess(some(Vars,ConW)*ConWO,R).
+% reduce scope of universal to conjuncts where that variable appears
+preprocess(all(Vars,Fml),R) :-
+        disjuncts_with_without(Vars,Fml,DisW,DisWO),
+        DisWO \= false, !,
+        preprocess(all(Vars,DisW)+DisWO,R).
+
+% ?[X]:(X=T)&F --> F with X replaced by T
+preprocess(some(Vars,Fml),R) :-
+        handle_equality_conjuncts(Vars,Fml,Vars2,Fml2),
+        some(Vars,Fml) \= some(Vars2,Fml2), !,
+        preprocess(some(Vars2,Fml2),R).
+% ![X]:~(X=T)|F --> F with X replaced by T
+preprocess(all(Vars,Fml),R) :-
+        handle_inequality_disjuncts(Vars,Fml,Vars2,Fml2),
+        all(Vars,Fml) \= all(Vars2,Fml2), !,
+        preprocess(all(Vars2,Fml2),R).
 
 % drop quantifiers for non-appearing variables
 preprocess(some(Vars1,Fml),R) :-
@@ -158,25 +161,30 @@ preprocess(all([],Fml),R) :- !,
         preprocess(Fml,R).
 
 % combine quantifiers
+preprocess(some(Vars1,some(Var,Fml)),R) :- 
+        var(Var), !,
+        append(Vars1,[Var],Vars),
+        preprocess(some(Vars,Fml),R).
 preprocess(some(Vars1,some(Vars2,Fml)),R) :- !,
         append(Vars1,Vars2,Vars),
         preprocess(some(Vars,Fml),R).
+preprocess(all(Vars1,all(Var,Fml)),R) :- 
+        var(Var), !,
+        append(Vars1,[Var],Vars),
+        preprocess(all(Vars,Fml),R).
 preprocess(all(Vars1,all(Vars2,Fml)),R) :- !,
         append(Vars1,Vars2,Vars),
         preprocess(all(Vars,Fml),R).
 
-% reduce scope of existential to conjuncts where that variable appears
-preprocess(some(Vars,Fml),R) :-
-        conjuncts_with_without(Vars,Fml,ConW,ConWO),
-        ConWO \= true, !,
-        preprocess(some(Vars,ConW)*ConWO,R).
-% reduce scope of universal to conjuncts where that variable appears
-preprocess(all(Vars,Fml),R) :-
-        disjuncts_with_without(Vars,Fml,DisW,DisWO),
-        DisWO \= false, !,
-        preprocess(all(Vars,DisW)+DisWO,R).
-
 % recursive preprocessing of subformulas
+preprocess(some(Vars,Fml),R) :-
+        preprocess(Fml,Fml2),
+        Fml \= Fml2, !,
+        preprocess(some(Vars,Fml2),R).
+preprocess(all(Vars,Fml),R) :-
+        preprocess(Fml,Fml2),
+        Fml \= Fml2, !,
+        preprocess(all(Vars,Fml2),R).
 preprocess(some(Vars,Fml),some(Vars,R)) :- !,
         preprocess(Fml,R).
 preprocess(all(Vars,Fml),all(Vars,R)) :- !,
@@ -205,6 +213,22 @@ preprocess(Fml1*Fml2,R1*R2) :- !,
 
 % else do nothing
 preprocess(R,R) :- !.
+
+handle_equality_conjuncts([X|Vars],Fml,Vars2,Fml3) :-
+        equality_conjunct(X,Y,Fml), !,
+        subv(X,Y,Fml,Fml2),
+        handle_equality_conjuncts(Vars,Fml2,Vars2,Fml3).
+handle_equality_conjuncts([X|Vars],Fml,[X|Vars2],Fml2) :-
+        handle_equality_conjuncts(Vars,Fml,Vars2,Fml2).
+handle_equality_conjuncts([],Fml,[],Fml).
+
+handle_inequality_disjuncts([X|Vars],Fml,Vars2,Fml3) :-
+        inequality_disjunct(X,Y,Fml), !,
+        subv(X,Y,Fml,Fml2),
+        handle_inequality_disjuncts(Vars,Fml2,Vars2,Fml3).
+handle_inequality_disjuncts([X|Vars],Fml,[X|Vars2],Fml2) :-
+        handle_inequality_disjuncts(Vars,Fml,Vars2,Fml2).
+handle_inequality_disjuncts([],Fml,[],Fml).
 
 equality_conjunct(X,Y,(A=B)) :-
         not(A==B), % else no substitution necessary
@@ -305,7 +329,7 @@ bdd2formula(-Fml,Vars,BDD) :-
         bdd_node((Fml,Vars),0,1,BDD),!.
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),1,E,BDD),!,
-        bdd2formula(FmlE,Vars,E),
+        bdd2formula(FmlE,Vars,E),        
         Fml = Fml2+FmlE.
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),0,E,BDD),!,
@@ -420,8 +444,11 @@ label_less_than((all(_,_),_),(some(_,_),_)) :- !.
 label_less_than((all(_,_),_),(_,_)) :- !.
 label_less_than((some(_,_),_),(_,_)) :- !.
 label_less_than((L1,_),(L2,_)) :-
+        L1 \= all(_,_), 
+        L1 \= some(_,_),
+        L2 \= all(_,_),
+        L2 \= some(_,_), !,
         L1 @=< L2.
-
 
 branch(Node,Label,_Value,Result) :-
         bdd_node(Label2,_Then,_Else,Node),

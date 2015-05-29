@@ -16,6 +16,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
+:- use_module('../reasoning/fol').
+:- use_module('../reasoning/bdd').
 
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).
@@ -352,7 +354,6 @@ cgraph_file(File,ProgramName) :-
 
 % use fol simplification
 simplify_fml(F,R) :-
-        apply_una(F,G),
-        simplify(G,H),
-        apply_una(H,I),
-        simplify(I,R).
+        apply_una(F,F2),
+        simplify_bdd(F2,F3),
+        apply_una(F3,R).

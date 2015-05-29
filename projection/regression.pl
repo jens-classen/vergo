@@ -2,9 +2,8 @@
 % Regression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% this file requires the simplify/2 predicate from fol or bdd module
-
 :- use_module('../lib/utils').
+:- use_module('../reasoning/fol').
 
 :- multifile prim_action/1.
 :- multifile rel_fluent/1.
