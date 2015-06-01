@@ -2,6 +2,7 @@
                 inconsistent/1,
                 consistent/1,
                 consistent/2,
+                valid/1,
                 equivalent/2,
                 simplify/2,
                 disjoin/2,
@@ -65,6 +66,10 @@ consistent(ListOfFormulas) :-
 consistent(ListOfFormulas1, ListOfFormulas2) :-
         append(ListOfFormulas1, ListOfFormulas2, ListOfFormulas),
         consistent(ListOfFormulas).
+
+/* Succeeds if Formula is valid. */
+valid(Formula) :-
+        entails([true],Formula).
 
 /* Succeeds if Formula1 and Formula2 are equivlanet. */
 equivalent(Formula1,Formula2) :-
