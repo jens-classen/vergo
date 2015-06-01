@@ -27,7 +27,7 @@ built-in term order is used for ordering nodes.
 
  **/
 
-:- module(bdd, [simplify_bdd/2]).
+:- module(bdd, [reduce/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
@@ -44,7 +44,7 @@ nodes(1).
 bdd_node('___undef','___undef','___undef',0).
 bdd_node('___undef','___undef','___undef',1).
 
-simplify_bdd(Fml1,Fml2) :- !,
+reduce(Fml1,Fml2) :- !,
         free_variables(Fml1,Vars),
         formula2bdd(Fml1,Vars,BDD),
         bdd2formula(Fml2,Vars,BDD).
@@ -478,9 +478,9 @@ bdd_atom(Fml) :-
         Fml \= (_ * _).
 
 get_label(some(Vars,Fml),AllVars,(some(Vars,SFml),AllVars)) :- !,
-        simplify_bdd(Fml,SFml).
+        reduce(Fml,SFml).
 get_label(all(Vars,Fml),AllVars,(all(Vars,SFml),AllVars)) :- !,
-        simplify_bdd(Fml,SFml).        
+        reduce(Fml,SFml).        
 get_label(Atom,AllVars,(Atom,AllVars)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
