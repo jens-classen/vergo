@@ -38,6 +38,7 @@ built-in term order is used for ordering nodes.
 :- dynamic bdd_node/4. % table entries
 :- dynamic nodes/1.    % highest table index
 :- dynamic cached_ite/4.
+:- dynamic cached_implies/4.
 
 nodes(1).
 
@@ -330,25 +331,25 @@ bdd2formula(-Fml,Vars,BDD) :-
         bdd_node((Fml,Vars),0,1,BDD),!.
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),1,E,BDD),!,
-        bdd2formula(FmlE,Vars,E),        
-        Fml = Fml2+FmlE.
+        bdd2formula(FmlE,Vars,E),
+        simplify_deps(Fml2+FmlE,Vars,Fml).
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),0,E,BDD),!,
         bdd2formula(FmlE,Vars,E),
-        Fml = (-Fml2)*FmlE.
+        simplify_deps((-Fml2)*FmlE,Vars,Fml).
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),T,1,BDD),!,
         bdd2formula(FmlT,Vars,T),
-        Fml = FmlT+(-Fml2).
+        simplify_deps(FmlT+(-Fml2),Vars,Fml).
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml2,Vars),T,0,BDD),!,
         bdd2formula(FmlT,Vars,T),
-        Fml = Fml2*FmlT.
+        simplify_deps(Fml2*FmlT,Vars,Fml).
 bdd2formula(Fml,Vars,BDD) :-
         bdd_node((Fml3,Vars),Then,Else,BDD),
         bdd2formula(Fml1,Vars,Then),
         bdd2formula(Fml2,Vars,Else),!,
-        Fml = (Fml3*Fml1)+((-Fml3)*Fml2).
+        simplify_deps((Fml3*Fml1)+((-Fml3)*Fml2),Vars,Fml).
 
 construct_bdd(true,_Vars,1) :- !.
 construct_bdd(false,_Vars,0) :- !.
@@ -477,11 +478,55 @@ bdd_atom(Fml) :-
         Fml \= (_ + _),
         Fml \= (_ * _).
 
-get_label(some(Vars,Fml),AllVars,(some(Vars,SFml),AllVars)) :- !,
-        reduce(Fml,SFml).
-get_label(all(Vars,Fml),AllVars,(all(Vars,SFml),AllVars)) :- !,
-        reduce(Fml,SFml).        
+get_label(some(Vars,Fml),AllVars,L) :- !,
+        reduce(Fml,SFml),
+        L = (some(Vars,SFml),AllVars).
+get_label(all(Vars,Fml),AllVars,L) :- !,
+        reduce(Fml,SFml),
+        L = (all(Vars,SFml),AllVars).
 get_label(Atom,AllVars,(Atom,AllVars)).
+
+%simplify_deps(_,_,Vars,_) :-
+%        Vars \= [], !, fail.
+
+% simplify formulas checking dependencies between subformulas
+% (using FOL reasoning / theorem proving)
+simplify_deps((Fml3*Fml1)+((-Fml3)*Fml2),Vars,Fml1) :-
+        implies(Fml1,Fml2,Vars),
+        implies(Fml2,Fml1,Vars), !.
+simplify_deps(Fml1+Fml2,Vars,Fml2) :-
+        implies(Fml1,Fml2,Vars), !.
+simplify_deps(Fml1+Fml2,Vars,Fml1) :-
+        implies(Fml2,Fml1,Vars), !.
+simplify_deps(Fml1+Fml2,Vars,true) :-
+        implies(-Fml1,Fml2,Vars), !.
+simplify_deps(Fml1+Fml2,Vars,true) :-
+        implies(-Fml2,Fml1,Vars), !.
+simplify_deps(Fml1*Fml2,Vars,Fml1) :-
+        implies(Fml1,Fml2,Vars), !.
+simplify_deps(Fml1*Fml2,Vars,Fml2) :-
+        implies(Fml2,Fml1,Vars), !.
+simplify_deps(Fml1*Fml2,Vars,false) :-
+        implies(Fml1,-Fml2,Vars), !.
+simplify_deps(Fml1*Fml2,Vars,false) :-
+        implies(Fml2,-Fml1,Vars), !.
+simplify_deps(Fml,_Vars,Fml) :- !.
+
+implies(Fml1,-(-Fml2),Vars) :- !,
+        implies(Fml1,Fml2,Vars).
+implies(Fml1,Fml2,Vars) :-
+        cached_implies(Fml1,Fml2,Vars,true), !.
+implies(Fml1,Fml2,Vars) :-
+        cached_implies(Fml1,Fml2,Vars,false), !, fail.
+implies(Fml1,Fml2,Vars) :-
+        % as one formula b/c of free variables
+        % => use (automatic) universal closure
+        valid(all(Vars,Fml1=>Fml2)), !,
+        assert(cached_implies(Fml1,Fml2,Vars,true)).
+implies(Fml1,Fml2,Vars) :- !,
+        assert(cached_implies(Fml1,Fml2,Vars,false)),
+        fail.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BDD Output
