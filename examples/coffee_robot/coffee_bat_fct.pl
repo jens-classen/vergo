@@ -52,6 +52,7 @@ exo(requestCoffee(_),true).
 
 stdname(e).
 stdname(q(_,_)).
+stdname(bob).
 
 include_preconditions. % everything is precondition-extended
 
