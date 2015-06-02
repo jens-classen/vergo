@@ -109,24 +109,6 @@ preprocess(all(Vars,-Fml),R) :-
         -Fml \= Fml2, !,
         preprocess(all(Vars,Fml2),R).
 
-% distribute "exists" over disjunction
-preprocess(some(Vars,Fml1+Fml2),R) :- !,
-        preprocess(some(Vars,Fml1)+some(Vars,Fml2),R).
-% distribute "forall" over conjunction
-preprocess(all(Vars,Fml1*Fml2),R) :- !,
-        preprocess(all(Vars,Fml1)*all(Vars,Fml2),R).
-
-% reduce scope of existential to conjuncts where that variable appears
-preprocess(some(Vars,Fml),R) :-
-        conjuncts_with_without(Vars,Fml,ConW,ConWO),
-        ConWO \= true, !,
-        preprocess(some(Vars,ConW)*ConWO,R).
-% reduce scope of universal to conjuncts where that variable appears
-preprocess(all(Vars,Fml),R) :-
-        disjuncts_with_without(Vars,Fml,DisW,DisWO),
-        DisWO \= false, !,
-        preprocess(all(Vars,DisW)+DisWO,R).
-
 % ?[X]:(X=T)&F --> F with X replaced by T
 preprocess(some(Vars,Fml),R) :-
         handle_equality_conjuncts(Vars,Fml,Vars2,Fml2),
@@ -156,6 +138,30 @@ preprocess(some([],Fml),R) :- !,
 preprocess(all([],Fml),R) :- !,
         preprocess(Fml,R).
 
+% distribute "exists" over disjunction
+preprocess(some(Vars,Fml),R) :-
+        disjuncts(Fml,Disj),
+        distribute_exists_disjuncts(Vars,Disj,Fml2),
+        Fml2 \= some(Vars,Fml), !,
+        preprocess(Fml2,R).
+% distribute "forall" over conjunction
+preprocess(all(Vars,Fml),R) :-
+        conjuncts(Fml,Conj),
+        distribute_forall_conjuncts(Vars,Conj,Fml2),
+        Fml2 \= all(Vars,Fml), !,
+        preprocess(Fml2,R).
+
+% reduce scope of existential to conjuncts where that variable appears
+preprocess(some(Vars,Fml),R) :-
+        conjuncts_with_without(Vars,Fml,ConW,ConWO),
+        ConWO \= true, !,
+        preprocess(some(Vars,ConW)*ConWO,R).
+% reduce scope of universal to conjuncts where that variable appears
+preprocess(all(Vars,Fml),R) :-
+        disjuncts_with_without(Vars,Fml,DisW,DisWO),
+        DisWO \= false, !,
+        preprocess(all(Vars,DisW)+DisWO,R).
+
 % combine quantifiers
 preprocess(some(Vars1,some(Var,Fml)),R) :- 
         var(Var), !,
@@ -181,10 +187,6 @@ preprocess(all(Vars,Fml),R) :-
         preprocess(Fml,Fml2),
         Fml \= Fml2, !,
         preprocess(all(Vars,Fml2),R).
-preprocess(some(Vars,Fml),some(Vars,R)) :- !,
-        preprocess(Fml,R).
-preprocess(all(Vars,Fml),all(Vars,R)) :- !,
-        preprocess(Fml,R).
 
 % apply simple FOL simplifications if possible
 preprocess(F,R) :-
@@ -192,6 +194,11 @@ preprocess(F,R) :-
         F \= F2, !,
         preprocess(F2,R).
 
+% if none of the other cases works
+preprocess(some(Vars,Fml),some(Vars,R)) :- !,
+        preprocess(Fml,R).
+preprocess(all(Vars,Fml),all(Vars,R)) :- !,
+        preprocess(Fml,R).
 preprocess(Fml1<=>Fml2,R) :- !,
         preprocess((Fml1=>Fml2)*(Fml2=>Fml1),R).
 preprocess(Fml1=>Fml2,R) :- !,
@@ -215,6 +222,58 @@ preprocess(Fml1*Fml2,R1*R2) :- !,
 
 % else do nothing
 preprocess(R,R) :- !.
+
+disjuncts((F1+F2)*F3,F4+F5) :- !,
+        disjuncts(F1*F3,F4),
+        disjuncts(F2*F3,F5).
+disjuncts(F1*(F2+F3),F4+F5) :- !,
+        disjuncts(F1*F2,F4),
+        disjuncts(F1*F3,F5).     
+disjuncts(F1*F2,R) :- !,
+        disjuncts(F1,F3),
+        disjuncts(F2,F4),
+        disjuncts2(F3,F4,R).
+disjuncts(F1+F2,F3+F4) :- !,
+        disjuncts(F1,F3),
+        disjuncts(F2,F4).
+disjuncts(F,F).
+
+disjuncts2(F1+F2,F3,R) :- !,
+        disjuncts((F1+F2)*F3,R).
+disjuncts2(F1,F2+F3,R) :- !,
+        disjuncts(F1*(F2+F3),R).
+disjuncts2(F1,F2,F1*F2).
+
+distribute_exists_disjuncts(Vars,Fml1+Fml2,R1+R2) :- !,
+        distribute_exists_disjuncts(Vars,Fml1,R1),
+        distribute_exists_disjuncts(Vars,Fml2,R2).
+distribute_exists_disjuncts(Vars,Fml,some(Vars,Fml)).
+
+conjuncts((F1*F2)+F3,F4*F5) :- !,        
+        conjuncts(F1+F3,F4),
+        conjuncts(F2+F3,F5).
+conjuncts(F1+(F2*F3),F4*F5) :- !,
+        conjuncts(F1+F2,F4),
+        conjuncts(F1+F3,F5).     
+conjuncts(F1+F2,R) :- !,
+        conjuncts(F1,F3),
+        conjuncts(F2,F4),
+        conjuncts2(F3,F4,R).
+conjuncts(F1*F2,F3*F4) :- !,
+        conjuncts(F1,F3),
+        conjuncts(F2,F4).
+conjuncts(F,F).
+
+conjuncts2(F1*F2,F3,R) :- !,
+        conjuncts((F1*F2)+F3,R).
+conjuncts2(F1,F2*F3,R) :- !,
+        conjuncts(F1+(F2*F3),R).
+conjuncts2(F1,F2,F1+F2).
+
+distribute_forall_conjuncts(Vars,Fml1*Fml2,R1*R2) :- !,
+        distribute_forall_conjuncts(Vars,Fml1,R1),
+        distribute_forall_conjuncts(Vars,Fml2,R2).
+distribute_forall_conjuncts(Vars,Fml,all(Vars,Fml)).
 
 handle_equality_conjuncts([X|Vars],Fml,Vars2,Fml3) :-
         equality_conjunct(X,Y,Fml), !,
@@ -480,14 +539,24 @@ bdd_atom(Fml) :-
 
 get_label(some(Vars,Fml),AllVars,L) :- !,
         reduce(Fml,SFml),
-        L = (some(Vars,SFml),AllVars).
+        get_canonical_label(some(Vars,SFml),AllVars,L).
 get_label(all(Vars,Fml),AllVars,L) :- !,
         reduce(Fml,SFml),
-        L = (all(Vars,SFml),AllVars).
+        get_canonical_label(all(Vars,SFml),AllVars,L).
 get_label(Atom,AllVars,(Atom,AllVars)).
 
-%simplify_deps(_,_,Vars,_) :-
-%        Vars \= [], !, fail.
+% idea/todo: look for smallest, equivalent label formula
+%get_canonical_label(some(Vars,Fml),AllVars,L) :-
+%        bdd_node((some(Vars2,Fml2),AllVars),_,_,_),
+%        implies(some(Vars,Fml),some(Vars2,Fml2),AllVars),
+%        implies(some(Vars2,Fml2),some(Vars,Fml),AllVars), !,
+%        L = (some(Vars2,Fml2),AllVars).
+%get_canonical_label(all(Vars,Fml),AllVars,L) :-
+%        bdd_node((all(Vars2,Fml2),AllVars),_,_,_),
+%        implies(all(Vars,Fml),all(Vars2,Fml2),AllVars),
+%        implies(all(Vars2,Fml2),all(Vars,Fml),AllVars), !,
+%        L = (all(Vars2,Fml2),AllVars).        
+get_canonical_label(Fml,AllVars,(Fml,AllVars)) :- !.
 
 % simplify formulas checking dependencies between subformulas
 % (using FOL reasoning / theorem proving)
