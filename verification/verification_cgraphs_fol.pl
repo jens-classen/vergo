@@ -270,7 +270,8 @@ iterate_cg_construction(ProgramName) :-
         !,
         cg_draw_graph(ProgramName),
         iterate_cg_construction(ProgramName).
-iterate_cg_construction(_ProgramName).
+iterate_cg_construction(ProgramName) :-
+        cg_print_graph(ProgramName).
 
 cg_construction_step(ProgramName) :-
         
@@ -306,6 +307,65 @@ cg_get_node_id(ProgramName,Program,ID) :-
         final(Program,Final),
         simplify_fml(Final,FinalS),
         assert(cg_node(ProgramName,Program,FinalS,ID)).
+
+% print description of characteristic graph to console
+cg_print_graph(ProgramName) :- !,
+        write('================================================\n'),
+        write('Characteristic graph for program \''),
+        write(ProgramName),
+        write('\':\n'),
+        cg_print_nodes(ProgramName),
+        cg_print_edges(ProgramName),
+        write('================================================\n').
+
+cg_print_nodes(ProgramName) :- !,
+        write('------------------------------------------------\n'),
+        write('Nodes:\n'),
+        cg_number_of_nodes(ProgramName,N),
+        cg_print_nodes(ProgramName,0,N),
+        write('------------------------------------------------\n').
+cg_print_nodes(ProgramName,I,N) :-
+        I < N, !,
+        cg_node(ProgramName,Program,Final,I),
+        cg_print_node(Program,Final,I),
+        I1 is I+1,
+        cg_print_nodes(ProgramName,I1,N).
+cg_print_nodes(_ProgramName,N,N) :- !.
+cg_print_node(Program,Final,ID) :- !,
+        write(ID),
+        write(': '),
+        write(Program),
+        write('\n\t'),
+        write(Final),
+        write('\n').
+                
+cg_print_edges(ProgramName) :- !,
+        write('Edges:\n'),
+        cg_print_edges2(ProgramName).
+cg_print_edges2(ProgramName) :-
+        cg_edge(ProgramName,ID,Action,ID2,Cond1,Vars,Cond2),
+        cg_print_edge(ID,Action,ID2,Cond1,Vars,Cond2),
+        fail.
+cg_print_edges2(_ProgramName).
+cg_print_edge(ID,Action,ID2,Cond1,Vars,Cond2) :- !,
+        write(ID),
+        write(' --['),
+        write(Action),
+        write(']--> '),
+        write(ID2),
+        write('\n\t'),
+        cg_print_edge_cond(Cond1),
+        cg_print_edge_vars(Vars),
+        cg_print_edge_cond(Cond2),
+        write('\n').
+cg_print_edge_cond(true) :- !.
+cg_print_edge_cond(Cond) :- !,
+        write(Cond).
+cg_print_edge_vars([]) :- !.
+cg_print_edge_vars(Vars) :-
+        write('pick '),
+        write(Vars),
+        write(': ').
 
 % draw characteristic graph using dot
 cg_draw_graph(ProgramName) :-
