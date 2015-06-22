@@ -579,6 +579,38 @@ simplify_deps(Fml1*Fml2,Vars,false) :-
         implies(Fml1,-Fml2,Vars), !.
 simplify_deps(Fml1*Fml2,Vars,false) :-
         implies(Fml2,-Fml1,Vars), !.
+simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml3) :-
+        implies(Fml1*Fml2,Fml3,Vars), !.
+simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml2) :-
+        implies(Fml1*Fml3,Fml2,Vars), !.
+simplify_deps((Fml1+Fml2)*Fml3,Vars,Fml2) :-
+        implies(Fml1*Fml3,Fml2,Vars), !.
+simplify_deps((Fml1+Fml2)*Fml3,Vars,Fml1) :-
+        implies(Fml2*Fml3,Fml1,Vars), !.
+simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml) :-
+        implies(Fml3,-Fml1,Vars), !,
+        simplify_deps(Fml1*Fml2,Vars,Fml).
+simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml) :-
+        implies(Fml2,-Fml1,Vars), !,
+        simplify_deps(Fml1*Fml3,Vars,Fml).
+simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml) :-
+        implies(Fml1,-Fml3,Vars), !,
+        simplify_deps(Fml1*Fml2,Vars,Fml).
+simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml) :-
+        implies(Fml1,-Fml2,Vars), !,
+        simplify_deps(Fml1*Fml3,Vars,Fml).
+simplify_deps((Fml2+Fml3)*Fml1,Vars,Fml) :-
+        implies(Fml3,-Fml1,Vars), !,
+        simplify_deps(Fml1*Fml2,Vars,Fml).
+simplify_deps((Fml2+Fml3)*Fml1,Vars,Fml) :-
+        implies(Fml2,-Fml1,Vars), !,
+        simplify_deps(Fml1*Fml3,Vars,Fml).
+simplify_deps((Fml2+Fml3)*Fml1,Vars,Fml) :-
+        implies(Fml1,-Fml3,Vars), !,
+        simplify_deps(Fml1*Fml2,Vars,Fml).
+simplify_deps((Fml2+Fml3)*Fml1,Vars,Fml) :-
+        implies(Fml1,-Fml2,Vars), !,
+        simplify_deps(Fml1*Fml3,Vars,Fml).
 simplify_deps(Fml,_Vars,Fml) :- !.
 
 implies(Fml1,-(-Fml2),Vars) :- !,
