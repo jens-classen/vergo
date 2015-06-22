@@ -17,7 +17,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 :- use_module('../reasoning/fol').
-:- use_module('../reasoning/bdd').
+:- use_module('../reasoning/fobdd').
 
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).

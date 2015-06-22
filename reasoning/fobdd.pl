@@ -27,7 +27,7 @@ built-in term order is used for ordering nodes.
 
  **/
 
-:- module(bdd, [reduce/2]).
+:- module(fobdd, [reduce/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
