@@ -50,6 +50,10 @@
 
 :- discontiguous(simplify/2).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Reasoning by Theorem Proving
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 /* Succeeds if ListOfAxioms entails Conjecture. */
 entails(ListOfAxioms,Conjecture) :-
         entails_eprover(ListOfAxioms,Conjecture).
@@ -179,6 +183,10 @@ write_binary_formula(Stream, F1, Symbol, F2) :-
         write_formula(Stream, F2),
         write(Stream, ' )').
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Formula Simplification
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 /* simplify(+F,-R)
    simplify formula F to obtain R
    makes 'obvious' simplifications like F&$true => F */
@@ -301,3 +309,4 @@ disjoin([F],F).
 disjoin([F1,F2|Fs],F1+FR) :-
         disjoin([F2|Fs],FR).
 disjoin([],false).
+        
