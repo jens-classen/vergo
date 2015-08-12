@@ -449,6 +449,181 @@ cf_dnf_remove_duplicate_lits_clause([Lit|Lits],[Lit|Lits2]) :-
         cf_dnf_remove_duplicate_lits_clause(Lits,Lits2).
 cf_dnf_remove_duplicate_lits_clause([],[]).
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Variant simplification procedure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cf_clauses_simplify(Cla1,U,E,V,Cla2) :-
+        sort_clauses(Cla1,Cla3),
+        cf_find_inconsistencies(Cla3,Cla4),
+        cf_remove_tautologies(Cla4,Cla5),
+        cf_remove_duplicate_cl(Cla5,Cla6),
+        cf_simplify_exi(Cla6,U,E,V,Cla7),
+        cf_remove_subsumed(Cla7,Cla8),
+        %%cf_simplify_variant_clauses(Cla6,U,Cla7),
+        cf_remove_subsumed_variants(Cla8,U,E,V,Cla2).
+        %sort_clauses(Cla7,Cla2).
+
+% sort clauses plus their literals (eliminates duplicates)
+sort_clauses(Clauses1,Clauses2) :-
+        sort_clauses2(Clauses1,Clauses3),
+        sort(Clauses3,Clauses2).
+
+% sort the literals in each clause (eliminates duplicates)
+sort_clauses2([Clause|Clauses],[Clause2|Clauses2]) :-
+        sort(Clause,Clause2),
+        sort_clauses(Clauses,Clauses2).
+sort_clauses2([],[]).
+
+% remove tautologuous clauses
+cf_remove_tautologies([Cl|Cls],Cls2) :-
+        member((X=Y),Cl), X==Y, !,
+        cf_remove_tautologies(Cls,Cls2).
+% remove tautologuous clauses
+cf_remove_tautologies([Cl|Cls],Cls2) :-
+        (member($true,Cl);member(~($false),Cl)),!,
+        cf_remove_tautologies(Cls,Cls2).
+% remove tautologuous clauses
+cf_remove_tautologies([Cl|Cls],Cls2) :-
+        member(~(Atom1),Cl),
+        member(Atom2,Cl), 
+        Atom1 == Atom2, !,
+        cf_remove_tautologies(Cls,Cls2).
+cf_remove_tautologies([Cl|Cls],[Cl2|Cls2]) :-
+        cf_remove_false(Cl,Cl2),
+        cf_remove_tautologies(Cls,Cls2).
+cf_remove_tautologies([],[]).
+
+cf_remove_false([~(X=Y)|Lits],Lits2) :-
+        X==Y, !,
+        cf_remove_false(Lits,Lits2).
+cf_remove_false([($false)|Lits],Lits2) :- !,
+        cf_remove_false(Lits,Lits2).
+cf_remove_false([~($true)|Lits],Lits2) :- !,
+        cf_remove_false(Lits,Lits2).
+cf_remove_false([Lit|Lits],[Lit|Lits2]) :-
+        cf_remove_false(Lits,Lits2).
+cf_remove_false([],[]).
+
+% eliminate double clauses
+% warning: this is expensive !!!
+
+cf_remove_duplicate_cl([Cl|Cls],Cls2) :-
+        %shuffle(Cl,Cl2),
+        member2(Cl,Cls), !,
+        cf_remove_duplicate_cl(Cls,Cls2).
+cf_remove_duplicate_cl([Cl|Cls],[Cl|Cls2]) :-
+        cf_remove_duplicate_cl(Cls,Cls2).
+cf_remove_duplicate_cl([],[]).
+
+cf_find_inconsistencies(Clauses,[[]]) :-
+        member([Lit],Clauses),
+        member([~Lit],Clauses), !.
+cf_find_inconsistencies(Clauses,[[]]) :-
+        member2([~(X=Y)],Clauses),
+        X==Y, !.
+cf_find_inconsistencies(Clauses,Clauses).
+
+cf_simplify_exi(Cla,Unis,Exis,[X|Vars],Cla2) :-
+        member2(X,Unis), !,
+        cf_simplify_exi(Cla,Unis,Exis,Vars,Cla2).
+cf_simplify_exi(Cla,Unis,Exis,[X|Vars],Cla2) :-
+        member2(X,Exis),
+        (member2([(Y=Z)],Cla);member2([(Z=Y)],Cla)),
+        X==Y,!,
+        subv(X,Z,Cla,Cla3),
+        cf_simplify_exi(Cla3,Unis,Exis,Vars,Cla2).
+cf_simplify_exi(Cla,Unis,Exis,[_X|Vars],Cla2) :-
+        cf_simplify_exi(Cla,Unis,Exis,Vars,Cla2).
+cf_simplify_exi(Cla,_Unis,_Exis,[],Cla).
+
+cf_remove_subsumed(Clauses1,Clauses2) :-
+        findall(Clause2,(member(Clause1,Clauses1),
+                         member(Clause2,Clauses1),
+                         Clause1 \= Clause2,
+                         subset2(Clause1,Clause2)),
+                SubsumedClauses),
+        subtract(Clauses1,SubsumedClauses,Clauses2).
+
+cf_simplify_variant_clauses([Cla|Clauses],Unis,Clauses2) :-
+        member2(Cla2,Clauses),
+        variant_clause(Cla,Cla2,Unis),!,
+        cf_simplify_variant_clauses(Clauses,Unis,Clauses2).
+cf_simplify_variant_clauses([Cla|Clauses],Unis,[Cla|Clauses2]) :-
+        cf_simplify_variant_clauses(Clauses,Unis,Clauses2).
+cf_simplify_variant_clauses([],_Unis,[]).
+
+variant_clause(Clause1,Clause2,Unis) :-
+        term_variables(Clause1,Var1),
+        term_variables(Clause2,Var2),
+        subset2(Var1,Unis), % only universally qu.
+        subset2(Var2,Unis), % vars
+        variant(Clause1,Clause2).
+
+cf_remove_subsumed_variants(Clauses1,Unis,Exis,Vars,Clauses2) :-
+        cf_remove_subsumed_variants2(Clauses1,Unis,Exis,Vars,Clauses2,[]).
+
+cf_remove_subsumed_variants2([Clause|Clauses],Unis,Exis,Vars,Clauses2,SoFar) :-
+        find_smallest_subsumer(Clause,Clauses,Unis,Exis,Vars,Smallest,Nonsubsumed),
+        cf_remove_subsumed_variants2(Nonsubsumed,Unis,Exis,Vars,Clauses2,[Smallest|SoFar]).
+cf_remove_subsumed_variants2([],_Unis,_Exis,_Vars,Clauses2,Clauses2).
+
+find_smallest_subsumer(Clause,Clauses,Unis,Exis,Vars,Smallest,Nonsubsumed) :-
+        find_smallest_subsumer2(Clause,Clauses,Unis,Exis,Vars,Smallest,Nonsubsumed,[]).
+
+find_smallest_subsumer2(Clause,[Clause2|Clauses],Unis,Exis,Vars,Smallest,Nonsubsumed,SoFar) :-
+        variant_subsumed(Clause,Clause2,Clause3,Unis,Exis,Vars),!,
+        find_smallest_subsumer2(Clause3,Clauses,Unis,Exis,Vars,Smallest,Nonsubsumed,SoFar).
+find_smallest_subsumer2(Clause,[Clause2|Clauses],Unis,Exis,Vars,Smallest,Nonsubsumed,SoFar) :-
+        find_smallest_subsumer2(Clause,Clauses,Unis,Exis,Vars,Smallest,Nonsubsumed,[Clause2|SoFar]).
+find_smallest_subsumer2(Clause,[],_Unis,_Exis,_Vars,Clause,Nonsubsumed,Nonsubsumed).
+
+
+variant_subsumed(Clause1,Clause2,Clause1,Unis,Exis,Vars) :-
+        variant_subsumed2(Clause1,Clause2,Unis,Exis,Vars).
+variant_subsumed(Clause1,Clause2,Clause2,Unis,Exis,Vars) :-
+        variant_subsumed2(Clause2,Clause1,Unis,Exis,Vars).
+        
+% Clause1 is a subset of a variant of Clause 2
+variant_subsumed2(Clause1,Clause2,Unis,Exis,Vars) :-
+        % they must not share variables
+        term_variables(Clause1,V1),
+        term_variables(Clause2,V2),
+        disjoint2(V1,V2),
+        % determine a subset of clause2
+        variant_subsumed3(Clause1,Clause2,Clause2Sub),
+        term_variables(Clause2Sub,V2S),
+        % determine which vars are universal and which existential
+        intersection2(V1,Unis,Unis1),
+        intersection2(V2S,Unis,Unis2),
+        intersection2(V1,Exis,Exis1),
+        intersection2(V2S,Exis,Exis2),
+        % determine their quantification order as in Vars
+        intersection2(V1,Vars,Vars1),
+        intersection2(V2S,Vars,Vars2),
+        variant((Clause1,Unis1,Exis1,Vars1),(Clause2Sub,Unis2,Exis2,Vars2)).
+        
+
+% nondeterministically choose a subset of Clause 2
+% as a candidate for subsumption
+% non-variant literals can be excluded a priori
+variant_subsumed3([Lit|Lits],[Lit2|Lits2],[Lit2|Lits3]) :-
+        variant(Lit,Lit2),
+        variant_subsumed3(Lits,Lits2,Lits3).
+variant_subsumed3([Lit|Lits],[_Lit2|Lits2],Lits3) :-
+        variant_subsumed3([Lit|Lits],Lits2,Lits3).
+variant_subsumed3([],Lits2,Lits2).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cf_dnf_simplify_resolution(Clauses1,Clauses2,U,E,V) :-
@@ -510,6 +685,21 @@ elim_clauses([Pred|Preds],Cla1,Cla2,Unis,Exis,Vars) :-
         cf_dnf_clauses_simplify(Cla4,Unis,Exis,Vars,Cla2).
 elim_clauses([],Cla,Cla,_U,_E,_V).
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% elim([Pred|Preds],Phi1,Phi2) :-
+%%         atom(Pred),!,
+%%         elim(Preds,Phi1,Phi3),        
+%%         cf_nnf(Phi3,Phi4,[],Unis,Exis,Vars,'1',_SkolS2,Skol),
+%%         cf_cnf(Phi4,Phi5),
+%%         subv(Pred,$true,Phi5,Phi5p),
+%%         subv(Pred,$false,Phi5,Phi5n),
+%%         cf_cnf((Phi5p|Phi5n),Phi6),
+%%         cf_cnf_clauses(Phi6,Cla),
+%%         cf_clauses_simplify(Cla,Unis,Exis,Vars,Cla2),
+%%         clauses2fml(Phi2,Cla2,Unis,Exis,Vars).
+%% elim([],Phi,Phi).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
