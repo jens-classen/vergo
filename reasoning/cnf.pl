@@ -208,6 +208,12 @@ flatten_quantifiers(!Vars1:(?Vars2:Fml),!Vars1:Result) :- !,
         flatten_quantifiers(?Vars2:Fml,Result).
 flatten_quantifiers(Fml,Fml).
 
+%% % generate new variables for deskolemization
+%% make_fresh_variables(Unis,[Skol|Skols],[X|NewVars]) :-
+%%         make_fresh_variables(Unis,Skols,NewVars),
+%%         copy_term((Unis,NewVars,X2),(_Unis2,_NewVars2,X)).
+%% make_fresh_variables(_Unis,[],[]).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 simplify_formula_cnf(Fml,Fml2) :-
