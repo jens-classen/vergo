@@ -29,8 +29,7 @@ reduce(Fml1,Fml2) :-
         free_variables(Fml3,Vars),
         propositionalize(Fml3,Vars,Fml4),
         bdd:reduce(Fml4,Fml5),
-        depropositionalize(Fml5,Vars,Fml6),
-        simplify_deps(Fml6,Vars,Fml2).
+        depropositionalize(Fml5,Vars,Fml2).
 
 reduce2dnf(Fml1,Fml2) :-
         preprocess(Fml1,Fml3),
