@@ -20,7 +20,8 @@
 %       conversion (starting with 'skol1','skol2',...)
 %    -> SkolS2 is the next usable skolem function symbol *after*
 %       conversion
-%    -> Skol is the set of skolem terms introduced during conversion
+%    -> Skol is the set of skolem term substitions (Var,SkolemTerm)
+%       introduced during conversion 
 
 fml2nnf((F1<=>F2),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
         fml2nnf((-F1+F2)*(F1+(F2)),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
@@ -49,7 +50,7 @@ fml2nnf(all(Vars,F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
         fml2nnf(F,Fml,FreeV1,Unis1,Exis,AllVars1,SkolS1,SkolS2,Skol),
         append(Vars,Unis1,Unis),
         append(Vars,AllVars1,AllVars).
-fml2nnf(some([Var|Vars],F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,[NewSymbol|Skol1]) :- !,
+fml2nnf(some([Var|Vars],F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,[(Var,NewSymbol)|Skol1]) :- !,
         NewSymbol =.. [SkolS1|FreeV],
         skol_next(SkolS1,SkolS3),
         fml2nnf(some(Vars,F),Fml2,FreeV,Unis,Exis1,AllVars1,SkolS3,SkolS2,Skol1),
@@ -151,10 +152,9 @@ dnf2clauses(true,[[]]).
 dnf2clauses(Lit,[[Lit]]).
 
 % convert clause set to CNF formula
-clauses2cnf(Cla,Unis,Exis,Vars,Fml) :-
-        %make_fresh_variables(Unis,Skol,NewVars),
+clauses2cnf(Cla,Unis,Exis,Vars,Skols,Fml) :-
         clauses2cnf(Cla,CNF),
-        attach_quantifiers(CNF,Unis,Exis,Vars,Fml2),
+        attach_quantifiers(CNF,Unis,Exis,Vars,Skols,Fml2),
         flatten_quantifiers(Fml2,Fml).
 
 clauses2cnf([Clause],Fml) :- !,
@@ -170,10 +170,9 @@ clause2disjunction([Lit|Lits],(Lit+Fml)) :- !,
 clause2disjunction([],false).
 
 % convert clause set to DNF formula
-clauses2dnf(Cla,Unis,Exis,Vars,Fml) :-
-        %make_fresh_variables(Unis,Skol,NewVars),
+clauses2dnf(Cla,Unis,Exis,Vars,Skols,Fml) :-
         clauses2dnf(Cla,DNF),
-        attach_quantifiers(DNF,Unis,Exis,Vars,Fml2),
+        attach_quantifiers(DNF,Unis,Exis,Vars,Skols,Fml2),
         flatten_quantifiers(Fml2,Fml).
 
 clauses2dnf([Clause],Fml) :- !,
@@ -189,19 +188,17 @@ clause2conjunction([Lit|Lits],(Lit*Fml)) :- !,
 clause2conjunction([],true).
 
 % reattach quantifiers in prenex form
-attach_quantifiers(CNF,Unis,Exis,[X|Vars],Fml) :-
-        term_variables(CNF,TVars),
-        not(member2(X,TVars)),!, % if X not occurs, ignore
-        attach_quantifiers(Fml,CNF,Unis,Exis,Vars).
-attach_quantifiers(CNF,Unis,Exis,[X|Vars],Fml) :-
+attach_quantifiers(CNF,Unis,Exis,[X|Vars],Skols,Fml) :-
         member2(X,Unis),!,
-        attach_quantifiers(Fml1,CNF,Unis,Exis,Vars),
+        attach_quantifiers(CNF,Unis,Exis,Vars,Skols,Fml1),
         Fml=all([X],Fml1).
-attach_quantifiers(CNF,Unis,Exis,[X|Vars],Fml) :-
+attach_quantifiers(CNF,Unis,Exis,[X|Vars],Skols,Fml) :-
         member2(X,Exis),!,
-        attach_quantifiers(Fml1,CNF,Unis,Exis,Vars),
-        Fml=some([X],Fml1).
-attach_quantifiers(CNF,_Unis,_Exis,[],CNF).
+        get_skolem_term(X,Skols,Skol),
+        attach_quantifiers(CNF,Unis,Exis,Vars,Skols,Fml1),
+        subv(Skol,X,Fml1,Fml2),
+        Fml=some([X],Fml2).
+attach_quantifiers(CNF,_Unis,_Exis,[],_Skols,CNF).
 
 % flatten nested quantifiers using list notation
 flatten_quantifiers(all(Vars1,all(Vars2,Fml)),Result) :- !,
@@ -215,6 +212,11 @@ flatten_quantifiers(some(Vars1, all(Vars2,Fml)),some(Vars1,Result)) :- !,
 flatten_quantifiers(all(Vars1,some(Vars2,Fml)),all(Vars1,Result)) :- !,
         flatten_quantifiers(some(Vars2,Fml),Result).
 flatten_quantifiers(Fml,Fml).
+
+get_skolem_term(X,[(Y,Skol)|_],Skol) :-
+        X == Y, !.
+get_skolem_term(X,[(_,_)|Skols],Skol) :-
+        get_skolem_term(X,Skols,Skol).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Prime implicate compiler
