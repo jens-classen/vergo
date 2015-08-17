@@ -1,4 +1,4 @@
-:- module(clausalform, []).
+:- module(clausalform, [fml2pinf/2]).
 
 :- use_module('../reasoning/fol').
 :- use_module('../lib/utils').
@@ -78,6 +78,10 @@ fml2nnf(-some(Vars,F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
         fml2nnf(all(Vars,-F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
 
 fml2nnf(Lit,Lit,_FreeV,[],[],[],SkolS,SkolS,[]).
+
+% propositional case
+fml2nnf(Fml1,Fml2) :- !,
+        fml2nnf(Fml1,Fml2,[],[],[],[],skol1,_,_).
 
 % skolem symbols are 'skol1','skol2','skol3',...
 skol_atom(skol).
@@ -227,6 +231,13 @@ get_skolem_term(X,[(_,_)|Skols],Skol) :-
 %     Logical Foundations for Specifying and Implementing Dynamical
 %     Systems. MIT Press, 2001.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fml2pinf(Fml1,Fml2) :- !,
+        fml2nnf(Fml1,Fml3),
+        nnf2cnf(Fml3,Fml4),
+        cnf2clauses(Fml4,Clauses),
+        clauses2prime_implicates(Clauses,PrimeImplicates),
+        clauses2cnf(PrimeImplicates,Fml2).
 
 clauses2prime_implicates(Clauses,PrimeImplicates) :-
         assertClauses(Clauses,0),

@@ -18,32 +18,38 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/bdd').
+:- use_module('../reasoning/clausalform').
 
 :- dynamic mapping/3.
 :- dynamic mappings/1.
+:- dynamic cached_implies/4.
 
 mappings(0).
 
-reduce(Fml1,Fml2) :-
+reduce(Fml1,Fml2) :- !,
         preprocess(Fml1,Fml3),
         free_variables(Fml3,Vars),
         propositionalize(Fml3,Vars,Fml4),
         bdd:reduce(Fml4,Fml5),
-        depropositionalize(Fml5,Vars,Fml2).
+        depropositionalize(Fml5,Vars,Fml6),
+        simplify_deps(Fml6,Vars,Fml2).
 
-reduce2dnf(Fml1,Fml2) :-
+reduce2dnf(Fml1,Fml2) :- !,
         preprocess(Fml1,Fml3),
         free_variables(Fml3,Vars),
         propositionalize(Fml3,Vars,Fml4),
         bdd:reduce2dnf(Fml4,Fml5),
-        depropositionalize(Fml5,Vars,Fml2).
+        depropositionalize(Fml5,Vars,Fml6),
+        simplify_deps(Fml6,Vars,Fml2).
 
-reduce2cnf(Fml1,Fml2) :-
+reduce2cnf(Fml1,Fml2) :- !,
         preprocess(Fml1,Fml3),
         free_variables(Fml3,Vars),
         propositionalize(Fml3,Vars,Fml4),
         bdd:reduce2cnf(Fml4,Fml5),
-        depropositionalize(Fml5,Vars,Fml2).
+        clausalform:fml2pinf(Fml5,Fml6),
+        depropositionalize(Fml6,Vars,Fml7),
+        simplify_deps(Fml7,Vars,Fml2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preprocessing
@@ -439,33 +445,42 @@ depropositionalize(Atom,Vars,Fml) :- !,
 
 % simplify formulas checking dependencies between subformulas
 % (using FOL reasoning / theorem proving)
-simplify_deps((Fml3*Fml1)+((-Fml3)*Fml2),Vars,Fml1) :-
+simplify_deps((Fml3*Fml1)+((-Fml3)*Fml2),Vars,Fml) :-
         implies(Fml1,Fml2,Vars),
-        implies(Fml2,Fml1,Vars), !.
-simplify_deps(Fml1+Fml2,Vars,Fml2) :-
-        implies(Fml1,Fml2,Vars), !.
-simplify_deps(Fml1+Fml2,Vars,Fml1) :-
-        implies(Fml2,Fml1,Vars), !.
+        implies(Fml2,Fml1,Vars), !,
+        simplify_deps(Fml1,Vars,Fml).
+simplify_deps(Fml1+Fml2,Vars,Fml) :-
+        implies(Fml1,Fml2,Vars), !,
+        simplify_deps(Fml2,Vars,Fml).
+simplify_deps(Fml1+Fml2,Vars,Fml) :-
+        implies(Fml2,Fml1,Vars), !,
+        simplify_deps(Fml1,Vars,Fml).
 simplify_deps(Fml1+Fml2,Vars,true) :-
         implies(-Fml1,Fml2,Vars), !.
 simplify_deps(Fml1+Fml2,Vars,true) :-
         implies(-Fml2,Fml1,Vars), !.
-simplify_deps(Fml1*Fml2,Vars,Fml1) :-
-        implies(Fml1,Fml2,Vars), !.
-simplify_deps(Fml1*Fml2,Vars,Fml2) :-
-        implies(Fml2,Fml1,Vars), !.
+simplify_deps(Fml1*Fml2,Vars,Fml) :-
+        implies(Fml1,Fml2,Vars), !,
+        simplify_deps(Fml1,Vars,Fml).
+simplify_deps(Fml1*Fml2,Vars,Fml) :-
+        implies(Fml2,Fml1,Vars), !,
+        simplify_deps(Fml2,Vars,Fml).
 simplify_deps(Fml1*Fml2,Vars,false) :-
         implies(Fml1,-Fml2,Vars), !.
 simplify_deps(Fml1*Fml2,Vars,false) :-
         implies(Fml2,-Fml1,Vars), !.
-simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml3) :-
-        implies(Fml1*Fml2,Fml3,Vars), !.
-simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml2) :-
-        implies(Fml1*Fml3,Fml2,Vars), !.
-simplify_deps((Fml1+Fml2)*Fml3,Vars,Fml2) :-
-        implies(Fml1*Fml3,Fml2,Vars), !.
-simplify_deps((Fml1+Fml2)*Fml3,Vars,Fml1) :-
-        implies(Fml2*Fml3,Fml1,Vars), !.
+simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml) :-
+        implies(Fml1*Fml2,Fml3,Vars), !,
+        simplify_deps(Fml3,Vars,Fml).
+simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml) :-
+        implies(Fml1*Fml3,Fml2,Vars), !,
+        simplify_deps(Fml2,Vars,Fml).
+simplify_deps((Fml1+Fml2)*Fml3,Vars,Fml) :-
+        implies(Fml1*Fml3,Fml2,Vars), !,
+        simplify_deps(Fml2,Vars,Fml).
+simplify_deps((Fml1+Fml2)*Fml3,Vars,Fml) :-
+        implies(Fml2*Fml3,Fml1,Vars), !,
+        simplify_deps(Fml1,Vars,Fml).
 simplify_deps(Fml1*(Fml2+Fml3),Vars,Fml) :-
         implies(Fml3,-Fml1,Vars), !,
         simplify_deps(Fml1*Fml2,Vars,Fml).
