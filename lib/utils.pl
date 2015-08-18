@@ -11,7 +11,10 @@
            setminus2/3,
            disjoint2/2,
            member2/2,
-           forall/2]).
+           nth2/3,
+           forall/2,
+           write_readable/2,
+           write_readable/1]).
 
 /*  T2 is T1 with X1 replaced by X2  */
 subv(X1,X2,T1,T2) :- var(T1), T1 == X1, !, T2 = X2.
@@ -67,6 +70,15 @@ member2(X,[Y|_L]) :- X == Y.
 member2(X,[_|L]) :- member2(X,L).
 member2(_,[]) :- fail.
 
+nth2(X,[Y|_L],N) :-
+        X == Y,
+        N = 0.
+nth2(X,[_|L],N) :-
+        nth2(X,L,N1),
+        N is N1+1.
+nth2(_,[]) :-
+        fail.
+
 % do Action for each Goal
 forall(Goal,Action):-
         Goal,
@@ -74,3 +86,23 @@ forall(Goal,Action):-
 	->	fail
 	;	!,fail).
 forall(_,_).
+
+% write Term to Stream using readable variables 
+% (A,B,C,... instead of _G201,_G202,...)
+write_readable(Stream, Term) :-
+        \+ \+ ( numbervars(Term, 0, _),
+                write_term(Stream, Term,
+                           [ numbervars(true),
+                             quoted(true)
+                           ])
+              ).
+
+% write Term using readable variables 
+% (A,B,C,... instead of _G201,_G202,...)
+write_readable(Term) :-
+        \+ \+ ( numbervars(Term, 0, _),
+                write_term(Term,
+                           [ numbervars(true),
+                             quoted(true)
+                           ])
+              ).
