@@ -271,7 +271,7 @@ iterate_cg_construction(ProgramName) :-
         cg_draw_graph(ProgramName),
         iterate_cg_construction(ProgramName).
 iterate_cg_construction(ProgramName) :-
-        cg_print_graph(ProgramName).
+        cg_print_graph(ProgramName), !.
 
 cg_construction_step(ProgramName) :-
         
