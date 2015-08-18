@@ -283,7 +283,7 @@ resolveAllClauses(N) :-
         resolveAllClausesNonUnit(N).
 resolveAllClauses(N) :-
         N1 is N+1,
-        clause_n(_Clause,N1),
+        clause_n(_Clause,N1), !,
         resolveAllClauses(N1).
 resolveAllClauses(_N).
 
