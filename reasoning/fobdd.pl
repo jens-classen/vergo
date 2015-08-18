@@ -413,6 +413,10 @@ propositionalize(Fml,Vars,Atom) :- !,
 get_mapping(QFml,Vars,Atom) :-
         mapping(QFml2,Vars2,Atom), 
         (QFml,Vars) =@= (QFml2,Vars2), !.
+get_mapping(QFml,Vars,Atom) :-
+        mapping(QFml2,Vars,Atom),
+        implies(QFml,QFml2,Vars),
+        implies(QFml2,QFml,Vars), !.
 get_mapping(QFml,Vars,Atom) :- !,
         retract(mappings(N)),
         N1 is N+1,
@@ -513,6 +517,11 @@ implies(Fml1,Fml2,Vars) :-
         cached_implies(Fml1,Fml2,Vars,true), !.
 implies(Fml1,Fml2,Vars) :-
         cached_implies(Fml1,Fml2,Vars,false), !, fail.
+implies(Fml1,Fml2,[]) :-
+        % as one formula b/c of free variables
+        % => use (automatic) universal closure
+        valid(Fml1=>Fml2), !,
+        assert(cached_implies(Fml1,Fml2,[],true)).
 implies(Fml1,Fml2,Vars) :-
         % as one formula b/c of free variables
         % => use (automatic) universal closure
