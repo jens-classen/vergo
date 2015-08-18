@@ -47,6 +47,8 @@
 % :- op( 299, fx, $).     % for $true/$false
 
 :- use_module('../lib/env').
+:- use_module('../lib/utils').
+
 
 :- discontiguous(simplify/2).
 
@@ -92,13 +94,22 @@ entails_eprover(ListOfAxioms,Conjecture) :-
                        [stdout(null),     % completely silent
                         process(PID)]),   % need PID for exit status
         process_wait(PID, Status), !,     % wait for completion
-        Status=exit(0).                   % return value
-        % eprover's return status determines the truth value:
-        % 0 =    proof found = Conjecture derivable
-        % 1 = no proof found = Conjecture not derivable
+        check_eprover_status(Status).     % return value
 
-        % shell('rm temp.p'). % leave this for debugging
-        % TODO: catch other exit statutes (3 = parse error)
+% eprover's return status determines the truth value:
+% 0 =    proof found = Conjecture derivable     => succeed
+% 1 = no proof found = Conjecture not derivable => fail
+% other exit statutes (e.g. 3 = parse error)    => abort execution
+check_eprover_status(exit(0)) :- !.
+check_eprover_status(exit(1)) :- !,
+        fail.
+check_eprover_status(exit(S)) :- !,
+        temp_file(File),
+        report_message(['Unexpected eprover return status (', S,
+                        ')!']),
+        report_message(['Aborting...']),
+        report_message(['Check ', File, '.']),
+        abort.        
 
 temp_file(File) :-
         temp_dir(TempDir),
