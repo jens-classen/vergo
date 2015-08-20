@@ -86,3 +86,74 @@ property(prop3,
          main,
          somepath(always(-some(P,occ(selectRequest(P)))))).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Testing
+% -------
+% Reconstruction of full Example 5.35 from Appendix B.2 of
+% 
+% Jens Claßen: Planning and Verification in the Agent Language Golog.
+% PhD Thesis, Department of Computer Science, RWTH Aachen University,
+% 2013.
+%
+% It turned out that there is an error in the thesis for label (*)
+% below, and hence label (**) is also wrong as a consequence. The end
+% result (and all other label formulas) are correct though, with the
+% only difference being that the method converges one iteration
+% earlier.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+test :-
+        construct_characteristic_graph(main),
+        check(main,prop3,R),
+        report_message(['Result is: ', R]),
+        check_expected_labels(main,prop3).
+
+check_expected_labels(P,Phi) :-
+        expected_label(P,Phi,I,N,Psi1),
+        actual_label(P,Phi,I,N,Psi2),
+        report_equivalence(I,N,Psi1,Psi2),
+        fail.
+check_expected_labels(_,_).
+
+actual_label(P,Prop,I,N,Psi) :-
+        property(Prop,P,somepath(always(Phi))),
+        cg_label(P,eg(Phi),I,N,Psi).
+
+report_equivalence(I,N,Psi1,Psi2) :-
+        regress(Psi1,Psi3), % to macro-expand defined formulas
+        equivalent(Psi3,Psi2), !.
+report_equivalence(I,N,Psi1,_Psi2) :-
+        report_message(['Unexpected label for node ', N, ' in iteration ', I,
+                        ': ', Psi1]).
+
+def(phi,-some(X, occ(selectRequest(X)))).
+
+expected_label(main,prop3,0,0,phi).
+expected_label(main,prop3,0,1,phi).
+expected_label(main,prop3,0,2,phi).
+
+expected_label(main,prop3,1,0,phi*lastFree(queue)).
+expected_label(main,prop3,1,1,phi*(lastFree(queue)+(-holdingCoffee))).
+expected_label(main,prop3,1,2,phi*(lastFree(queue)+holdingCoffee)).
+
+expected_label(main,prop3,2,0,phi*empty(queue)).
+expected_label(main,prop3,2,1,phi*(empty(queue)+(-holdingCoffee))).
+expected_label(main,prop3,2,2,phi*lastFree(queue)*(empty(queue)+holdingCoffee)).
+
+expected_label(main,prop3,3,0,phi*empty(queue)).
+expected_label(main,prop3,3,1,phi*lastFree(queue)*(-holdingCoffee)).
+%expected_label(main,prop3,3,2,phi*lastFree(queue)*holdingCoffee).    (*)
+expected_label(main,prop3,3,2,phi*empty(queue)*holdingCoffee).
+
+expected_label(main,prop3,4,0,phi*empty(queue)).
+%expected_label(main,prop3,4,1,phi*lastFree(queue)*(-holdingCoffee)). (**)
+expected_label(main,prop3,4,1,phi*empty(queue)*(-holdingCoffee)).
+expected_label(main,prop3,4,2,phi*empty(queue)*holdingCoffee).
+
+expected_label(main,prop3,5,0,phi*empty(queue)).
+expected_label(main,prop3,5,1,phi*empty(queue)*(-holdingCoffee)).
+expected_label(main,prop3,5,2,phi*empty(queue)*holdingCoffee).
+
+%expected_label(main,prop3,6,0,phi*empty(queue)).
+%expected_label(main,prop3,6,1,phi*empty(queue)*(-holdingCoffee)).
+%expected_label(main,prop3,6,2,phi*empty(queue)*holdingCoffee).
