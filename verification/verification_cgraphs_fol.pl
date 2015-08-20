@@ -33,7 +33,21 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 %% Verification Algorithms
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+
+/**
+  * verify(+Program,+Property)
+  **/
+verify(Program,Property) :- !,
+        check(Program,Property,Result),
+        entails_initially(Result,TruthValue),
+        report_message(['Verified: \n',
+                        '\t Property   : ', Property, '\n',
+                        '\t Result Fml : ', Result, '\n',
+                        '\t Truth Value: ', TruthValue, '\n']).        
+
+/**
+  * check(+Program,+Property,-Result)
+  **/
 check(Program,Property,Result) :-
         property(Property,Program,somepath(next(Phi))), !,
         check_ex(Program,Phi,Result).
@@ -76,7 +90,7 @@ check(Program,Property,Result) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * check(+Program,+Property,-Result)
+  * check_ex(+Program,+Property,-Result)
   **/
 check_ex(P,Phi,Result) :-
         cg_label(P,ex(Phi),1,0,Result).
@@ -95,6 +109,9 @@ check_label(P,ex(Phi),1,N,F) :-
 % checkEG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+/**
+  * check_eg(+Program,+Property,-Result)
+  **/
 check_eg(P,Phi,Result) :-
         check_iterate(P,eg(Phi),0,K),
         cg_label(P,eg(Phi),K,0,Result).
@@ -115,6 +132,9 @@ check_label(P,eg(Phi),I,N,F) :-
 % checkEU
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+/**
+  * check_eu(+Program,+Property,-Result)
+  **/
 check_eu(P,Phi1,Phi2,Result) :-
         check_iterate(P,eu(Phi1,Phi2),0,K),
         cg_label(P,eu(Phi1,Phi2),K,0,Result).
@@ -136,6 +156,9 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
 % checkPost
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+/**
+  * check_post(+Program,+Property,-Result)
+  **/
 check_post(P,Phi,Result) :-
         check_iterate(P,post(Phi),0,K),
         cg_label(P,post(Phi),K,0,Result).
@@ -168,8 +191,6 @@ path_label(P,N,L) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Iteration
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% todo: report labels, convergence
 
 check_iterate(P,Phi,I,K) :- 
         check_not_converged(P,Phi,I), !,
@@ -240,6 +261,20 @@ cg_label(P,Phi,I,M,Psi) :-
         check_label(P,Phi,I,M,Psi),
         %not(cached_label(P,Phi,I,M,Psi)),
         assert(cached_label(P,Phi,I,M,Psi)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Check result against initial theory
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+entails_initially(Fml,Truth) :-
+        findall(IniFml2,
+                (initially(IniFml),
+                 regress(IniFml,IniFml2)), % b/c of defs
+                KB),
+        entails(KB,Fml), !,
+        Truth = true.
+entails_initially(_Fml,Truth) :- !,
+        Truth = false.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
