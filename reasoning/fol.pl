@@ -4,6 +4,7 @@
                 consistent/2,
                 valid/1,
                 equivalent/2,
+                check_equivalence/2,
                 simplify/2,
                 disjoin/2,
                 conjoin/2,
@@ -110,6 +111,16 @@ check_eprover_status(exit(S)) :- !,
         report_message(['Aborting...']),
         report_message(['Check ', File, '.']),
         abort.        
+
+% check for equivalence, abort if fails
+% useful as assertion for debugging purposes
+check_equivalence(F2,F3) :-
+        equivalent(F2,F3), !.
+check_equivalence(F2,F3) :-  !,
+        report_message(['Not equivalent: ']),
+        report_message(['Fml1 = ', F2]),
+        report_message(['Fml2 = ', F3]),
+        abort.
 
 temp_file(File) :-
         temp_dir(TempDir),
