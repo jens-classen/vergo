@@ -71,6 +71,9 @@ program(coffee,
 program(exog,
         loop(pick(A,[test(exo(A)),A]))).
 
+program(exog_finite,
+        star(pick(X,requestCoffee(X)))).
+
 program(main,
         conc(coffee,exog)).
 
@@ -86,6 +89,10 @@ property(prop2,
 property(prop3,
          main,
          somepath(always(-some(P,occ(selectRequest(P)))))).
+
+property(prop4,
+         exog_finite,
+         postcond(full(queue))).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Testing
