@@ -5,9 +5,10 @@
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rel_fluent/1.
+:- discontiguous def/2.
 
 initially(empty(queue)).
-initially(forall(A,-occ(A))).
+initially(all(A,-occ(A))).
 
 prim_action(wait).
 prim_action(requestCoffee(_)).
@@ -119,7 +120,7 @@ actual_label(P,Prop,I,N,Psi) :-
         property(Prop,P,somepath(always(Phi))),
         cg_label(P,eg(Phi),I,N,Psi).
 
-report_equivalence(I,N,Psi1,Psi2) :-
+report_equivalence(_I,_N,Psi1,Psi2) :-
         regress(Psi1,Psi3), % to macro-expand defined formulas
         equivalent(Psi3,Psi2), !.
 report_equivalence(I,N,Psi1,_Psi2) :-
@@ -142,11 +143,11 @@ expected_label(main,prop3,2,2,phi*lastFree(queue)*(empty(queue)+holdingCoffee)).
 
 expected_label(main,prop3,3,0,phi*empty(queue)).
 expected_label(main,prop3,3,1,phi*lastFree(queue)*(-holdingCoffee)).
-%expected_label(main,prop3,3,2,phi*lastFree(queue)*holdingCoffee).    (*)
+%expected_label(main,prop3,3,2,phi*lastFree(queue)*holdingCoffee).    % (*)
 expected_label(main,prop3,3,2,phi*empty(queue)*holdingCoffee).
 
 expected_label(main,prop3,4,0,phi*empty(queue)).
-%expected_label(main,prop3,4,1,phi*lastFree(queue)*(-holdingCoffee)). (**)
+%expected_label(main,prop3,4,1,phi*lastFree(queue)*(-holdingCoffee)). % (**)
 expected_label(main,prop3,4,1,phi*empty(queue)*(-holdingCoffee)).
 expected_label(main,prop3,4,2,phi*empty(queue)*holdingCoffee).
 
