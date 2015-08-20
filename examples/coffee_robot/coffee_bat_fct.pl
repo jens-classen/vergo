@@ -41,7 +41,7 @@ def(empty(Q),
     Q=q(e,e)).
 def(lastFree(Q),
     some(P,Q=q(P,e))).
-def(full(Q),     
+def(full(Q),
     some([P1,P2],(-(P1=e))*(-(P2=e))*(Q=q(P1,P2)))).
 def(enqueue(Qold,P,Qnew),
     ((Qold=q(e,e))*(Qnew=q(P,e)))
