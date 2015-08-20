@@ -122,6 +122,8 @@ simplify_program(A,D) :-
         var(A), !, D=A.
 simplify_program(A,A) :-
         prim_action(A), !.
+simplify_program([P],NP) :- !,
+        simplify_program(P,NP).
 simplify_program(L,P) :-
         is_list(L), !,
         simplify_program_list(L,LP),
