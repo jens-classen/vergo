@@ -85,6 +85,11 @@ check(Program,Property,Result) :-
         check_eg(Program,-Phi,R),
         simplify_fml(-R,Result).
 
+check(Program,Property,Result) :-
+        property(Property,Program,postcond(Phi)), !,
+        check_post(Program,Phi,R),
+        simplify_fml(R,Result).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEX
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -166,7 +171,8 @@ check_post(P,Phi,Result) :-
 check_label(_P,post(_Phi),-1,_N,true).
 
 check_label(_P,post(Phi),0,_N,F) :-
-        simplify_fml(Phi,F).
+        regress(Phi,PhiR),   % b/c if defs
+        simplify_fml(PhiR,F).
 
 check_label(P,post(Phi),I,N,F) :-
         I > 0,
