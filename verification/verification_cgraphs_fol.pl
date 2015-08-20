@@ -179,14 +179,23 @@ check_label(P,post(Phi),I,N,F) :-
 % Path
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-path_label(P,N,L) :-
-        cg_max_iteration(P,eg(true),K),
-        cg_label(P,eg(true),K,N,L).
+/**
+  * path_label(+Program,+Node,-Result)
+  **/
+path_label(P,N,Result) :-
+        check_iterate(P,path,0,K),
+        cg_label(P,path,K,N,Result).
 
-path_label(P,N,L) :-
-        not(cg_max_iteration(P,eg(true),_)),
-        check(P,eg(true),_),
-        path_label(P,N,L).
+check_label(_P,path,-1,_N,false).
+
+check_label(_P,path,0,_N,true).
+
+check_label(P,path,I,N,F) :-
+        I > 0,
+        I1 is I-1,
+        cg_label(P,path,I1,N,F1),
+        preimage(P,path,I1,N,F2),        
+        simplify_fml(F1*F2,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Iteration
