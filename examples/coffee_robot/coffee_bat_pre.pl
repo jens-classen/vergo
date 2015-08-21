@@ -2,43 +2,95 @@
 % Basic Action Theory for coffee delivery robot, queue size 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% action preconditions
-precondition(wait,$true).
-precondition(requestCoffee(_P),~full).
-precondition(selectRequest(P),isFirst(P)).
-precondition(pickupCoffee,~holdingCoffee).
-precondition(bringCoffee(_P),holdingCoffee).
+:- discontiguous causes_true/3.
+:- discontiguous causes_false/3.
+:- discontiguous def/2.
 
-% successor state axioms
-ssa(holdingCoffee, A, A=pickupCoffee | holdingCoffee & ~ ? [P] : A = bringCoffee(P)).
-ssa(queue(X,Y), wait, queue(X,Y)).
-ssa(queue(X,Y), requestCoffee(P), ?[X1,Y1]: (queue(X1,Y1) & enqueue(X1,Y1,P,X,Y))).
-ssa(queue(X,Y), selectRequest(P), ?[X1,Y1]: (queue(X1,Y1) & dequeue(X1,Y1,P,X,Y))).
-ssa(queue(X,Y), pickupCoffee, queue(X,Y)).
-ssa(queue(X,Y), bringCoffee(_P), queue(X,Y)).
-        
-%ssa(queue(X,Y),    A, (?[P,Xp,Yp] : (A = requestCoffee(P) & enqueue(Xp,Yp,P,X,Y)) |
-%                       ?[P,Xp,Yp] : (A = selectRequest(P) & dequeue(Xp,Yp,P,X,Y)) |
-%                       (queue(X,Y) & ~ (?[P] : (A =requestCoffee(P) | A = selectRequest(P)))))).
+initially(empty).
+initially(all(A,-occ(A))).
 
-% definitions
-def(isFirst(P),           (~(P = e) & ?[P2] : queue(P,P2))).
-def(empty,                queue(e,e)).
-def(full,                 ?[P1,P2] : (~(P1 = e) & ~(P2 = e) & queue(P1,P2))).
-def(enqueue(Xo,Yo,P,X,Y), (~(P = e) & Xo = e & Yo = e & X = P & Y = e) |
-                          (~(P = e) & ~(Xo = e) & Yo = e & X = Xo & Y = P)).
-def(dequeue(Xo,Yo,P,X,Y), (~(P = e) & P = Xo & X = Yo & Y = e)).
+prim_action(wait).
+prim_action(requestCoffee(_)).
+prim_action(selectRequest(_)).
+prim_action(pickupCoffee).
+prim_action(bringCoffee(_)).
 
-% exogenous actions
-exo(A,?[P] : A = requestCoffee(P)).
+rel_fluent(holdingCoffee).
+rel_fluent(queue(_,_)).
+rel_fluent(occ(_)).
 
-program(coffee,loop(if(empty,do(wait),pi(P,do(selectRequest(P));do(pickupCoffee);do(bringCoffee(P)))))).
-program(exo,star(pi(A,?exo(A);do(A)))).
+poss(wait,true).
+poss(requestCoffee(P),-(P=e)*lastFree).
+poss(selectRequest(P),-(P=e)*isFirst(P)).
+poss(pickupCoffee,-holdingCoffee).
+poss(bringCoffee(_P),holdingCoffee).
 
-program(coffee_exo,conc(coffee,exo)).
-program(coffee_exo_p,executable(coffee_exo)).
+causes_true(pickupCoffee,holdingCoffee,true).
+causes_false(bringCoffee(_),holdingCoffee,true).
 
-property(prop2,somepath(always(~(?[P]:occ(selectRequest(P)))))).
+causes_true(requestCoffee(P),queue(X,Y),some([Xo,Yo],queue(Xo,Yo)*enqueue(Xo,Yo,P,X,Y))).
+causes_false(requestCoffee(P),queue(Xo,Yo),some([X,Y],queue(Xo,Yo)*enqueue(Xo,Yo,P,X,Y))).
+causes_true(selectRequest(P),queue(X,Y),some([Xo,Yo],queue(Xo,Yo)*dequeue(Xo,Yo,P,X,Y))).
+causes_false(selectRequest(P),queue(Xo,Yo),some([X,Y],queue(Xo,Yo)*dequeue(Xo,Yo,P,X,Y))).
 
-axiom(_) :- fail.
-uno(_) :- fail.
+causes_true(A,occ(B),(A=B)).
+causes_false(A,occ(B),-(A=B)).
+
+def(isFirst(P),
+    some(P2,queue(P,P2))).
+def(empty,    
+    queue(e,e)).
+def(lastFree,
+    some(P,queue(P,e))).
+def(full,
+    some([P1,P2],(-(P1=e))*(-(P2=e))*queue(P1,P2))).
+def(enqueue(Xo,Yo,P,X,Y),
+    ((Xo=e)*(Yo=e)*(X=P)*(Y=e))
+    +some(X1,(-(X1=e))*(Xo=X1)*(Yo=e)*(X=X1)*(Y=P))).
+def(dequeue(Xo,Yo,P,X,Y), 
+    some(X2,(Xo=P)*(Yo=X2)*(X=X2)*(Y=e))).
+
+exo(requestCoffee(_),true).
+
+stdname(e).
+stdname(q(_,_)).
+stdname(bob).
+
+include_preconditions. % everything is precondition-extended
+
+program(coffee,
+        loop(if(-empty,
+                pick(P,[selectRequest(P),
+                        pickupCoffee,
+                        bringCoffee(P)
+                       ]
+                    ),
+                wait)
+            )
+       ).
+
+program(exog,
+        loop(pick(A,[test(exo(A)),A]))).
+
+program(exog_finite,
+        star(pick(X,requestCoffee(X)))).
+
+program(main,
+        conc(coffee,exog)).
+
+property(prop1,
+         main,
+         somepath(next(empty))).
+
+property(prop2,
+         main,
+         allpaths(always(occ(requestCoffee(X))
+                         =>eventually(occ(selectRequest(X)))))).
+
+property(prop3,
+         main,
+         somepath(always(-some(P,occ(selectRequest(P)))))).
+
+property(prop4,
+         exog_finite,
+         postcond(full)).
