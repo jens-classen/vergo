@@ -26,4 +26,4 @@
 %% Verification Algorithm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- ['../../verification/verification_cgraphs_fol'].
+:- ['../../verification/verification_cgraphs'].
