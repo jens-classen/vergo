@@ -98,6 +98,8 @@ check(Program,Property,Result) :-
   * check_ex(+Program,+Property,-Result)
   **/
 check_ex(P,Phi,Result) :-
+        report_message(['--------------------------------------']),
+        report_message(['CheckEX']),
         cg_label(P,ex(Phi),1,0,Result).
 
 /**
@@ -118,6 +120,8 @@ check_label(P,ex(Phi),1,N,F) :-
   * check_eg(+Program,+Property,-Result)
   **/
 check_eg(P,Phi,Result) :-
+        report_message(['--------------------------------------']),
+        report_message(['CheckEG']),
         check_iterate(P,eg(Phi),0,K),
         cg_label(P,eg(Phi),K,0,Result).
 
@@ -141,6 +145,8 @@ check_label(P,eg(Phi),I,N,F) :-
   * check_eu(+Program,+Property,-Result)
   **/
 check_eu(P,Phi1,Phi2,Result) :-
+        report_message(['--------------------------------------']),
+        report_message(['CheckEU']),
         check_iterate(P,eu(Phi1,Phi2),0,K),
         cg_label(P,eu(Phi1,Phi2),K,0,Result).
 
@@ -189,8 +195,16 @@ check_label(P,post(Phi),I,N,F) :-
   * path_label(+Program,+Node,-Result)
   **/
 path_label(P,N,Result) :-
+        cg_max_iteration(P,path,I), !, % use cached values
+        cg_label(P,path,I,N,Result).
+
+path_label(P,N,Result) :-        
+        report_message(['--------------------------------------']),
+        report_message(['Computing PATH labels first...']),
         check_iterate(P,path,0,K),
-        cg_label(P,path,K,N,Result).
+        cg_label(P,path,K,N,Result),
+        report_message(['Done computing PATH labels.']),
+        report_message(['--------------------------------------']).
 
 check_label(_P,path,-1,_N,false).
 
