@@ -118,16 +118,14 @@ progdef(loop(D),
         while(true,D)).
 progdef(Name,Def) :-
         program(Name,Def).
+
 simplify_program(A,D) :-
         var(A), !, D=A.
 simplify_program(A,A) :-
         prim_action(A), !.
-simplify_program([P],NP) :- !,
-        simplify_program(P,NP).
 simplify_program(L,P) :-
         is_list(L), !,
-        simplify_program_list(L,LP),
-        flatten(LP,P).
+        simplify_program_list(L,P).
 simplify_program(nondet(P1,P2),P) :-
         simplify_program(P1,PS1),
         simplify_program(P2,PS2), !,
@@ -162,7 +160,14 @@ simplify_test2(true,[]) :- !.
 simplify_test2(false,fail) :- !.
 simplify_test2(F,test(F)) :- !.
 
-simplify_program_list([],[]).
-simplify_program_list([P|Ps],[NP|NPs]) :-
+simplify_program_list(L,P) :- !,
+        simplify_program_list2(L,LS),
+        flatten(LS,LF),
+        simplify_program_list3(LF,P).
+simplify_program_list2([],[]).
+simplify_program_list2([P|Ps],[NP|NPs]) :- !,
         simplify_program(P,NP),
-        simplify_program_list(Ps,NPs).
+        simplify_program_list2(Ps,NPs).
+simplify_program_list3([P],P) :- !.
+simplify_program_list3(L,P) :- !,
+        flatten(L,P).
