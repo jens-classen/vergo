@@ -138,7 +138,8 @@ check_eg(P,Phi,Result) :-
 check_label(_P,eg(_Phi),-1,_N,false).
 
 check_label(_P,eg(Phi),0,_N,F) :-
-        simplify_fml(Phi,F).
+        regress(Phi,PhiR),   % b/c of defs
+        simplify_fml(PhiR,F).
 
 check_label(P,eg(Phi),I,N,F) :-
         I > 0,
@@ -164,14 +165,16 @@ check_label(_P,eu(_Phi1,_Phi2),-1,_N,true).
 
 check_label(P,eu(_Phi1,Phi2),0,N,F) :-
         path_label(P,N,Path),
-        simplify_fml(Phi2*Path,F).
+        regress(Phi2,Phi2R),   % b/c of defs
+        simplify_fml(Phi2R*Path,F).
 
 check_label(P,eu(Phi1,Phi2),I,N,F) :-
         I > 0,
         I1 is I-1,
         cg_label(P,eu(Phi1,Phi2),I1,N,Old),
-        preimage(P,eu(Phi1,Phi2),I1,F,Pre),        
-        simplify_fml(Old+(Phi1*Pre),F).
+        preimage(P,eu(Phi1,Phi2),I1,F,Pre),  
+        regress(Phi1,Phi1R),   % b/c of defs      
+        simplify_fml(Old+(Phi1R*Pre),F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkPost
