@@ -47,7 +47,9 @@ reduce2cnf(Fml1,Fml2) :- !,
         free_variables(Fml3,Vars),
         propositionalize(Fml3,Vars,Fml4),
         bdd:reduce2cnf(Fml4,Fml5),
-        clausalform:fml2pinf(Fml5,Fml6),
+        clausalform:fml2prime_implicates(Fml5,PIs),
+        simplify_deps_clauses(PIs,Vars,SPIs),
+        clausalform:clauses2cnf(SPIs,Fml6),
         depropositionalize(Fml6,Vars,Fml7),
         simplify_deps(Fml7,Vars,Fml2).
 
@@ -446,7 +448,6 @@ depropositionalize(Fml1<=Fml2,Vars,Fml3<=Fml4) :- !,
 depropositionalize(Atom,Vars,Fml) :- !,
         mapping(Fml,Vars,Atom).
 
-
 % simplify formulas checking dependencies between subformulas
 % (using FOL reasoning / theorem proving)
 simplify_deps((Fml3*Fml1)+((-Fml3)*Fml2),Vars,Fml) :-
@@ -509,7 +510,29 @@ simplify_deps((Fml2+Fml3)*Fml1,Vars,Fml) :-
 simplify_deps((Fml2+Fml3)*Fml1,Vars,Fml) :-
         implies(Fml1,-Fml2,Vars), !,
         simplify_deps(Fml1*Fml3,Vars,Fml).
+simplify_deps(Fml1*Fml2,Vars,Fml3*Fml4) :- !,
+        simplify_deps(Fml1,Vars,Fml3),
+        simplify_deps(Fml2,Vars,Fml4).
+simplify_deps(Fml1+Fml2,Vars,Fml3+Fml4) :- !,
+        simplify_deps(Fml1,Vars,Fml3),
+        simplify_deps(Fml2,Vars,Fml4).
 simplify_deps(Fml,_Vars,Fml) :- !.
+
+simplify_deps_clauses([Clause|Clauses],Vars,[Clause2|Clauses2]) :-
+        simplify_deps_clause(Clause,Vars,Clause2),
+        simplify_deps_clauses(Clauses,Vars,Clauses2).
+simplify_deps_clauses([],_Vars,[]).
+
+simplify_deps_clause(Clause,Vars,Clause2) :-
+        member(L1,Clause),
+        member(L2,Clause),
+        L1 \= L2,
+        depropositionalize(L1,Vars,Fml1),
+        depropositionalize(L2,Vars,Fml2),
+        implies(Fml1,Fml2,Vars), !,
+        setminus2(Clause,[L1],Clause3),
+        simplify_deps_clause(Clause3,Vars,Clause2).
+simplify_deps_clause(Clause,_Vars,Clause).
 
 implies(Fml1,-(-Fml2),Vars) :- !,
         implies(Fml1,Fml2,Vars).
@@ -518,9 +541,7 @@ implies(Fml1,Fml2,Vars) :-
 implies(Fml1,Fml2,Vars) :-
         cached_implies(Fml1,Fml2,Vars,false), !, fail.
 implies(Fml1,Fml2,[]) :-
-        % as one formula b/c of free variables
-        % => use (automatic) universal closure
-        valid(Fml1=>Fml2), !,
+        entails([Fml1],Fml2), !,
         assert(cached_implies(Fml1,Fml2,[],true)).
 implies(Fml1,Fml2,Vars) :-
         % as one formula b/c of free variables

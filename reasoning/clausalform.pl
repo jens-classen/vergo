@@ -1,4 +1,8 @@
-:- module(clausalform, [fml2pinf/2]).
+:- module(clausalform, [clauses2cnf/2,
+                        clauses2dnf/2,
+                        fml2pinf/2,
+                        fml2prime_implicates/2
+                        ]).
 
 :- use_module('../reasoning/fol').
 :- use_module('../lib/utils').
@@ -233,12 +237,15 @@ get_skolem_term(X,[(_,_)|Skols],Skol) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fml2pinf(Fml1,Fml2) :- !,
+        fml2prime_implicates(Fml1,PrimeImplicates),
+        clauses2cnf(PrimeImplicates,Fml2).
+
+fml2prime_implicates(Fml1,PrimeImplicates) :- !,
         fml2nnf(Fml1,Fml3),
         nnf2cnf(Fml3,Fml4),
         cnf2clauses(Fml4,Clauses),
-        clauses2prime_implicates(Clauses,PrimeImplicates),
-        clauses2cnf(PrimeImplicates,Fml2).
-
+        clauses2prime_implicates(Clauses,PrimeImplicates).
+        
 clauses2prime_implicates(Clauses,PrimeImplicates) :-
         assertClauses(Clauses,0),
         resolveAllClauses(0),
