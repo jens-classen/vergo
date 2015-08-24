@@ -31,6 +31,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% To Do List
 %% ----------
+%% - remove defs without call to regress
 %% - pretty print formulas/programs (also using defs)
 %% - full check method
 %% - work directly on BDDs
