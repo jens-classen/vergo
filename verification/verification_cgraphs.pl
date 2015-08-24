@@ -31,6 +31,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% To Do List
 %% ----------
+%% - property(propX,somepath(main,always(F)))
 %% - remove defs without call to regress
 %% - pretty print formulas/programs (also using defs)
 %% - full check method
