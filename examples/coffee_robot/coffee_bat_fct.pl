@@ -83,14 +83,18 @@ property(prop1,
 
 property(prop2,
          main,
-         allpaths(always(occ(requestCoffee(X))
-                         =>eventually(occ(selectRequest(X)))))).
+         somepath(until(empty(queue),holdingCoffee))).
 
 property(prop3,
          main,
-         somepath(always(-some(P,occ(selectRequest(P)))))).
+         allpaths(always(occ(requestCoffee(X))
+                         =>eventually(occ(selectRequest(X)))))).
 
 property(prop4,
+         main,
+         somepath(always(-some(P,occ(selectRequest(P)))))).
+
+property(prop5,
          exog_finite,
          postcond(full(queue))).
 
@@ -110,58 +114,67 @@ property(prop4,
 % earlier.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-test :-
-        construct_characteristic_graph(main),
-        check(main,prop3,R),
+test(Program,Prop) :-
+        construct_characteristic_graph(Program),
+        check(Program,Prop,R),
         report_message(['Result is: ', R]),
-        check_expected_labels(main,prop3).
+        check_expected_labels(Program,Prop).
 
-check_expected_labels(P,Phi) :-
-        expected_label(P,Phi,I,N,Psi1),
-        actual_label(P,Phi,I,N,Psi2),
+check_expected_labels(Prog,Phi) :-
+        expected_label(Prog,Phi,I,N,Psi1),
+        actual_label(Prog,Phi,I,N,Psi2),
         report_equivalence(I,N,Psi1,Psi2),
         fail.
 check_expected_labels(_,_).
 
-actual_label(P,Prop,I,N,Psi) :-
-        property(Prop,P,somepath(always(Phi))),
-        cg_label(P,eg(Phi),I,N,Psi).
+actual_label(Prog,Prop,I,N,Psi) :-
+        property(Prop,Prog,somepath(next(Phi))),
+        cg_label(Prog,ex(Phi),I,N,Psi).
+actual_label(Prog,Prop,I,N,Psi) :-
+        property(Prop,Prog,somepath(always(Phi))),
+        cg_label(Prog,eg(Phi),I,N,Psi).
+actual_label(Prog,Prop,I,N,Psi) :-
+        property(Prop,Prog,somepath(until(Phi1,Phi2))),
+        cg_label(Prog,eu(Phi1,Phi2),I,N,Psi).
 
-report_equivalence(_I,_N,Psi1,Psi2) :-
+report_equivalence(I,N,Psi1,Psi2) :-
         regress(Psi1,Psi3), % to macro-expand defined formulas
-        equivalent(Psi3,Psi2), !.
+        equivalent(Psi3,Psi2), !,
+        report_message(['Label for node ', N, ' in iteration ', I,
+                        ' is as expected.']).
 report_equivalence(I,N,Psi1,_Psi2) :-
         report_message(['Unexpected label for node ', N, ' in iteration ', I,
                         ': ', Psi1]).
 
 def(phi,-some(X, occ(selectRequest(X)))).
 
-expected_label(main,prop3,0,0,phi).
-expected_label(main,prop3,0,1,phi).
-expected_label(main,prop3,0,2,phi).
+% labels for somepath(always(-some(P,occ(selectRequest(P)))))
+expected_label(main,prop4,0,0,phi).
+expected_label(main,prop4,0,1,phi).
+expected_label(main,prop4,0,2,phi).
 
-expected_label(main,prop3,1,0,phi*lastFree(queue)).
-expected_label(main,prop3,1,1,phi*(lastFree(queue)+(-holdingCoffee))).
-expected_label(main,prop3,1,2,phi*(lastFree(queue)+holdingCoffee)).
+expected_label(main,prop4,1,0,phi*lastFree(queue)).
+expected_label(main,prop4,1,1,phi*(lastFree(queue)+(-holdingCoffee))).
+expected_label(main,prop4,1,2,phi*(lastFree(queue)+holdingCoffee)).
 
-expected_label(main,prop3,2,0,phi*empty(queue)).
-expected_label(main,prop3,2,1,phi*(empty(queue)+(-holdingCoffee))).
-expected_label(main,prop3,2,2,phi*lastFree(queue)*(empty(queue)+holdingCoffee)).
+expected_label(main,prop4,2,0,phi*empty(queue)).
+expected_label(main,prop4,2,1,phi*(empty(queue)+(-holdingCoffee))).
+expected_label(main,prop4,2,2,phi*lastFree(queue)*(empty(queue)+holdingCoffee)).
 
-expected_label(main,prop3,3,0,phi*empty(queue)).
-expected_label(main,prop3,3,1,phi*lastFree(queue)*(-holdingCoffee)).
-%expected_label(main,prop3,3,2,phi*lastFree(queue)*holdingCoffee).    % (*)
-expected_label(main,prop3,3,2,phi*empty(queue)*holdingCoffee).
+expected_label(main,prop4,3,0,phi*empty(queue)).
+expected_label(main,prop4,3,1,phi*lastFree(queue)*(-holdingCoffee)).
+%expected_label(main,prop4,3,2,phi*lastFree(queue)*holdingCoffee).    % (*)
+expected_label(main,prop4,3,2,phi*empty(queue)*holdingCoffee).
 
-expected_label(main,prop3,4,0,phi*empty(queue)).
-%expected_label(main,prop3,4,1,phi*lastFree(queue)*(-holdingCoffee)). % (**)
-expected_label(main,prop3,4,1,phi*empty(queue)*(-holdingCoffee)).
-expected_label(main,prop3,4,2,phi*empty(queue)*holdingCoffee).
+expected_label(main,prop4,4,0,phi*empty(queue)).
+%expected_label(main,prop4,4,1,phi*lastFree(queue)*(-holdingCoffee)). % (**)
+expected_label(main,prop4,4,1,phi*empty(queue)*(-holdingCoffee)).
+expected_label(main,prop4,4,2,phi*empty(queue)*holdingCoffee).
 
-expected_label(main,prop3,5,0,phi*empty(queue)).
-expected_label(main,prop3,5,1,phi*empty(queue)*(-holdingCoffee)).
-expected_label(main,prop3,5,2,phi*empty(queue)*holdingCoffee).
+expected_label(main,prop4,5,0,phi*empty(queue)).
+expected_label(main,prop4,5,1,phi*empty(queue)*(-holdingCoffee)).
+expected_label(main,prop4,5,2,phi*empty(queue)*holdingCoffee).
 
-%expected_label(main,prop3,6,0,phi*empty(queue)).
-%expected_label(main,prop3,6,1,phi*empty(queue)*(-holdingCoffee)).
-%expected_label(main,prop3,6,2,phi*empty(queue)*holdingCoffee).
+%expected_label(main,prop4,6,0,phi*empty(queue)).
+%expected_label(main,prop4,6,1,phi*empty(queue)*(-holdingCoffee)).
+%expected_label(main,prop4,6,2,phi*empty(queue)*holdingCoffee).
