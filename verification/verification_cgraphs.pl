@@ -174,7 +174,7 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
         I > 0,
         I1 is I-1,
         cg_label(P,eu(Phi1,Phi2),I1,N,Old),
-        preimage(P,eu(Phi1,Phi2),I1,F,Pre),  
+        preimage(P,eu(Phi1,Phi2),I1,N,Pre),  
         regress(Phi1,Phi1R),   % b/c of defs      
         simplify_fml(Old+(Phi1R*Pre),F).
 
@@ -191,16 +191,21 @@ check_post(P,Phi,Result) :-
 
 check_label(_P,post(_Phi),-1,_N,true).
 
-check_label(_P,post(Phi),0,_N,F) :-
+check_label(P,post(Phi),0,N,F) :-
         regress(Phi,PhiR),   % b/c if defs
-        simplify_fml(PhiR,F).
+        simplify_fml(PhiR,PhiRS),
+        final_label(P,N,PhiRS,F).
 
 check_label(P,post(Phi),I,N,F) :-
         I > 0,
         I1 is I-1,
         cg_label(P,post(Phi),I1,N,Old),
-        preimage(P,post(Phi),I1,F,Pre),        
+        preimage(P,post(Phi),I1,N,Pre),        
         simplify_fml(Old+Pre,F).
+
+final_label(P,N,A,F) :-
+        cg_node(P,_Program,Final,N),
+        simplify_fml(A*Final,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Path
