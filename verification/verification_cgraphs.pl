@@ -339,9 +339,9 @@ entails_initially(_Fml,Truth) :- !,
 construct_characteristic_graph(ProgramName) :-
         
         % eliminate previous instances
-        retractall(cg_node(_,_,_,_)),
-        retractall(cg_edge(_,_,_,_,_,_,_)),
-        retractall(cg_number_of_nodes(_,_)),
+        retractall(cg_node(ProgramName,_,_,_)),
+        retractall(cg_edge(ProgramName,_,_,_,_,_,_)),
+        retractall(cg_number_of_nodes(ProgramName,_)),
         
         % find the program with the given name
         program(ProgramName,Program),
