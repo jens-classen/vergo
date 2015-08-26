@@ -11,6 +11,7 @@
 :- multifile poss/1.
 :- multifile causes_true/3.
 :- multifile causes_false/3.
+:- multifile ssa_inst/3.
 :- multifile causes/4.
 :- multifile def/2.
 :- multifile exo/2.
@@ -21,31 +22,41 @@
 % poss if A is a variable => big disjunction over all cases
 precond(A,Precondition) :- var(A), !, 
         condition(poss(B,Phi),Phi,B,A,Precondition).
+% poss if A is instantiated => take predefined axiom
 precond(A,Precondition) :- nonvar(A), !,
         poss(A,Precondition).
             
 % exo if A is a variable => big disjunction over all cases
 exocond(A,Exocondition) :- var(A), !, 
         condition(exo(B,Phi),Phi,B,A,Exocondition).
+% exo if A is instantiated => take predefined axiom
 exocond(A,Exocondition) :- nonvar(A), !,
         exo(A,Exocondition).
 
+% ssa if exists pre-instantiated axiom by user => use it
+ssa(Fluent,A,Condition) :- ssa_inst(Fluent,A,Condition), !.
+% ssa if A is a variable => big disjunction over all cases
 ssa(Fluent,A,Condition) :- rel_fluent(Fluent), var(A), !,
         condition(causes_true(B,Fluent,Phi),Phi,B,A,Poscondition),
         condition(causes_false(B,Fluent,Phi),Phi,B,A,Negcondition),
         Condition2 = Poscondition+Fluent*(-Negcondition),
         simplify(Condition2,Condition).
+% ssa if A is instantiated => instantiate
 ssa(Fluent,A,Condition) :- rel_fluent(Fluent), nonvar(A), !,
         ssa(Fluent,B,Condition3), B=A,
         apply_una(Condition3,Condition2),
         simplify(Condition2,Condition).
  
+% ssa if exists pre-instantiated axiom by user => use it
+ssa(Fluent=Y,A,Condition) :- ssa_inst(Fluent=Y,A,Condition), !.
+% ssa if A is a variable => big disjunction over all cases
 ssa(Fluent=Y,A,Condition) :- fun_fluent(Fluent), var(A), !,
         condition(causes(B,Fluent,Y,Phi),Phi,B,A,Cond),
         copy_term((Cond,Y,A),(CondC,Y,A)),
         subv(Y,X,CondC,CondD), % Y may not be a variable
         Condition2 = Cond+(Fluent=Y)*(-some(X,CondD)),
         simplify(Condition2,Condition).
+% ssa if A is instantiated => instantiate
 ssa(Fluent=Y,A,Condition) :- fun_fluent(Fluent), nonvar(A), !,
         ssa(Fluent=Y,B,Condition3), B=A,
         apply_una(Condition3,Condition2),
@@ -79,6 +90,9 @@ construct_disjuncts([E|D1],[Cond|D2],A,FreeVars) :-
 isfluent(F) :- rel_fluent(F).
 isfluent((F=_)) :- nonvar(F), fun_fluent(F).
 
+isrigid(F) :- rel_rigid(F).
+isrigid((F=_)) :- nonvar(F), fun_rigid(F).
+
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
         regress(S,Precondition,Result).
@@ -97,6 +111,8 @@ regress([A|S],(Fluent=Y),Result) :-
         fun_fluent(Fluent), 
         ssa((Fluent=Y),A,Formula), !, 
         regress(S,Formula,Result).
+regress(_S,Rigid,Rigid) :- 
+        isrigid(Rigid), !.
 regress(S,after(A,Formula),Result) :- !, 
         regress([A|S],Formula,Result).
 regress(S,-F,Result) :- !, 
