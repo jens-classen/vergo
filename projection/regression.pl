@@ -18,7 +18,7 @@
 :- multifile def/2.
 :- multifile exo/2.
 :- multifile senses/2.
-:- multifule senses/3.
+:- multifile senses/3.
 :- multifile stdname/1.
 :- multifile include_preconditions/0.
 :- multifile sensing_style/1.
