@@ -57,44 +57,6 @@ reduce2cnf(Fml1,Fml2) :- !,
 % Preprocessing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% determine free varibles of a formula
-free_variables(Fml1*Fml2,Vars) :- !,
-        free_variables(Fml1,Vars1),
-        free_variables(Fml2,Vars2),
-        union2(Vars1,Vars2,Vars).
-free_variables(Fml1+Fml2,Vars) :- !,
-        free_variables(Fml1,Vars1),
-        free_variables(Fml2,Vars2),
-        union2(Vars1,Vars2,Vars).
-free_variables(-Fml,Vars) :- !,
-        free_variables(Fml,Vars).
-free_variables(Fml1<=>Fml2,Vars) :- !,
-        free_variables(Fml1,Vars1),
-        free_variables(Fml2,Vars2),
-        union2(Vars1,Vars2,Vars).
-free_variables(Fml1=>Fml2,Vars) :- !,
-        free_variables(Fml1,Vars1),
-        free_variables(Fml2,Vars2),
-        union2(Vars1,Vars2,Vars).
-free_variables(Fml1<=Fml2,Vars) :- !,
-        free_variables(Fml1,Vars1),
-        free_variables(Fml2,Vars2),
-        union2(Vars1,Vars2,Vars).
-free_variables(some(X,Fml),Vars) :-
-        var(X), !,
-        free_variables(some([X],Fml),Vars).
-free_variables(all(X,Fml),Vars) :-
-        var(X), !,
-        free_variables(all([X],Fml),Vars).
-free_variables(some(Vars2,Fml),Vars) :- !,
-        free_variables(Fml,Vars3),
-        setminus2(Vars3,Vars2,Vars).
-free_variables(all(Vars2,Fml),Vars) :- !,
-        free_variables(Fml,Vars3),
-        setminus2(Vars3,Vars2,Vars).
-free_variables(Fml,Vars) :- !,
-        term_variables(Fml,Vars).
-
 % always use variable *lists* in quantifiers
 preprocess(some(X,Fml),R) :-
         var(X), !,
