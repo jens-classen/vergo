@@ -8,6 +8,8 @@
 :- multifile prim_action/1.
 :- multifile rel_fluent/1.
 :- multifile fun_fluent/1.
+:- multifile rel_rigid/1.
+:- multifile fun_rigid/1.
 :- multifile poss/1.
 :- multifile causes_true/3.
 :- multifile causes_false/3.
@@ -15,23 +17,51 @@
 :- multifile causes/4.
 :- multifile def/2.
 :- multifile exo/2.
+:- multifile senses/2.
+:- multifule senses/3.
 :- multifile stdname/1.
 :- multifile include_preconditions/0.
-
+:- multifile sensing_style/1.
 
 % poss if A is a variable => big disjunction over all cases
 precond(A,Precondition) :- var(A), !, 
         condition(poss(B,Phi),Phi,B,A,Precondition).
 % poss if A is instantiated => take predefined axiom
-precond(A,Precondition) :- nonvar(A), !,
-        poss(A,Precondition).
+precond(A,Precondition) :- nonvar(A),
+        poss(A,Precondition), !.
+% poss otherwise: false
+precond(_,false) :- !.
             
 % exo if A is a variable => big disjunction over all cases
 exocond(A,Exocondition) :- var(A), !, 
         condition(exo(B,Phi),Phi,B,A,Exocondition).
 % exo if A is instantiated => take predefined axiom
-exocond(A,Exocondition) :- nonvar(A), !,
-        exo(A,Exocondition).
+exocond(A,Exocondition) :- nonvar(A),
+        exo(A,Exocondition), !.
+% exo otherwise: false
+exocond(_,false) :- !.
+
+% sf if A is a variable => big disjunction over all cases
+sfcond(A,Sensecondition) :- var(A), sensing_style(truth), !, 
+        condition(senses(B,Phi),Phi,B,A,Sensecondition).
+% sf if A is instantiated => take predefined axiom
+sfcond(A,Sensecondition) :- nonvar(A), sensing_style(truth),
+        senses(A,Sensecondition), !.
+% sf otherwise: true
+sfcond(_,true) :- sensing_style(truth), !.
+
+% sf if A is a variable => big disjunction over all cases
+sfcond(A,Y,Sensecondition) :- var(A), sensing_style(object), !,
+        condition(senses(B,Y,Phi),Phi,B,A,Cond),
+        copy_term((Cond,Y,A),(CondC,Y,A)),
+        subv(Y,X,CondC,CondD), % Y may not be a variable
+        Condition2 = Cond+(-some(X,CondD)*(Y=ok)),
+        simplify(Condition2,Sensecondition).
+% sf if A is instantiated => take predefined axiom
+sfcond(A,Y,Sensecondition) :- nonvar(A), sensing_style(object),
+        senses(A,Y,Sensecondition).
+% sf otherwise: "ok"
+sfcond(_,Y,(Y=ok)) :- sensing_style(object), !.
 
 % ssa if exists pre-instantiated axiom by user => use it
 ssa(Fluent,A,Condition) :- ssa_inst(Fluent,A,Condition), !.
@@ -99,6 +129,12 @@ regress(S,poss(A),Result) :-
 regress(S,exo(A),Result) :- 
         exocond(A,ExoCondition), !, 
         regress(S,ExoCondition,Result).
+regress(S,sf(A),Result) :- 
+        sfcond(A,Sensecondition), !, 
+        regress(S,Sensecondition,Result).
+regress(S,sf(A)=Y,Result) :- 
+        sfcond(A,Y,Sensecondition), !, 
+        regress(S,Sensecondition,Result).
 %regress([A|S],occ(T),Result) :- !, 
 %        regress(S,A=T,Result).
 %regress([],occ(T),occ(T)) :- !.
@@ -147,6 +183,20 @@ regress(S,F1<=F2,Result) :- !,
 regress(S,Formula,Result) :- 
         def(Formula,Definition), !, 
         regress(S,Definition,Result).
+
+regress([],know(Formula),know(Result)) :- !,
+        regress(Formula,Result).
+regress([A|S],know(Formula),Result) :-
+        sensing_style(truth), !,
+        regress(S,
+                (sf(A) * know(sf(A)=>after(A,Formula)))
+                + (-sf(A) * know((-sf(A))=>after(A,Formula))),
+                Result).
+regress([A|S],know(Formula),Result) :-
+        sensing_style(object), !,
+        regress(S,
+                some(X,(sf(A)=X)*know((sf(A)=X)=>after(A,Formula))),
+                Result).
 
 regress(_S,(X=Y),(X=Y)) :- !.
 regress([],Fluent,Fluent) :- isfluent(Fluent), !.
