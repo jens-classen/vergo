@@ -102,6 +102,11 @@ check(Program,Property,Result) :-
         check_post(Program,Phi,R),
         simplify_fml(R,Result).
 
+check(Program,Property,Result) :-
+        property(Property,Program,unipostcond(Phi)), !,
+        check_post(Program,-Phi,R),
+        simplify_fml(-R,Result).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEX
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
