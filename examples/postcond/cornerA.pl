@@ -1,8 +1,8 @@
-:- style_check(-singleton).
-:- ensure_loaded(progress).
-:- ensure_loaded(modelGen).
-:- ensure_loaded(gove).
-:- ensure_loaded(sc).
+%:- style_check(-singleton).
+%:- ensure_loaded(progress).
+%:- ensure_loaded(modelGen).
+%:- ensure_loaded(gove).
+%:- ensure_loaded(sc).
 
 typeList([num]).
 
@@ -42,10 +42,15 @@ pred(num(X)) :-
 
 :- initall.
 
-poss(move(left)) <=> -pos(1).
-poss(move(right)) <=> -pos(5).
-poss(move(up)) <=> -pos(1).
-poss(move(down)) <=> -pos(5).
+%poss(move(left)) <=> -pos(1).
+%poss(move(right)) <=> -pos(5).
+%poss(move(up)) <=> -pos(1).
+%poss(move(down)) <=> -pos(5).
+
+poss(move(left)) <=> -xpos(1).
+poss(move(right)) <=> -xpos(5).
+poss(move(up)) <=> -ypos(1).
+poss(move(down)) <=> -ypos(5).
 
 addList(S, move(left)) <=> 
         [xpos(XX)] :- member(xpos(X), S), XX is X-1.

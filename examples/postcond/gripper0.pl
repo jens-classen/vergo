@@ -1,7 +1,7 @@
-:- style_check(-singleton).
-:- ensure_loaded(progress).
-:- ensure_loaded(modelGen).
-:- ensure_loaded(gove).
+%:- style_check(-singleton).
+%:- ensure_loaded(progress).
+%:- ensure_loaded(modelGen).
+%:- ensure_loaded(gove).
 
 typeList([loc, obj, num]).
 

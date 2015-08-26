@@ -1,8 +1,8 @@
-:- style_check(-singleton).
-:- ensure_loaded(progress).
-:- ensure_loaded(modelGen).
-:- ensure_loaded(gove).
-:- ensure_loaded(sc).
+%:- style_check(-singleton).
+%:- ensure_loaded(progress).
+%:- ensure_loaded(modelGen).
+%:- ensure_loaded(gove).
+%:- ensure_loaded(sc).
 
 % Domain for test3 and test3_1
 
