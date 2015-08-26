@@ -135,9 +135,6 @@ regress(S,sf(A),Result) :-
 regress(S,sf(A)=Y,Result) :- 
         sfcond(A,Y,Sensecondition), !, 
         regress(S,Sensecondition,Result).
-%regress([A|S],occ(T),Result) :- !, 
-%        regress(S,A=T,Result).
-%regress([],occ(T),occ(T)) :- !.
 regress([A|S],Fluent,Result) :- 
         rel_fluent(Fluent), 
         ssa(Fluent,A,Formula), !, 
