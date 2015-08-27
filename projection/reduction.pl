@@ -2,36 +2,9 @@
 :- use_module('../reasoning/fol').
 
 :- multifile stdname/1.
-:- multifile initially/1.
 :- multifile def/2.
 
 :- dynamic(stdname/1).
-:- dynamic(initially/1).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ASK+TELL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-ask(Fml,Truth) :- !,
-        reduce(Fml,Result),
-        entails_initially(Result,Truth).
-
-tell(Fml) :- !,
-        reduce(Fml,Result),
-        assert(initially(Result)).
-
-ask4(Fml,Result) :- !,
-        ask(Fml,TruthP),
-        ask(-Fml,TruthN),
-        ask4result(TruthP,TruthN,Result).
-
-ask4result(true,true,inconsistent).
-ask4result(true,false,true).
-ask4result(false,true,false).
-ask4result(false,false,unknown).
-
-wh_ask(Fml,Result) :- !,
-        reduce(know(Fml),Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Reduction
@@ -75,7 +48,8 @@ resolve(Fml,[Var|Vars],Result) :- !,
         get_new_std_name(Names,New),
         resolve_pos_disjunct(Fml,Var,Vars,Names,Pos),
         resolve_neg_disjunct(Fml,Var,Vars,Names,New,Neg),
-        Result = Pos + Neg.
+        Result2 = Pos + Neg,
+        simplify(Result2,Result).
         
 resolve_pos_disjunct(Fml,Var,Vars,[Name],Result) :- !,
         subv(Var,Name,Fml,FmlS),
