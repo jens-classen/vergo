@@ -40,6 +40,10 @@ The code is divided into the following subdirectories:
 
   Temporary files are put here.
 
+- tools:
+
+  Conversion tools such as PDDL parser.
+
 - transfinal:
 
   Contains various definitions for Golog program semantics.
