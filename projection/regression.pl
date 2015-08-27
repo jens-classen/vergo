@@ -212,6 +212,7 @@ apply_una(true,true) :- !.
 apply_una(false,false) :- !.
 apply_una(poss(A),poss(A)) :- !.
 apply_una(exo(A),exo(A)) :- !.
+apply_una(sf(A),sf(A)) :- !.
 apply_una(F,F) :- isfluent(F), !.
 apply_una(F,F) :- def(F,_), !.
 
@@ -283,6 +284,8 @@ apply_una(all([X],(Z=Y)),false) :-
 apply_una(some(Vars,F1),some(Vars,F2)) :- !,
         apply_una(F1,F2).
 apply_una(all(Vars,F1),all(Vars,F2)) :- !,
+        apply_una(F1,F2).
+apply_una(know(F1),know(F2)) :- !,
         apply_una(F1,F2).
 
 apply_una(F,F) :- !.
