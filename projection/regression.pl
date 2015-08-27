@@ -23,6 +23,8 @@
 :- multifile include_preconditions/0.
 :- multifile sensing_style/1.
 
+:- dynamic(stdname/1).
+
 % poss if A is a variable => big disjunction over all cases
 precond(A,Precondition) :- var(A), !, 
         condition(poss(B,Phi),Phi,B,A,Precondition).
@@ -62,6 +64,8 @@ sfcond(A,Y,Sensecondition) :- nonvar(A), sensing_style(object),
         senses(A,Y,Sensecondition).
 % sf otherwise: "ok"
 sfcond(_,Y,(Y=ok)) :- sensing_style(object), !.
+% ok is a standard name
+stdname(ok).
 
 % ssa if exists pre-instantiated axiom by user => use it
 ssa(Fluent,A,Condition) :- ssa_inst(Fluent,A,Condition), !.
@@ -132,7 +136,9 @@ regress(S,exo(A),Result) :-
 regress(S,sf(A),Result) :- 
         sfcond(A,Sensecondition), !, 
         regress(S,Sensecondition,Result).
-regress(S,sf(A)=Y,Result) :- 
+regress(S,SFA=Y,Result) :- 
+        nonvar(SFA),
+        SFA=sf(A),
         sfcond(A,Y,Sensecondition), !, 
         regress(S,Sensecondition,Result).
 regress([A|S],Fluent,Result) :- 
