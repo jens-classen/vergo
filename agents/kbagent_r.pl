@@ -1,6 +1,7 @@
 :- multifile initially/1.
 
 :- dynamic(history/1).
+:- dynamic(program/1).
 :- dynamic(initially/1).
 
 :- ['../projection/regression'].
@@ -12,32 +13,46 @@
 % Interaction Operations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-init :-
-        assert(history([])).
-
+init :- !,
+        assert(history([])),
+        assert(program('__undef')).
 
 ask(Fml,Truth) :- !,
-        history(History),
-        regress(History,Fml,RegFml),
-        reduce(RegFml,Result),
+        history(H),
+        regress_s(H,Fml,Fml2),
+        reduce_s(Fml2,Result),
         entails_initially(Result,Truth).
 
 tell(Fml) :- !,
-        history(History),
-        regress(History,Fml,RegFml),
-        reduce(RegFml,Result),
+        history(H),
+        regress_s(H,Fml,Fml2),
+        reduce_s(Fml2,Result),
         assert(initially(Result)).
 
 execute(Action,SenseResult) :- !,
-        retract(history(History)),
-        senseresult2fml(SenseResult,Action,SRFml),
-        regress(History,SRFml,RegFml),
-        reduce(RegFml,Result),
-        assert(history([Action|History])),
+        retract(history(H)),
+        senseresult2fml(SenseResult,Action,Fml),
+        regress_s(H,Fml,Fml2),
+        reduce_s(Fml2,Result),
+        update_program(Action),
+        assert(history([Action|H])),
         assert(initially(Result)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper Predicates
+% Program Operations
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+init(Program) :- !,
+        assert(history([])),
+        assert(program(Program)).
+
+next_action(Action) :- !,
+        program(Program),
+        trans(Program,Action,_,Condition),
+        ask(Condition,true).        
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Derived Operations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ask4(Fml,Result) :- !,
@@ -51,7 +66,11 @@ ask4result(false,true,false).
 ask4result(false,false,unknown).
 
 wh_ask(Fml,Result) :- !,
-        reduce(know(Fml),Result).
+        reduce_s(know(Fml),Result).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Helper Predicates
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 senseresult2fml(Result,Action,Fml) :-
         sensing_style(truth),
@@ -64,3 +83,21 @@ senseresult2fml(Result,Action,Fml) :-
 senseresult2fml(Result,Action,Fml) :-
         sensing_style(object), !,
         Fml=(sf(Action)=Result).
+
+regress_s(H,Fml1,Fml2) :- !,
+        regress(H,Fml1,Fml3),
+        apply_una(Fml3,Fml2).
+        
+reduce_s(Fml1,Fml2) :- !,
+        reduce(Fml1,Fml3),
+        simplify(Fml3,Fml2).
+
+new_program('__undef',_,'__undef') :- !.
+new_program(P,A,Q) :-
+        trans(P,A,Q,_), !.
+new_program(_,_,_,failed).
+
+update_program(Action) :-
+        retract(program(P)),
+        new_program(P,Action,Q),
+        assert(program(Q)).

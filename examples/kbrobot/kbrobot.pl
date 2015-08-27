@@ -13,9 +13,9 @@ poss(lookFor(_),true).
 sensing_style(object).
 include_preconditions.
 
-senses(lookFor(X),Y,(Y=location(X))).
+senses(lookFor(X),Y,(location(X)=Y)).
 
-causes(lookFor(XP),location(X),Y,(X=robot)*(Y=location(XP))).
+causes(lookFor(XP),location(X),Y,(X=robot)*(location(XP)=Y)).
 
 program(control,
         while(-some(X,know(X=location(book))),
