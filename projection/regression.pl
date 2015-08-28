@@ -152,13 +152,8 @@ regress(S,SFA=Y,Result) :-
         sfcond(A,Y,Sensecondition), !, 
         regress(S,Sensecondition,Result).
 regress([A|S],Fluent,Result) :- 
-        rel_fluent(Fluent), 
+        isfluent(Fluent), 
         ssa(Fluent,A,Formula), !, 
-        regress(S,Formula,Result).
-regress([A|S],(Fluent=Y),Result) :-
-        nonvar(Fluent),
-        fun_fluent(Fluent), 
-        ssa((Fluent=Y),A,Formula), !, 
         regress(S,Formula,Result).
 regress(_S,Rigid,Rigid) :- 
         isrigid(Rigid), !.
