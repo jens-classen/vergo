@@ -79,8 +79,12 @@ preprocess :- !,
         
         % preds w/o perform clause = rigids
         findall(rel_rigid(Rigid),
-                (pred(Rigid),
-                 not(perform(Rigid,_) <=> _)),
+                (pred(RigidP),
+                 not(perform(RigidP,_) <=> _),
+                 RigidP =.. [P|Args],
+                 length(Args,N),
+                 anonymous_list(N,Ano),
+                 Rigid =.. [P|Ano]),               
                 RelRigids2),
         assert_list(RelRigids2),
         
