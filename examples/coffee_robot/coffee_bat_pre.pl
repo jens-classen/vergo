@@ -84,13 +84,17 @@ property(prop1,
 
 property(prop2,
          main,
-         allpaths(always(occ(requestCoffee(X))
-                         =>eventually(occ(selectRequest(X)))))).
+         somepath(until(empty,holdingCoffee))).
 
 property(prop3,
          main,
-         somepath(always(-some(P,occ(selectRequest(P)))))).
+         allpaths(always(occ(requestCoffee(X))
+                         =>eventually(occ(selectRequest(X)))))).
 
 property(prop4,
+         main,
+         somepath(always(-some(P,occ(selectRequest(P)))))).
+
+property(prop5,
          exog_finite,
          postcond(full)).
