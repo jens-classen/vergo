@@ -526,7 +526,7 @@ cgraph_file(File,ProgramName) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % use fol simplification
-simplify_fml(F,R) :-
+simplify_fml(F,R) :- !,
         apply_una(F,F2),
         reduce2cnf(F2,F3),
         apply_una(F3,R).
