@@ -215,8 +215,10 @@ disjuncts2(F1,F2+F3,R) :- !,
 disjuncts2(F1,F2,F1*F2).
 
 distribute_exists_disjuncts(Vars,Fml1+Fml2,R1+R2) :- !,
+        copy_term(Vars,VarsN),
+        sub_vars(Vars,VarsN,Fml2,Fml2N),
         distribute_exists_disjuncts(Vars,Fml1,R1),
-        distribute_exists_disjuncts(Vars,Fml2,R2).
+        distribute_exists_disjuncts(VarsN,Fml2N,R2).
 distribute_exists_disjuncts(Vars,Fml,some(Vars,Fml)).
 
 conjuncts((F1*F2)+F3,F4*F5) :- !,        
@@ -241,9 +243,16 @@ conjuncts2(F1,F2*F3,R) :- !,
 conjuncts2(F1,F2,F1+F2).
 
 distribute_forall_conjuncts(Vars,Fml1*Fml2,R1*R2) :- !,
+        copy_term(Vars,VarsN),
+        sub_vars(Vars,VarsN,Fml2,Fml2N),
         distribute_forall_conjuncts(Vars,Fml1,R1),
-        distribute_forall_conjuncts(Vars,Fml2,R2).
+        distribute_forall_conjuncts(VarsN,Fml2N,R2).
 distribute_forall_conjuncts(Vars,Fml,all(Vars,Fml)).
+
+sub_vars([Var|Vars],[NVar|NVars],Fml,NFml) :-
+        sub_vars(Vars,NVars,Fml,Fml2),
+        subv(Var,NVar,Fml2,NFml).
+sub_vars([],[],Fml,Fml).
 
 handle_equality_conjuncts([X|Vars],Fml,Vars2,Fml3) :-
         equality_conjunct(X,Y,Fml), !,
