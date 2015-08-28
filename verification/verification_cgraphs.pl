@@ -50,6 +50,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
   * verify(+Program,+Property)
   **/
 verify(Program,Property) :- !,
+        report_message(['Verifying property \'', Property,
+                        '\' for program \'', Program, '\'...']),
         check(Program,Property,Result),
         entails_initially(Result,TruthValue),
         report_message(['Verified: \n',
@@ -62,48 +64,68 @@ verify(Program,Property) :- !,
   **/
 check(Program,Property,Result) :-
         property(Property,Program,somepath(next(Phi))), !,
+        report_message(['Checking \'', somepath(next(Phi)),
+                        '\' on program \'', Program, '\'...']),
         check_ex(Program,Phi,Result).
         
 check(Program,Property,Result) :-
         property(Property,Program,somepath(always(Phi))), !,
+        report_message(['Checking \'', somepath(always(Phi)),
+                        '\' on program \'', Program, '\'...']),
         check_eg(Program,Phi,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,somepath(until(Phi1,Phi2))), !,
+        report_message(['Checking \'', somepath(until(Phi1,Phi2)),
+                        '\' on program \'', Program, '\'...']),
         check_eu(Program,Phi1,Phi2,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,somepath(eventually(Phi))), !,
+        report_message(['Checking \'', somepath(eventually(Phi)),
+                        '\' on program \'', Program, '\'...']),
         check_eu(Program,true,Phi,Result).
         
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(next(Phi))), !,
+        report_message(['Checking \'', allpaths(next(Phi)),
+                        '\' on program \'', Program, '\'...']),
         check_ex(Program,-Phi,R),
         simplify_fml(-R,Result).
         
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(always(Phi))), !,
+        report_message(['Checking \'', allpaths(always(Phi)),
+                        '\' on program \'', Program, '\'...']),
         check_eu(Program,true,-Phi,R),
         simplify_fml(-R,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(until(Phi1,Phi2))), !,
+        report_message(['Checking \'', allpaths(until(Phi1,Phi2)),
+                        '\' on program \'', Program, '\'...']),
         check_eu(Program,-Phi2,(-Phi1)*(-Phi2),R1),
         check_eg(Program,-Phi2,R2),
         simplify_fml((-R1)*(-R2),Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,allpaths(eventually(Phi))), !,
+        report_message(['Checking \'', allpaths(eventually(Phi)),
+                        '\' on program \'', Program, '\'...']),
         check_eg(Program,-Phi,R),
         simplify_fml(-R,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,postcond(Phi)), !,
+        report_message(['Checking \'', postcond(Phi),
+                        '\' on program \'', Program, '\'...']),
         check_post(Program,Phi,R),
         simplify_fml(R,Result).
 
 check(Program,Property,Result) :-
         property(Property,Program,unipostcond(Phi)), !,
+        report_message(['Checking \'', unipostcond(Phi),
+                        '\' on program \'', Program, '\'...']),
         check_post(Program,-Phi,R),
         simplify_fml(-R,Result).
 
@@ -116,7 +138,7 @@ check(Program,Property,Result) :-
   **/
 check_ex(P,Phi,Result) :-
         report_message(['--------------------------------------']),
-        report_message(['CheckEX']),
+        report_message(['CheckEX[',P,',',Phi,']:']),
         cg_label(P,ex(Phi),1,0,Result).
 
 /**
@@ -138,7 +160,7 @@ check_label(P,ex(Phi),1,N,F) :-
   **/
 check_eg(P,Phi,Result) :-
         report_message(['--------------------------------------']),
-        report_message(['CheckEG']),
+        report_message(['CheckEG[',P,',',Phi,']:']),
         check_iterate(P,eg(Phi),0,K),
         cg_label(P,eg(Phi),K,0,Result).
 
@@ -164,7 +186,7 @@ check_label(P,eg(Phi),I,N,F) :-
   **/
 check_eu(P,Phi1,Phi2,Result) :-
         report_message(['--------------------------------------']),
-        report_message(['CheckEU']),
+        report_message(['CheckEU[',P,',',Phi1,',',Phi2,']:']),
         check_iterate(P,eu(Phi1,Phi2),0,K),
         cg_label(P,eu(Phi1,Phi2),K,0,Result).
 
@@ -191,6 +213,8 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
   * check_post(+Program,+Property,-Result)
   **/
 check_post(P,Phi,Result) :-
+        report_message(['--------------------------------------']),
+        report_message(['CheckPost[',P,',',Phi,']:']),
         check_iterate(P,post(Phi),0,K),
         cg_label(P,post(Phi),K,0,Result).
 
