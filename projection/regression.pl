@@ -290,6 +290,8 @@ apply_una(some(Vars,F1),some(Vars,F2)) :- !,
         apply_una(F1,F2).
 apply_una(all(Vars,F1),all(Vars,F2)) :- !,
         apply_una(F1,F2).
+apply_una(after(A,F1),after(A,F2)) :- !,
+        apply_una(F1,F2).
 apply_una(know(F1),know(F2)) :- !,
         apply_una(F1,F2).
 
