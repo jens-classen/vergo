@@ -121,11 +121,21 @@ construct_disjuncts([E|D1],[Cond|D2],A,FreeVars) :-
         Cond = some(Vars,((A=B)*Phi)),
         construct_disjuncts(D1,D2,A,FreeVars).
 
-isfluent(F) :- rel_fluent(F).
-isfluent((F=_)) :- nonvar(F), fun_fluent(F).
+isfluent(F) :- 
+        rel_fluent(F2), 
+        unifiable(F,F2,_). % don't unify (b/c of free vars)
+isfluent((F=_)) :- 
+        nonvar(F), 
+        fun_fluent(F2),
+        unifiable(F,F2,_). % don't unify (b/c of free vars)
 
-isrigid(F) :- rel_rigid(F).
-isrigid((F=_)) :- nonvar(F), fun_rigid(F).
+isrigid(F) :- 
+        rel_rigid(F2),
+        unifiable(F,F2,_). % don't unify (b/c of free vars)
+isrigid((F=_)) :- 
+        nonvar(F), 
+        fun_rigid(F2),
+        unifiable(F,F2,_). % don't unify (b/c of free vars)
 
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
