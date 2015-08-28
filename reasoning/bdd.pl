@@ -47,15 +47,15 @@ bdd_node('___undef','___undef','___undef',1).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % reduce using BDDs
-reduce(Fml1,Fml2) :-
+reduce(Fml1,Fml2) :- !,
         formula2bdd(Fml1,BDD),
         bdd2formula(BDD,Fml2).
 
-reduce2dnf(Fml1,Fml2) :-
+reduce2dnf(Fml1,Fml2) :- !,
         formula2bdd(Fml1,BDD),
         bdd2dnf(BDD,Fml2).
 
-reduce2cnf(Fml1,Fml2) :-
+reduce2cnf(Fml1,Fml2) :- !,
         formula2bdd(Fml1,BDD),
         bdd2cnf(BDD,Fml2).
 
