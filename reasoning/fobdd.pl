@@ -66,6 +66,40 @@ preprocess(all(X,Fml),R) :-
         var(X), !,
         preprocess(all([X],Fml),R).
 
+% drop empty quantifiers
+preprocess(some([],Fml),R) :- !,
+        preprocess(Fml,R).
+preprocess(all([],Fml),R) :- !,
+        preprocess(Fml,R).
+
+% drop quantifiers for non-appearing variables
+preprocess(some(Vars1,Fml),R) :-
+        term_variables(Fml,Vars2),
+        intersection2(Vars1,Vars2,Vars3),
+        Vars1 \= Vars3, !,
+        preprocess(some(Vars3,Fml),R).
+preprocess(all(Vars1,Fml),R) :-
+        term_variables(Fml,Vars2),
+        intersection2(Vars1,Vars2,Vars3),
+        Vars1 \= Vars3, !,
+        preprocess(all(Vars3,Fml),R).
+
+% combine quantifiers
+preprocess(some(Vars1,some(Var,Fml)),R) :- 
+        var(Var), !,
+        append(Vars1,[Var],Vars),
+        preprocess(some(Vars,Fml),R).
+preprocess(some(Vars1,some(Vars2,Fml)),R) :- !,
+        append(Vars1,Vars2,Vars),
+        preprocess(some(Vars,Fml),R).
+preprocess(all(Vars1,all(Var,Fml)),R) :- 
+        var(Var), !,
+        append(Vars1,[Var],Vars),
+        preprocess(all(Vars,Fml),R).
+preprocess(all(Vars1,all(Vars2,Fml)),R) :- !,
+        append(Vars1,Vars2,Vars),
+        preprocess(all(Vars,Fml),R).
+
 % push negation inwards to try the other cases
 preprocess(some(Vars,-Fml),R) :-
         push_negation_inside(-Fml,Fml2),
@@ -86,24 +120,6 @@ preprocess(all(Vars,Fml),R) :-
         handle_inequality_disjuncts(Vars,Fml,Vars2,Fml2),
         all(Vars,Fml) \= all(Vars2,Fml2), !,
         preprocess(all(Vars2,Fml2),R).
-
-% drop quantifiers for non-appearing variables
-preprocess(some(Vars1,Fml),R) :-
-        term_variables(Fml,Vars2),
-        intersection2(Vars1,Vars2,Vars3),
-        Vars1 \= Vars3, !,
-        preprocess(some(Vars3,Fml),R).
-preprocess(all(Vars1,Fml),R) :-
-        term_variables(Fml,Vars2),
-        intersection2(Vars1,Vars2,Vars3),
-        Vars1 \= Vars3, !,
-        preprocess(all(Vars3,Fml),R).
-
-% drop empty quantifiers
-preprocess(some([],Fml),R) :- !,
-        preprocess(Fml,R).
-preprocess(all([],Fml),R) :- !,
-        preprocess(Fml,R).
 
 % distribute "exists" over disjunction
 preprocess(some(Vars,Fml),R) :-
@@ -128,22 +144,6 @@ preprocess(all(Vars,Fml),R) :-
         disjuncts_with_without(Vars,Fml,DisW,DisWO),
         DisWO \= false, !,
         preprocess(all(Vars,DisW)+DisWO,R).
-
-% combine quantifiers
-preprocess(some(Vars1,some(Var,Fml)),R) :- 
-        var(Var), !,
-        append(Vars1,[Var],Vars),
-        preprocess(some(Vars,Fml),R).
-preprocess(some(Vars1,some(Vars2,Fml)),R) :- !,
-        append(Vars1,Vars2,Vars),
-        preprocess(some(Vars,Fml),R).
-preprocess(all(Vars1,all(Var,Fml)),R) :- 
-        var(Var), !,
-        append(Vars1,[Var],Vars),
-        preprocess(all(Vars,Fml),R).
-preprocess(all(Vars1,all(Vars2,Fml)),R) :- !,
-        append(Vars1,Vars2,Vars),
-        preprocess(all(Vars,Fml),R).
 
 % recursive preprocessing of subformulas
 preprocess(some(Vars,Fml),R) :-
