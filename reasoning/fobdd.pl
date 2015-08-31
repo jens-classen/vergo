@@ -141,24 +141,20 @@ preprocess(all(Vars,Fml),R) :-
         preprocess(all(Vars,DisW)+DisWO,R).
 
 % recursive preprocessing of subformulas
-preprocess(some(Vars,Fml),R) :-
+preprocess(some(Vars,Fml),R) :- !,
         preprocess(Fml,Fml2),
-        Fml \= Fml2, !,
-        preprocess(some(Vars,Fml2),R).
-preprocess(all(Vars,Fml),R) :-
+        (Fml \= Fml2 ->
+            preprocess(some(Vars,Fml2),R);
+            (reduce(Fml,R1),
+             R = some(Vars,R1))).
+preprocess(all(Vars,Fml),R) :- !,
         preprocess(Fml,Fml2),
-        Fml \= Fml2, !,
-        preprocess(all(Vars,Fml2),R).
+        (Fml \= Fml2 ->
+            preprocess(all(Vars,Fml2),R);
+            (reduce(Fml,R1),
+             R = all(Vars,R1))).
 
-% if none of the other cases worked: reduce quantified subformula
-preprocess(some(Vars,Fml),some(Vars,R)) :- !,
-        preprocess(Fml,R1),
-        reduce(R1,R).
-preprocess(all(Vars,Fml),all(Vars,R)) :- !,
-        preprocess(Fml,R1),
-        reduce(R1,R).
-
-% if none of the other cases works
+% handle boolean connectives
 preprocess(Fml1<=>Fml2,R) :- !,
         preprocess((Fml1=>Fml2)*(Fml2=>Fml1),R).
 preprocess(Fml1=>Fml2,R) :- !,
@@ -175,8 +171,6 @@ preprocess(Fml1+Fml2,R1+R2) :- !,
 preprocess(Fml1*Fml2,R1*R2) :- !,
         preprocess(Fml1,R1),
         preprocess(Fml2,R2).
-
-% else do nothing
 preprocess(R,R) :- !.
 
 disjuncts((F1+F2)*F3,F4+F5) :- !,
