@@ -28,31 +28,34 @@ reduce(Fml1,Fml2) :- !,
         reduce(Fml1,Fml2,cnf).
 
 reduce(Fml1,Fml2,ite) :- !,
-        preprocess(Fml1,Fml3),
-        free_variables(Fml3,Vars),
-        propositionalize(Fml3,Vars,Fml4),
-        bdd:reduce2ite(Fml4,Fml5),
-        depropositionalize(Fml5,Vars,Fml6),
-        simplify_deps(Fml6,Vars,Fml2).
-
-reduce(Fml1,Fml2,dnf) :- !,
-        preprocess(Fml1,Fml3),
-        free_variables(Fml3,Vars),
-        propositionalize(Fml3,Vars,Fml4),
-        bdd:reduce2dnf(Fml4,Fml5),
-        depropositionalize(Fml5,Vars,Fml6),
-        simplify_deps(Fml6,Vars,Fml2).
-
-reduce(Fml1,Fml2,cnf) :- !,
-        preprocess(Fml1,Fml3),
-        free_variables(Fml3,Vars),
-        propositionalize(Fml3,Vars,Fml4),
-        bdd:reduce2cnf(Fml4,Fml5),
-        clausalform:fml2prime_implicates(Fml5,PIs),
-        simplify_deps_clauses(PIs,Vars,SPIs),
-        clausalform:clauses2cnf(SPIs,Fml6),
+        simplify(Fml1,Fml3),
+        preprocess(Fml3,Fml4),
+        free_variables(Fml4,Vars),
+        propositionalize(Fml4,Vars,Fml5),
+        bdd:reduce2ite(Fml5,Fml6),
         depropositionalize(Fml6,Vars,Fml7),
         simplify_deps(Fml7,Vars,Fml2).
+
+reduce(Fml1,Fml2,dnf) :- !,
+        simplify(Fml1,Fml3),
+        preprocess(Fml3,Fml4),
+        free_variables(Fml4,Vars),
+        propositionalize(Fml4,Vars,Fml5),
+        bdd:reduce2dnf(Fml5,Fml6),
+        depropositionalize(Fml6,Vars,Fml7),
+        simplify_deps(Fml7,Vars,Fml2).
+
+reduce(Fml1,Fml2,cnf) :- !,
+        simplify(Fml1,Fml3),
+        preprocess(Fml3,Fml4),
+        free_variables(Fml4,Vars),
+        propositionalize(Fml4,Vars,Fml5),
+        bdd:reduce2cnf(Fml5,Fml6),
+        clausalform:fml2prime_implicates(Fml6,PIs),
+        simplify_deps_clauses(PIs,Vars,SPIs),
+        clausalform:clauses2cnf(SPIs,Fml7),
+        depropositionalize(Fml7,Vars,Fml8),
+        simplify_deps(Fml8,Vars,Fml2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preprocessing
@@ -104,12 +107,14 @@ preprocess(all(Vars1,all(Vars2,Fml)),R) :- !,
 preprocess(some(Vars,Fml),R) :-
         handle_equality_conjuncts(Vars,Fml,Vars2,Fml2),
         some(Vars,Fml) \= some(Vars2,Fml2), !,
-        preprocess(some(Vars2,Fml2),R).
+        simplify(some(Vars2,Fml2),Fml3),
+        preprocess(Fml3,R).
 % ![X]:~(X=T)|F --> F with X replaced by T
 preprocess(all(Vars,Fml),R) :-
         handle_inequality_disjuncts(Vars,Fml,Vars2,Fml2),
         all(Vars,Fml) \= all(Vars2,Fml2), !,
-        preprocess(all(Vars2,Fml2),R).
+        simplify(all(Vars2,Fml2),Fml3),
+        preprocess(Fml3,R).
 
 % distribute "exists" over disjunction
 preprocess(some(Vars,Fml),R) :-
@@ -144,12 +149,6 @@ preprocess(all(Vars,Fml),R) :-
         preprocess(Fml,Fml2),
         Fml \= Fml2, !,
         preprocess(all(Vars,Fml2),R).
-
-% apply simple FOL simplifications if possible
-preprocess(F,R) :-
-        simplify(F,F2),
-        F \= F2, !,
-        preprocess(F2,R).
 
 % if none of the other cases worked: reduce quantified subformula
 preprocess(some(Vars,Fml),some(Vars,R)) :- !,
