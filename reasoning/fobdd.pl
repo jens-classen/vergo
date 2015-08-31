@@ -100,16 +100,6 @@ preprocess(all(Vars1,all(Vars2,Fml)),R) :- !,
         append(Vars1,Vars2,Vars),
         preprocess(all(Vars,Fml),R).
 
-% push negation inwards to try the other cases
-preprocess(some(Vars,-Fml),R) :-
-        push_negation_inside(-Fml,Fml2),
-        -Fml \= Fml2, !,
-        preprocess(some(Vars,Fml2),R).
-preprocess(all(Vars,-Fml),R) :-
-        push_negation_inside(-Fml,Fml2),
-        -Fml \= Fml2, !,
-        preprocess(all(Vars,Fml2),R).
-
 % ?[X]:(X=T)&F --> F with X replaced by T
 preprocess(some(Vars,Fml),R) :-
         handle_equality_conjuncts(Vars,Fml,Vars2,Fml2),
@@ -168,14 +158,10 @@ preprocess(Fml1=>Fml2,R) :- !,
         preprocess((-Fml1)+Fml2,R).
 preprocess(Fml1<=Fml2,R) :- !,
         preprocess(Fml1+(-Fml2),R).
-preprocess(-some(Vars,Fml),R) :- !,
+preprocess(-Fml,R) :-
         push_negation_inside(-Fml,Fml2),
-        preprocess(all(Vars,Fml2),R).
-preprocess(-all(Vars,Fml),R) :- !,
-        push_negation_inside(-Fml,Fml2),
-        preprocess(some(Vars,Fml2),R).
-preprocess(-Fml,-R) :- !,
-        preprocess(Fml,R).
+        -Fml \= Fml2, !,
+        preprocess(Fml2,R).
 preprocess(Fml1+Fml2,R1+R2) :- !,
         preprocess(Fml1,R1),
         preprocess(Fml2,R2).
