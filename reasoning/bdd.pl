@@ -23,7 +23,7 @@ ordering nodes.
 
  **/
 
-:- module(bdd, [reduce/2,
+:- module(bdd, [reduce2ite/2,
                 reduce2dnf/2,
                 reduce2cnf/2]).
 
@@ -47,7 +47,7 @@ bdd_node('___undef','___undef','___undef',1).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % reduce using BDDs
-reduce(Fml1,Fml2) :- !,
+reduce2ite(Fml1,Fml2) :- !,
         formula2bdd(Fml1,BDD),
         bdd2formula(BDD,Fml2).
 

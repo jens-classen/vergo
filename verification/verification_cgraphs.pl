@@ -528,5 +528,5 @@ cgraph_file(File,ProgramName) :-
 % use fol simplification
 simplify_fml(F,R) :- !,
         apply_una(F,F2),
-        reduce2cnf(F2,F3),
+        reduce(F2,F3),
         apply_una(F3,R).

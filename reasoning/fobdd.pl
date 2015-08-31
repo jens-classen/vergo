@@ -12,9 +12,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
  **/
 
-:- module(fobdd, [reduce/2,
-                  reduce2dnf/2,
-                  reduce2cnf/2]).
+:- module(fobdd, [reduce/2]).
 
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/bdd').
@@ -27,14 +25,17 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 mappings(0).
 
 reduce(Fml1,Fml2) :- !,
+        reduce(Fml1,Fml2,cnf).
+
+reduce(Fml1,Fml2,ite) :- !,
         preprocess(Fml1,Fml3),
         free_variables(Fml3,Vars),
         propositionalize(Fml3,Vars,Fml4),
-        bdd:reduce(Fml4,Fml5),
+        bdd:reduce2ite(Fml4,Fml5),
         depropositionalize(Fml5,Vars,Fml6),
         simplify_deps(Fml6,Vars,Fml2).
 
-reduce2dnf(Fml1,Fml2) :- !,
+reduce(Fml1,Fml2,dnf) :- !,
         preprocess(Fml1,Fml3),
         free_variables(Fml3,Vars),
         propositionalize(Fml3,Vars,Fml4),
@@ -42,7 +43,7 @@ reduce2dnf(Fml1,Fml2) :- !,
         depropositionalize(Fml5,Vars,Fml6),
         simplify_deps(Fml6,Vars,Fml2).
 
-reduce2cnf(Fml1,Fml2) :- !,
+reduce(Fml1,Fml2,cnf) :- !,
         preprocess(Fml1,Fml3),
         free_variables(Fml3,Vars),
         propositionalize(Fml3,Vars,Fml4),
