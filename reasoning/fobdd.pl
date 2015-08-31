@@ -151,6 +151,14 @@ preprocess(F,R) :-
         F \= F2, !,
         preprocess(F2,R).
 
+% if none of the other cases worked: reduce quantified subformula
+preprocess(some(Vars,Fml),some(Vars,R)) :- !,
+        preprocess(Fml,R1),
+        reduce(R1,R).
+preprocess(all(Vars,Fml),all(Vars,R)) :- !,
+        preprocess(Fml,R1),
+        reduce(R1,R).
+
 % if none of the other cases works
 preprocess(Fml1<=>Fml2,R) :- !,
         preprocess((Fml1=>Fml2)*(Fml2=>Fml1),R).
@@ -168,14 +176,6 @@ preprocess(Fml1+Fml2,R1+R2) :- !,
 preprocess(Fml1*Fml2,R1*R2) :- !,
         preprocess(Fml1,R1),
         preprocess(Fml2,R2).
-
-% if none of the other cases worked: reduce quantified subformula
-preprocess(some(Vars,Fml),some(Vars,R)) :- !,
-        preprocess(Fml,R1),
-        reduce(R1,R).
-preprocess(all(Vars,Fml),all(Vars,R)) :- !,
-        preprocess(Fml,R1),
-        reduce(R1,R).
 
 % else do nothing
 preprocess(R,R) :- !.
