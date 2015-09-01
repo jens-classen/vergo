@@ -96,7 +96,7 @@ ssa(Fluent=Y,A,Condition) :- fun_fluent(Fluent), nonvar(A), !,
         apply_una(Condition3,Condition2),
         simplify(Condition2,Condition).       
 
-condition(Pattern,Phi,B,A,Condition) :-
+condition(Pattern,Phi,B,A,Condition) :- !,
         % free variables in Pattern (except Phi and B)
         term_variables(Pattern,FreeVars2),
         setminus2(FreeVars2,[B,Phi],FreeVars),
@@ -111,7 +111,7 @@ condition(Pattern,Phi,B,A,Condition) :-
         disjoin(Conditions,Condition2),
         simplify(Condition2,Condition).
 
-construct_disjuncts([],[],_,_).
+construct_disjuncts([],[],_,_) :- !.
 construct_disjuncts([E|D1],[Cond|D2],A,FreeVars) :-
         E = (FreeVars,[],((_C=B)*Phi)), !,
         Cond = ((A=B)*Phi),

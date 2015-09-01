@@ -321,17 +321,17 @@ simplify(F,FS) :-
 
 /* conjoin(+L,-F)
    F is the conjunction of the list of formulas L */
-conjoin([F],F).
-conjoin([F1,F2|Fs],F1*FR) :-
+conjoin([F],F) :- !.
+conjoin([F1,F2|Fs],F1*FR) :- !,
         conjoin([F2|Fs],FR).
-conjoin([],true).
+conjoin([],true) :- !.
 
 /* disjoin(+L,-F)
    F is the disjunction of the list of formulas L */
-disjoin([F],F).
-disjoin([F1,F2|Fs],F1+FR) :-
+disjoin([F],F) :- !.
+disjoin([F1,F2|Fs],F1+FR) :- !,
         disjoin([F2|Fs],FR).
-disjoin([],false).
+disjoin([],false) :- !.
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Formula Properties
