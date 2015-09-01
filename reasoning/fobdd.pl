@@ -502,3 +502,54 @@ implies(Fml1,Fml2,Vars) :-
 implies(Fml1,Fml2,Vars) :- !,
         assert(cached_implies(Fml1,Fml2,Vars,false)),
         fail.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Debugging
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ensure that every quantifier uses a separate variable symbol
+check_variables(Fml) :-
+        check_variables(Fml,[],_), !.
+check_variables(Fml) :-
+        report_message(['Variable check failed: ', Fml]),
+        gtrace.
+check_variables(Fml1<=>Fml2,Vars1,Vars2) :- !,
+        check_variables(Fml1,Vars1,Vars3),
+        check_variables(Fml2,Vars3,Vars2).
+check_variables(Fml1<=Fml2,Vars1,Vars2) :- !,
+        check_variables(Fml1,Vars1,Vars3),
+        check_variables(Fml2,Vars3,Vars2).
+check_variables(Fml1=>Fml2,Vars1,Vars2) :- !,
+        check_variables(Fml1,Vars1,Vars3),
+        check_variables(Fml2,Vars3,Vars2).
+check_variables(Fml1*Fml2,Vars1,Vars2) :- !,
+        check_variables(Fml1,Vars1,Vars3),
+        check_variables(Fml2,Vars3,Vars2).
+check_variables(Fml1+Fml2,Vars1,Vars2) :- !,
+        check_variables(Fml1,Vars1,Vars3),
+        check_variables(Fml2,Vars3,Vars2).
+check_variables(-Fml,Vars1,Vars2) :- !,
+        check_variables(Fml,Vars1,Vars2).
+check_variables(some(Var,Fml),Vars1,Vars2) :-
+        var(Var), !,
+        check_variables(some([Var],Fml),Vars1,Vars2).
+check_variables(some([Var|Vars],Fml),Vars1,Vars2) :-
+        not(member2(Var,Vars1)), !,
+        check_variables(some(Vars,Fml),[Var|Vars1],Vars2).
+check_variables(some([Var|_],_),Vars1,_) :-
+        member2(Var,Vars1), !,
+        fail.
+check_variables(some([],Fml),Vars1,Vars2) :- !,
+        check_variables(Fml,Vars1,Vars2).
+check_variables(all(Var,Fml),Vars1,Vars2) :-
+        var(Var), !,
+        check_variables(all([Var],Fml),Vars1,Vars2).
+check_variables(all([Var|Vars],Fml),Vars1,Vars2) :-
+        not(member2(Var,Vars1)), !,
+        check_variables(all(Vars,Fml),[Var|Vars1],Vars2).
+check_variables(all([Var|_],_),Vars1,_) :-
+        member2(Var,Vars1), !,
+        fail.
+check_variables(all([],Fml),Vars1,Vars2) :- !,
+        check_variables(Fml,Vars1,Vars2).
+check_variables(_Fml,Vars,Vars) :- !.
