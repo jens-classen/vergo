@@ -468,6 +468,30 @@ simplify_deps((Fml2+Fml3)*Fml1,Vars,Fml) :-
 simplify_deps((Fml2+Fml3)*Fml1,Vars,Fml) :-
         implies(Fml1,-Fml2,Vars), !,
         simplify_deps(Fml1*Fml3,Vars,Fml).
+simplify_deps(Fml1*(Fml2+_Fml3),Vars,Fml) :-
+        implies(Fml1,Fml2,Vars), !,
+        simplify_deps(Fml1,Vars,Fml).
+simplify_deps(Fml1*(_Fml2+Fml3),Vars,Fml) :-
+        implies(Fml1,Fml3,Vars), !,
+        simplify_deps(Fml1,Vars,Fml).
+simplify_deps((Fml2+_Fml3)*Fml1,Vars,Fml) :-
+        implies(Fml1,Fml2,Vars), !,
+        simplify_deps(Fml1,Vars,Fml).
+simplify_deps((_Fml2+Fml3)*Fml1,Vars,Fml) :-
+        implies(Fml1,Fml3,Vars), !,
+        simplify_deps(Fml1,Vars,Fml).
+simplify_deps(Fml1*(Fml2*Fml3),Vars,Fml) :-
+        implies(Fml1,Fml2,Vars), !,
+        simplify_deps(Fml1*Fml3,Vars,Fml).
+simplify_deps(Fml1*(Fml2*Fml3),Vars,Fml) :-
+        implies(Fml1,Fml3,Vars), !,
+        simplify_deps(Fml1*Fml2,Vars,Fml).
+simplify_deps((Fml2*Fml3)*Fml1,Vars,Fml) :-
+        implies(Fml1,Fml2,Vars), !,
+        simplify_deps(Fml1*Fml3,Vars,Fml).
+simplify_deps((Fml2*Fml3)*Fml1,Vars,Fml) :-
+        implies(Fml1,Fml2,Vars), !,
+        simplify_deps(Fml1*Fml3,Vars,Fml).
 simplify_deps(Fml1*Fml2,Vars,Fml3*Fml4) :- !,
         simplify_deps(Fml1,Vars,Fml3),
         simplify_deps(Fml2,Vars,Fml4).
@@ -476,10 +500,14 @@ simplify_deps(Fml1+Fml2,Vars,Fml3+Fml4) :- !,
         simplify_deps(Fml2,Vars,Fml4).
 simplify_deps(Fml,_Vars,Fml) :- !.
 
-simplify_deps_clauses([Clause|Clauses],Vars,[Clause2|Clauses2]) :- !,
+simplify_deps_clauses(Clauses,Vars,Clauses2) :- !,
+        simplify_deps_clauses2(Clauses,Vars,Clauses2).
+        %simplify_deps_clauses3(Clauses3,Vars,Clauses2).
+
+simplify_deps_clauses2([Clause|Clauses],Vars,[Clause2|Clauses2]) :- !,
         simplify_deps_clause(Clause,Vars,Clause2),
-        simplify_deps_clauses(Clauses,Vars,Clauses2).
-simplify_deps_clauses([],_Vars,[]) :- !.
+        simplify_deps_clauses2(Clauses,Vars,Clauses2).
+simplify_deps_clauses2([],_Vars,[]) :- !.
 
 simplify_deps_clause(Clause,Vars,Clause2) :-
         member(L1,Clause),
@@ -491,6 +519,20 @@ simplify_deps_clause(Clause,Vars,Clause2) :-
         setminus2(Clause,[L1],Clause3),
         simplify_deps_clause(Clause3,Vars,Clause2).
 simplify_deps_clause(Clause,_Vars,Clause) :- !.
+
+simplify_deps_clauses3(Clauses,Vars,Clauses2) :-
+        member([L1],Clauses),
+        member(C2,Clauses),
+        [L1] \= C2,
+        member(L2,C2),
+        report_message(['clauses: ',[L1],', ',C2]),
+        depropositionalize(L1,Vars,Fml1),
+        depropositionalize(L2,Vars,Fml2),
+        implies(Fml1,Fml2,Vars), !,
+        report_message([implies(Fml1,Fml2,Vars)]),
+        setminus2(Clauses,C2,Clauses3),
+        simplify_deps_clauses3(Clauses3,Vars,Clauses2).
+simplify_deps_clauses3(Clauses,_Vars,Clauses).
 
 implies(Fml1,-(-Fml2),Vars) :- !,
         implies(Fml1,Fml2,Vars).
