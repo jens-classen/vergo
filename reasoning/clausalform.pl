@@ -142,9 +142,11 @@ cnf2clauses(F1+F2,[Clause]) :- !,
         cnf2clauses(F1,[Clause1]),
         cnf2clauses(F2,[Clause2]),
         append(Clause1,Clause2,Clause).
-cnf2clauses(true,[]).
-cnf2clauses(false,[[]]).
-cnf2clauses(Lit,[[Lit]]).
+cnf2clauses(true,[]) :- !.
+cnf2clauses(false,[[]]) :- !.
+cnf2clauses(Lit,[[Lit]]) :-
+        Lit \= true,
+        Lit \= false, !.
 
 % convert DNF formula in clause set
 dnf2clauses(F1+F2,Clauses) :- !,
@@ -155,9 +157,11 @@ dnf2clauses(F1*F2,[Clause]) :- !,
         dnf2clauses(F1,[Clause1]),
         dnf2clauses(F2,[Clause2]),
         append(Clause1,Clause2,Clause).
-dnf2clauses(false,[]).
-dnf2clauses(true,[[]]).
-dnf2clauses(Lit,[[Lit]]).
+dnf2clauses(false,[]) :- !.
+dnf2clauses(true,[[]]) :- !.
+dnf2clauses(Lit,[[Lit]]) :-
+        Lit \= true,
+        Lit \= false, !.
 
 % convert clause set to CNF formula
 clauses2cnf(Cla,Unis,Exis,Vars,Skols,Fml) :-
