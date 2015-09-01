@@ -525,11 +525,9 @@ simplify_deps_clauses3(Clauses,Vars,Clauses2) :-
         member(C2,Clauses),
         [L1] \= C2,
         member(L2,C2),
-        report_message(['clauses: ',[L1],', ',C2]),
         depropositionalize(L1,Vars,Fml1),
         depropositionalize(L2,Vars,Fml2),
         implies(Fml1,Fml2,Vars), !,
-        report_message([implies(Fml1,Fml2,Vars)]),
         setminus2(Clauses,C2,Clauses3),
         simplify_deps_clauses3(Clauses3,Vars,Clauses2).
 simplify_deps_clauses3(Clauses,_Vars,Clauses).
