@@ -103,7 +103,7 @@ condition(Pattern,Phi,B,A,Condition) :-
         % findall instances of Pattern
         findall((FreeVars,Vars,((_C=B)*Phi)),
                 (Pattern, 
-                 term_variables((B,Phi),Vars2),
+                 free_variables((B=B)*Phi,Vars2),
                  setminus2(Vars2,FreeVars,Vars)),
                 Conds),
         % build a formula with quantifiers over conditions
