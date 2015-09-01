@@ -111,7 +111,7 @@ check_eprover_status(exit(S)) :- !,
                         ')!']),
         report_message(['Aborting...']),
         report_message(['Check ', File, '.']),
-        abort.        
+        gtrace.        
 
 % check for equivalence, abort if fails
 % useful as assertion for debugging purposes
@@ -121,7 +121,7 @@ check_equivalence(F2,F3) :-  !,
         report_message(['Not equivalent: ']),
         report_message(['Fml1 = ', F2]),
         report_message(['Fml2 = ', F3]),
-        abort.
+        gtrace.
 
 temp_file(File) :-
         temp_dir(TempDir),
