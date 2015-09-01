@@ -26,8 +26,8 @@ subvl(_,_,[],[]).
 subvl(X1,X2,[T1|L1],[T2|L2]) :- subv(X1,X2,T1,T2), subvl(X1,X2,L1,L2).
 
 /* Print a mesage */
-report_message([L|Ls]) :- !, print(L), report_message(Ls).
-report_message([]) :- !, print('\n').
+report_message([L|Ls]) :- !, write(L), report_message(Ls).
+report_message([]) :- !, write('\n').
 report_message(M) :- report_message([M]).
 
 /* Count solutions */
