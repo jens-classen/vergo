@@ -117,7 +117,7 @@ bdd2formula(BDD,(Fml3*Fml1)+((-Fml3)*Fml2)) :-
         bdd2formula(Else,Fml2),!.
 
 % BDD to disjunctive normal form
-bdd2dnf(BDD,Fml) :-
+bdd2dnf(BDD,Fml) :- !,
         findall(SPFml,
                 (path2one(BDD,PFml),
                  simplify(PFml,SPFml)),
@@ -132,7 +132,7 @@ path2one(BDD,-Fml*FmlE) :-
         path2one(E,FmlE).
 
 % BDD to conjunctive normal form
-bdd2cnf(BDD,Fml) :-
+bdd2cnf(BDD,Fml) :- !,
         findall(SPFml,
                 (path2zero(BDD,PFml),
                  simplify(PFml,SPFml)),

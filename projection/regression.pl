@@ -299,11 +299,11 @@ apply_una(F,F) :- !.
 
 make_equalities([],[],true) :- !.
 make_equalities([X],[Y],(X=Y)) :- !.
-make_equalities([X|Xs],[Y|Ys],(X=Y)*Equ) :- 
+make_equalities([X|Xs],[Y|Ys],(X=Y)*Equ) :-  !,
         make_equalities(Xs,Ys,Equ).
 make_inequalities([],[],false) :- !.
 make_inequalities([X],[Y],-(X=Y)) :- !.
-make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :-
+make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :- !,
         make_inequalities(Xs,Ys,Equ).
 
 unique_name(X) :-
@@ -330,15 +330,15 @@ action_equality_conjunct(A,Act,(X=Y),(X=Y),[]) :-
         A==X,
         nonvar(Y),
         unique_name(Y),
-        Act=Y.
+        Act=Y, !.
 action_equality_conjunct(A,Act,(X=Y),(X=Y),[]) :-
         A==Y,
         nonvar(X),
         unique_name(X),
-        Act=X.
-action_equality_conjunct(A,Act,some(Vars,F),F,Vars) :-
+        Act=X, !.
+action_equality_conjunct(A,Act,some(Vars,F),F,Vars) :- !,
         action_equality_conjunct(A,Act,F,F,[]).
 action_equality_conjunct(X,Y,Fml1*Fml2,Fml1P*Fml2,Vars) :-
-        action_equality_conjunct(X,Y,Fml1,Fml1P,Vars).
+        action_equality_conjunct(X,Y,Fml1,Fml1P,Vars), !.
 action_equality_conjunct(X,Y,Fml1*Fml2,Fml1*Fml2P,Vars) :-
-        action_equality_conjunct(X,Y,Fml2,Fml2P,Vars).
+        action_equality_conjunct(X,Y,Fml2,Fml2P,Vars), !.
