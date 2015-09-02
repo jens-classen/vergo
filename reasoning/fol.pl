@@ -111,7 +111,7 @@ check_eprover_status(exit(S)) :- !,
                         ')!']),
         report_message(['Aborting...']),
         report_message(['Check ', File, '.']),
-        gtrace.        
+        abort.        
 
 % check for equivalence, abort if fails
 % useful as assertion for debugging purposes
