@@ -22,184 +22,180 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- dynamic mappings/1.
 :- dynamic cached_implies/4.
 
-:- discontiguous preprocess/2.
-
 mappings(0).
 
 reduce(Fml1,Fml2) :- !,
         reduce(Fml1,Fml2,cnf).
 
 reduce(Fml1,Fml2,ite) :- !,
-        simplify(Fml1,Fml3),
-        preprocess(Fml3,Fml4),
-        free_variables(Fml4,Vars),
-        propositionalize(Fml4,Vars,Fml5),
-        bdd:reduce2ite(Fml5,Fml6),
-        depropositionalize(Fml6,Vars,Fml7),
-        simplify_deps(Fml7,Vars,Fml2).
+        free_variables(Fml1,Vars),
+        preprocess(Fml1,Vars,Fml3),
+        propositionalize(Fml3,Vars,Fml4),
+        bdd:reduce2ite(Fml4,Fml5),
+        depropositionalize(Fml5,Vars,Fml6),
+        simplify_deps(Fml6,Vars,Fml2).
 
 reduce(Fml1,Fml2,dnf) :- !,
-        simplify(Fml1,Fml3),
-        preprocess(Fml3,Fml4),
-        free_variables(Fml4,Vars),
-        propositionalize(Fml4,Vars,Fml5),
-        bdd:reduce2dnf(Fml5,Fml6),
-        depropositionalize(Fml6,Vars,Fml7),
-        simplify_deps(Fml7,Vars,Fml2).
+        free_variables(Fml1,Vars),
+        preprocess(Fml1,Vars,Fml3),
+        propositionalize(Fml3,Vars,Fml4),
+        bdd:reduce2dnf(Fml4,Fml5),
+        depropositionalize(Fml5,Vars,Fml6),
+        simplify_deps(Fml6,Vars,Fml2).
 
 reduce(Fml1,Fml2,cnf) :- !,
-        simplify(Fml1,Fml3),
-        preprocess(Fml3,Fml4),
-        free_variables(Fml4,Vars),
-        propositionalize(Fml4,Vars,Fml5),
-        bdd:reduce2cnf(Fml5,Fml6),
-        clausalform:fml2prime_implicates(Fml6,PIs),
+        free_variables(Fml1,Vars),
+        preprocess(Fml1,Vars,Fml3),
+        propositionalize(Fml3,Vars,Fml4),
+        bdd:reduce2cnf(Fml4,Fml5),
+        clausalform:fml2prime_implicates(Fml5,PIs),
         simplify_deps_clauses(PIs,Vars,SPIs),
-        clausalform:clauses2cnf(SPIs,Fml7),
-        depropositionalize(Fml7,Vars,Fml8),
-        simplify_deps(Fml8,Vars,Fml2).
+        clausalform:clauses2cnf(SPIs,Fml6),
+        depropositionalize(Fml6,Vars,Fml7),
+        simplify_deps(Fml7,Vars,Fml2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preprocessing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % always use variable *lists* in quantifiers
-preprocess(some(X,Fml),R) :-
+preprocess(some(X,Fml),Vars,R) :-
         var(X), !,
-        preprocess(some([X],Fml),R).
-preprocess(all(X,Fml),R) :-
+        preprocess(some([X],Fml),Vars,R).
+preprocess(all(X,Fml),Vars,R) :-
         var(X), !,
-        preprocess(all([X],Fml),R).
+        preprocess(all([X],Fml),Vars,R).
 
 % drop empty quantifiers
-preprocess(some([],Fml),R) :- !,
-        preprocess(Fml,R).
-preprocess(all([],Fml),R) :- !,
-        preprocess(Fml,R).
+preprocess(some([],Fml),Vars,R) :- !,
+        preprocess(Fml,Vars,R).
+preprocess(all([],Fml),Vars,R) :- !,
+        preprocess(Fml,Vars,R).
 
 % drop quantifiers for non-appearing variables
-preprocess(some(Vars1,Fml),R) :-
+preprocess(some(Vars1,Fml),Vars,R) :-
         term_variables(Fml,Vars2),
         intersection2(Vars1,Vars2,Vars3),
         Vars1 \= Vars3, !,
-        preprocess(some(Vars3,Fml),R).
-preprocess(all(Vars1,Fml),R) :-
+        preprocess(some(Vars3,Fml),Vars,R).
+preprocess(all(Vars1,Fml),Vars,R) :-
         term_variables(Fml,Vars2),
         intersection2(Vars1,Vars2,Vars3),
         Vars1 \= Vars3, !,
-        preprocess(all(Vars3,Fml),R).
+        preprocess(all(Vars3,Fml),Vars,R).
 
 % combine quantifiers
-preprocess(some(Vars1,some(Var,Fml)),R) :- 
+preprocess(some(Vars1,some(Var,Fml)),Vars,R) :- 
         var(Var), !,
-        append(Vars1,[Var],Vars),
-        preprocess(some(Vars,Fml),R).
-preprocess(some(Vars1,some(Vars2,Fml)),R) :- !,
-        append(Vars1,Vars2,Vars),
-        preprocess(some(Vars,Fml),R).
-preprocess(all(Vars1,all(Var,Fml)),R) :- 
+        append(Vars1,[Var],Vars2),
+        preprocess(some(Vars2,Fml),Vars,R).
+preprocess(some(Vars1,some(Vars2,Fml)),Vars,R) :- !,
+        append(Vars1,Vars2,Vars3),
+        preprocess(some(Vars3,Fml),Vars,R).
+preprocess(all(Vars1,all(Var,Fml)),Vars,R) :- 
         var(Var), !,
-        append(Vars1,[Var],Vars),
-        preprocess(all(Vars,Fml),R).
-preprocess(all(Vars1,all(Vars2,Fml)),R) :- !,
-        append(Vars1,Vars2,Vars),
-        preprocess(all(Vars,Fml),R).
+        append(Vars1,[Var],Vars2),
+        preprocess(all(Vars2,Fml),Vars,R).
+preprocess(all(Vars1,all(Vars2,Fml)),Vars,R) :- !,
+        append(Vars1,Vars2,Vars3),
+        preprocess(all(Vars3,Fml),Vars,R).
 
 % ?[X]:(X=T)&F --> F with X replaced by T
-preprocess(some(Vars,Fml),R) :-
-        handle_equality_conjuncts(Vars,Fml,Vars2,Fml2),
-        some(Vars,Fml) \= some(Vars2,Fml2), !,
-        simplify(some(Vars2,Fml2),Fml3),
-        preprocess(Fml3,R).
+preprocess(some(Vars1,Fml),Vars,R) :-
+        handle_equality_conjuncts(Vars1,Fml,Vars2,Fml2),
+        some(Vars1,Fml) \= some(Vars2,Fml2), !,
+        preprocess(some(Vars2,Fml2),Vars,R).
 % ![X]:~(X=T)|F --> F with X replaced by T
-preprocess(all(Vars,Fml),R) :-
-        handle_inequality_disjuncts(Vars,Fml,Vars2,Fml2),
-        all(Vars,Fml) \= all(Vars2,Fml2), !,
-        simplify(all(Vars2,Fml2),Fml3),
-        preprocess(Fml3,R).
+preprocess(all(Vars1,Fml),Vars,R) :-
+        handle_inequality_disjuncts(Vars1,Fml,Vars2,Fml2),
+        all(Vars1,Fml) \= all(Vars2,Fml2), !,
+        preprocess(all(Vars2,Fml2),Vars,R).
 
 % distribute "exists" over disjunction
-preprocess(some(Vars,Fml),R) :-
-        disjuncts(Fml,Disj),
-        distribute_exists_disjuncts(Vars,Disj,Fml2),
-        Fml2 \= some(Vars,Fml), !,
-        preprocess(Fml2,R).
+preprocess(some(Vars1,Fml),Vars,R) :-
+        append(Vars,Vars1,Vars2),
+        disjuncts(Fml,Vars2,Disj),
+        distribute_exists_disjuncts(Vars1,Disj,Fml2),
+        Fml2 \= some(Vars1,Fml), !,
+        preprocess(Fml2,Vars,R).
 % distribute "forall" over conjunction
-preprocess(all(Vars,Fml),R) :-
-        conjuncts(Fml,Conj),
-        distribute_forall_conjuncts(Vars,Conj,Fml2),
-        Fml2 \= all(Vars,Fml), !,
-        preprocess(Fml2,R).
+preprocess(all(Vars1,Fml),Vars,R) :-
+        append(Vars,Vars1,Vars2),
+        conjuncts(Fml,Vars2,Conj),
+        distribute_forall_conjuncts(Vars1,Conj,Fml2),
+        Fml2 \= all(Vars1,Fml), !,
+        preprocess(Fml2,Vars,R).
 
 % reduce scope of existential to conjuncts where that variable appears
-preprocess(some(Vars,Fml),R) :-
-        conjuncts_with_without(Vars,Fml,ConW,ConWO),
+preprocess(some(Vars1,Fml),Vars,R) :-
+        conjuncts_with_without(Vars1,Fml,ConW,ConWO),
         ConWO \= true, !,
-        preprocess(some(Vars,ConW)*ConWO,R).
+        preprocess(some(Vars1,ConW)*ConWO,Vars,R).
 % reduce scope of universal to conjuncts where that variable appears
-preprocess(all(Vars,Fml),R) :-
-        disjuncts_with_without(Vars,Fml,DisW,DisWO),
+preprocess(all(Vars1,Fml),Vars,R) :-
+        disjuncts_with_without(Vars1,Fml,DisW,DisWO),
         DisWO \= false, !,
-        preprocess(all(Vars,DisW)+DisWO,R).
+        preprocess(all(Vars1,DisW)+DisWO,Vars,R).
 
-% recursive preprocessing of subformulas
-preprocess(some(Vars,Fml),R) :- !,
-        preprocess(Fml,Fml2),
-        preprocess_r(some,Vars,Fml,Fml2,R).
-preprocess(all(Vars,Fml),R) :- !,
-        preprocess(Fml,Fml2),
-        preprocess_r(all,Vars,Fml,Fml2,R).
+% apply simple FOL simplifications if possible
+preprocess(F,Vars,R) :-
+        simplify(F,F2),
+        F \= F2, !,
+        preprocess(F2,Vars,R).
 
-preprocess_r(some,Vars,Fml,Fml2,R) :-
-        Fml \= Fml2, !,
-        preprocess(some(Vars,Fml2),R).
-preprocess_r(some,Vars,Fml,_Fml2,some(Vars,R1)) :- !,
-        reduce(Fml,R1).
-preprocess_r(all,Vars,Fml,Fml2,R) :-
-        Fml \= Fml2, !,
-        preprocess(all(Vars,Fml2),R).
-preprocess_r(all,Vars,Fml,_Fml2,all(Vars,R1)) :- !,
-        reduce(Fml,R1).
-
-% handle boolean connectives
-preprocess(Fml1<=>Fml2,R) :- !,
-        preprocess((Fml1=>Fml2)*(Fml2=>Fml1),R).
-preprocess(Fml1=>Fml2,R) :- !,
-        preprocess((-Fml1)+Fml2,R).
-preprocess(Fml1<=Fml2,R) :- !,
-        preprocess(Fml1+(-Fml2),R).
-preprocess(-Fml,R) :-
+% if none of the other cases works
+preprocess(Fml1<=>Fml2,Vars,R) :- !,
+        preprocess((Fml1=>Fml2)*(Fml2=>Fml1),Vars,R).
+preprocess(Fml1=>Fml2,Vars,R) :- !,
+        preprocess((-Fml1)+Fml2,Vars,R).
+preprocess(Fml1<=Fml2,Vars,R) :- !,
+        preprocess(Fml1+(-Fml2),Vars,R).
+preprocess(-Fml,Vars,R) :-
         push_negation_inside(-Fml,Fml2),
         -Fml \= Fml2, !,
-        preprocess(Fml2,R).
-preprocess(Fml1+Fml2,R1+R2) :- !,
-        preprocess(Fml1,R1),
-        preprocess(Fml2,R2).
-preprocess(Fml1*Fml2,R1*R2) :- !,
-        preprocess(Fml1,R1),
-        preprocess(Fml2,R2).
-preprocess(R,R) :- !.
+        preprocess(Fml2,Vars,R).
+preprocess(Fml1+Fml2,Vars,R1+R2) :- !,
+        preprocess(Fml1,Vars,R1),
+        preprocess(Fml2,Vars,R2).
+preprocess(Fml1*Fml2,Vars,R1*R2) :- !,
+        preprocess(Fml1,Vars,R1),
+        preprocess(Fml2,Vars,R2).
 
-disjuncts((F1+F2)*F3,F4+F5) :- !,
-        disjuncts(F1*F3,F4),
-        disjuncts(F2*F3,F5).
-disjuncts(F1*(F2+F3),F4+F5) :- !,
-        disjuncts(F1*F2,F4),
-        disjuncts(F1*F3,F5).     
-disjuncts(F1*F2,R) :- !,
-        disjuncts(F1,F3),
-        disjuncts(F2,F4),
-        disjuncts2(F3,F4,R).
-disjuncts(F1+F2,F3+F4) :- !,
-        disjuncts(F1,F3),
-        disjuncts(F2,F4).
-disjuncts(F,F) :- !.
+% if none of the other cases worked: reduce quantified subformula
+preprocess(some(Vars1,Fml),Vars,some(Vars1,R)) :- !,
+        append(Vars,Vars1,Vars2),
+        preprocess(Fml,Vars2,R1),
+        reduce(R1,R).
+preprocess(all(Vars1,Fml),Vars,all(Vars1,R)) :- !,
+        append(Vars,Vars1,Vars2),
+        preprocess(Fml,Vars2,R1),
+        reduce(R1,R).
 
-disjuncts2(F1+F2,F3,R) :- !,
-        disjuncts((F1+F2)*F3,R).
-disjuncts2(F1,F2+F3,R) :- !,
-        disjuncts(F1*(F2+F3),R).
-disjuncts2(F1,F2,F1*F2) :- !.
+% else do nothing
+preprocess(R,_Vars,R) :- !.
+
+disjuncts((F1+F2)*F3,Vars,F4+F5) :- !,
+        copy_term((F3,Vars),(F6,Vars)),
+        disjuncts(F1*F3,Vars,F4),
+        disjuncts(F2*F6,Vars,F5).
+disjuncts(F1*(F2+F3),Vars,F4+F5) :- !,
+        copy_term((F1,Vars),(F6,Vars)),
+        disjuncts(F1*F2,Vars,F4),
+        disjuncts(F6*F3,Vars,F5).     
+disjuncts(F1*F2,Vars,R) :- !,
+        disjuncts(F1,Vars,F3),
+        disjuncts(F2,Vars,F4),
+        disjuncts2(F3,F4,Vars,R).
+disjuncts(F1+F2,Vars,F3+F4) :- !,
+        disjuncts(F1,Vars,F3),
+        disjuncts(F2,Vars,F4).
+disjuncts(F,_Vars,F) :- !.
+
+disjuncts2(F1+F2,F3,Vars,R) :- !,
+        disjuncts((F1+F2)*F3,Vars,R).
+disjuncts2(F1,F2+F3,Vars,R) :- !,
+        disjuncts(F1*(F2+F3),Vars,R).
+disjuncts2(F1,F2,_Vars,F1*F2) :- !.
 
 distribute_exists_disjuncts(Vars,Fml1+Fml2,R1+R2) :- !,
         copy_term(Vars,VarsN),
@@ -208,26 +204,28 @@ distribute_exists_disjuncts(Vars,Fml1+Fml2,R1+R2) :- !,
         distribute_exists_disjuncts(VarsN,Fml2N,R2).
 distribute_exists_disjuncts(Vars,Fml,some(Vars,Fml)) :- !.
 
-conjuncts((F1*F2)+F3,F4*F5) :- !,        
-        conjuncts(F1+F3,F4),
-        conjuncts(F2+F3,F5).
-conjuncts(F1+(F2*F3),F4*F5) :- !,
-        conjuncts(F1+F2,F4),
-        conjuncts(F1+F3,F5).     
-conjuncts(F1+F2,R) :- !,
-        conjuncts(F1,F3),
-        conjuncts(F2,F4),
-        conjuncts2(F3,F4,R).
-conjuncts(F1*F2,F3*F4) :- !,
-        conjuncts(F1,F3),
-        conjuncts(F2,F4).
-conjuncts(F,F) :- !.
+conjuncts((F1*F2)+F3,Vars,F4*F5) :- !,        
+        copy_term((F3;Vars),(F6,Vars)),
+        conjuncts(F1+F3,Vars,F4),
+        conjuncts(F2+F6,Vars,F5).
+conjuncts(F1+(F2*F3),Vars,F4*F5) :- !,
+        copy_term((F1,Vars),(F6,Vars)),
+        conjuncts(F1+F2,Vars,F4),
+        conjuncts(F6+F3,Vars,F5).     
+conjuncts(F1+F2,Vars,R) :- !,
+        conjuncts(F1,Vars,F3),
+        conjuncts(F2,Vars,F4),
+        conjuncts2(F3,F4,Vars,R).
+conjuncts(F1*F2,Vars,F3*F4) :- !,
+        conjuncts(F1,Vars,F3),
+        conjuncts(F2,Vars,F4).
+conjuncts(F,_Vars,F) :- !.
 
-conjuncts2(F1*F2,F3,R) :- !,
-        conjuncts((F1*F2)+F3,R).
-conjuncts2(F1,F2*F3,R) :- !,
-        conjuncts(F1+(F2*F3),R).
-conjuncts2(F1,F2,F1+F2) :- !.
+conjuncts2(F1*F2,F3,Vars,R) :- !,
+        conjuncts((F1*F2)+F3,Vars,R).
+conjuncts2(F1,F2*F3,Vars,R) :- !,
+        conjuncts(F1+(F2*F3),Vars,R).
+conjuncts2(F1,F2,_Vars,F1+F2) :- !.
 
 distribute_forall_conjuncts(Vars,Fml1*Fml2,R1*R2) :- !,
         copy_term(Vars,VarsN),
@@ -265,7 +263,7 @@ equality_conjunct(X,Y,(A=B)) :-
         not(A==B), % else no substitution necessary
         X==B,
         Y=A, !.
-equality_conjunct(X,Y,Fml1*Fml2) :- !,
+equality_conjunct(X,Y,Fml1*Fml2) :-
         equality_conjunct(X,Y,Fml1);
         equality_conjunct(X,Y,Fml2).
 
@@ -277,7 +275,7 @@ inequality_disjunct(X,Y,-(A=B)) :-
         not(A==B), % else no substitution necessary
         X==B,
         Y=A, !.
-inequality_disjunct(X,Y,Fml1+Fml2) :- !,
+inequality_disjunct(X,Y,Fml1+Fml2) :-
         inequality_disjunct(X,Y,Fml1);
         inequality_disjunct(X,Y,Fml2).
 
@@ -501,14 +499,17 @@ simplify_deps(Fml1+Fml2,Vars,Fml3+Fml4) :- !,
 simplify_deps(Fml,_Vars,Fml) :- !.
 
 simplify_deps_clauses(Clauses,Vars,Clauses2) :- !,
-        simplify_deps_clauses2(Clauses,Vars,Clauses2).
-        %simplify_deps_clauses3(Clauses3,Vars,Clauses2).
+        simplify_deps_clauses2(Clauses,Vars,Clauses3),
+        %simplify_deps_clauses3(Clauses4,Vars,Clauses2).
+        simplify_deps_clauses4(Clauses3,Vars,Clauses2).
 
+% simplify within each clause
 simplify_deps_clauses2([Clause|Clauses],Vars,[Clause2|Clauses2]) :- !,
         simplify_deps_clause(Clause,Vars,Clause2),
         simplify_deps_clauses2(Clauses,Vars,Clauses2).
 simplify_deps_clauses2([],_Vars,[]) :- !.
 
+% if L1 (depropositionalized) implies L2 (depropositionalized), remove L1
 simplify_deps_clause(Clause,Vars,Clause2) :-
         member(L1,Clause),
         member(L2,Clause),
@@ -520,6 +521,9 @@ simplify_deps_clause(Clause,Vars,Clause2) :-
         simplify_deps_clause(Clause3,Vars,Clause2).
 simplify_deps_clause(Clause,_Vars,Clause) :- !.
 
+% if unit clause [L1] (depropositionalized) implies a literal L2
+% (depropositionalized) in another clause C2, remove C2
+% (this rule is a special case of simplify_deps_clauses4/3)
 simplify_deps_clauses3(Clauses,Vars,Clauses2) :-
         member([L1],Clauses),
         member(C2,Clauses),
@@ -528,16 +532,34 @@ simplify_deps_clauses3(Clauses,Vars,Clauses2) :-
         depropositionalize(L1,Vars,Fml1),
         depropositionalize(L2,Vars,Fml2),
         implies(Fml1,Fml2,Vars), !,
-        setminus2(Clauses,C2,Clauses3),
+        setminus2(Clauses,[C2],Clauses3),
         simplify_deps_clauses3(Clauses3,Vars,Clauses2).
 simplify_deps_clauses3(Clauses,_Vars,Clauses).
+
+% if a clause C1 (depropositionalized) implies another clause C2
+% (depropositionalized), remove C2
+simplify_deps_clauses4(Clauses,Vars,Clauses2) :-
+        member(C1,Clauses),
+        member(C2,Clauses),
+        C1 \= C2,
+        clauses2cnf([C1],P1),
+        clauses2cnf([C2],P2),
+        depropositionalize(P1,Vars,Fml1),
+        depropositionalize(P2,Vars,Fml2),
+        implies(Fml1,Fml2,Vars), !,
+        setminus2(Clauses,[C2],Clauses3),
+        simplify_deps_clauses4(Clauses3,Vars,Clauses2).
+simplify_deps_clauses4(Clauses,_Vars,Clauses).
 
 implies(Fml1,-(-Fml2),Vars) :- !,
         implies(Fml1,Fml2,Vars).
 implies(Fml1,Fml2,Vars) :-
-        cached_implies(Fml1,Fml2,Vars,true), !.
+        cached_implies(Fml3,Fml4,Vars2,true), 
+        (Fml1,Fml2,Vars) =@= (Fml3,Fml4,Vars2), !.
 implies(Fml1,Fml2,Vars) :-
-        cached_implies(Fml1,Fml2,Vars,false), !, fail.
+        cached_implies(Fml3,Fml4,Vars2,false), 
+        (Fml1,Fml2,Vars) =@= (Fml3,Fml4,Vars2), !, 
+        fail.
 implies(Fml1,Fml2,[]) :-
         entails([Fml1],Fml2), !,
         assert(cached_implies(Fml1,Fml2,[],true)).
@@ -549,54 +571,3 @@ implies(Fml1,Fml2,Vars) :-
 implies(Fml1,Fml2,Vars) :- !,
         assert(cached_implies(Fml1,Fml2,Vars,false)),
         fail.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Debugging
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% ensure that every quantifier uses a separate variable symbol
-check_variables(Fml) :-
-        check_variables(Fml,[],_), !.
-check_variables(Fml) :- 
-        report_message(['Variable check failed: ', Fml]),
-        gtrace.
-check_variables(Fml1<=>Fml2,Vars1,Vars2) :- !,
-        check_variables(Fml1,Vars1,Vars3),
-        check_variables(Fml2,Vars3,Vars2).
-check_variables(Fml1<=Fml2,Vars1,Vars2) :- !,
-        check_variables(Fml1,Vars1,Vars3),
-        check_variables(Fml2,Vars3,Vars2).
-check_variables(Fml1=>Fml2,Vars1,Vars2) :- !,
-        check_variables(Fml1,Vars1,Vars3),
-        check_variables(Fml2,Vars3,Vars2).
-check_variables(Fml1*Fml2,Vars1,Vars2) :- !,
-        check_variables(Fml1,Vars1,Vars3),
-        check_variables(Fml2,Vars3,Vars2).
-check_variables(Fml1+Fml2,Vars1,Vars2) :- !,
-        check_variables(Fml1,Vars1,Vars3),
-        check_variables(Fml2,Vars3,Vars2).
-check_variables(-Fml,Vars1,Vars2) :- !,
-        check_variables(Fml,Vars1,Vars2).
-check_variables(some(Var,Fml),Vars1,Vars2) :-
-        var(Var), !,
-        check_variables(some([Var],Fml),Vars1,Vars2).
-check_variables(some([Var|Vars],Fml),Vars1,Vars2) :-
-        not(member2(Var,Vars1)), !,
-        check_variables(some(Vars,Fml),[Var|Vars1],Vars2).
-check_variables(some([Var|_],_),Vars1,_) :-
-        member2(Var,Vars1), !,
-        fail.
-check_variables(some([],Fml),Vars1,Vars2) :- !,
-        check_variables(Fml,Vars1,Vars2).
-check_variables(all(Var,Fml),Vars1,Vars2) :-
-        var(Var), !,
-        check_variables(all([Var],Fml),Vars1,Vars2).
-check_variables(all([Var|Vars],Fml),Vars1,Vars2) :-
-        not(member2(Var,Vars1)), !,
-        check_variables(all(Vars,Fml),[Var|Vars1],Vars2).
-check_variables(all([Var|_],_),Vars1,_) :-
-        member2(Var,Vars1), !,
-        fail.
-check_variables(all([],Fml),Vars1,Vars2) :- !,
-        check_variables(Fml,Vars1,Vars2).
-check_variables(_Fml,Vars,Vars) :- !.
