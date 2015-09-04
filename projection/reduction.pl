@@ -81,25 +81,58 @@ get_new_std_name(Names,New) :- !,
         create_new_names(Names,1,[New]),
         assert(stdname(New)).
 
-collect_names(Fml,[]) :-
-        var(Fml), !.
-collect_names(Fml,[Fml]) :-
-        atom(Fml),
-        stdname(Fml), !.
-collect_names(Fml,[]) :-
-        atom(Fml),
-        not(stdname(Fml)), !.
-collect_names(Fml,Names) :-
-        is_list(Fml), !,
-        Fml = [E|L],
-        collect_names(E,Names1),
-        collect_names(L,Names2),
+collect_names(Fml1<=>Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
         union(Names1,Names2,Names).
-collect_names(Fml,Names) :-
-        not(is_list(Fml)), !,
-        Fml =.. [E|L],
-        collect_names(E,Names1),
-        collect_names(L,Names2),
+collect_names(Fml1=>Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(Fml1<=Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(Fml1*Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(Fml1+Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(-Fml,Names) :- !,
+        collect_names(Fml,Names).
+collect_names(some(_Vars,Fml),Names) :- !,
+        collect_names(Fml,Names).
+collect_names(all(_Vars,Fml),Names) :- !,
+        collect_names(Fml,Names).
+collect_names(know(Fml),Names) :- !,
+        collect_names(Fml,Names).
+collect_names((X=Y),Names) :- !,
+        collect_names_term(X,Names1),
+        collect_names_term(Y,Names2),
+        union(Names1,Names2,Names).
+collect_names(Atom,Names) :- !,
+        Atom =.. [_P|Args],
+        collect_names_term_list(Args,Names).
+
+collect_names_term(T,[]) :-
+        var(T), !.
+collect_names_term(T,[T]) :-
+        atom(T),
+        stdname(T), !.
+collect_names_term(T,[]) :-
+        atom(T),
+        not(stdname(T)), !.
+collect_names_term(T,Names) :- !,
+        T =.. [_|L],
+        collect_names_term_list(L,Names).
+
+collect_names_term_list([],[]) :- !.
+collect_names_term_list([E|L],Names) :- !,
+        collect_names_term(E,Names1),
+        collect_names_term_list(L,Names2),
         union(Names1,Names2,Names).
 
 create_new_names(_Names,0,[]) :- !.

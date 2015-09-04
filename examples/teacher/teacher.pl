@@ -1,4 +1,6 @@
 
+rel_rigid(teach(_,_)).
+
 initially(teach(tom, sam)).
 initially(teach(tina, sue) * (teach(tom, sue) + teach(ted, sue))).
 initially(some(X,teach(X, sara))).
