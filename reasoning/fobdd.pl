@@ -371,10 +371,11 @@ propositionalize(Fml,Vars,Atom) :- !,
 get_mapping(QFml,Vars,Atom) :-
         mapping(QFml2,Vars2,Atom), 
         (QFml,Vars) =@= (QFml2,Vars2), !.
-%get_mapping(QFml,Vars,Atom) :-
-%        mapping(QFml2,Vars,Atom),
-%        implies(QFml,QFml2,Vars),
-%        implies(QFml2,QFml,Vars), !.
+get_mapping(QFml,Vars,Atom) :-
+        mapping(QFml2,Vars2,Atom), 
+        (QFml,Vars) =@= (QFml2,Vars2), !,
+        implies(QFml,QFml2,Vars),
+        implies(QFml2,QFml,Vars), !.
 get_mapping(QFml,Vars,Atom) :- !,
         retract(mappings(N)),
         N1 is N+1,
