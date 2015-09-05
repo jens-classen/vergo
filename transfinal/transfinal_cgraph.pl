@@ -2,8 +2,9 @@
  
 transfinal_cgraph
 
-This file provides predicates for determining transitions according to
-what is described in
+This file provides predicates for defining a transition semantics for
+Golog programs that also serves as a set of rules for constructing the
+characteristic graphs of such programs. Cf.
 
 Jens Claßen: Planning and Verification in the Agent Language Golog.
 PhD Thesis, Department of Computer Science, RWTH Aachen University,
@@ -15,13 +16,28 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
  **/
 
 /**
+ * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
+ *
+ * There is a transition from program Prog1 to program Prog2
+ * via ground action Act if condition Cond holds in the situation
+ * before executing Act.
+ *
+ * TODO: we want to *determine* the ground action
+ *
+ **/
+trans(Prog1,Act,Prog2,Cond) :-
+        ground(Act),
+        trans(Prog1,Act,Prog2,Cond1,Vars,Cond2),
+        Cond = Cond1*some(Vars,Cond2), !.
+
+/**
  * trans(+Prog1,?Act,?Prog2,?Cond1,?Vars:List,?Cond2) is nondet
  *
  * There is a transition from program Prog1 to program Prog2
- * via action Act, where Vars is the list of variables to be
- * instantiated, Cond1 the condition to be evaluted before
- * variable instantiation and Cond2 the condition to be evaluated
- * after variable instantiation.
+ * via (possibly non-ground) action Act, where Vars is the list of
+ * variables to be instantiated, Cond1 the condition to be evaluted
+ * before variable instantiation and Cond2 the condition to be
+ * evaluated after variable instantiation.
  **/
 trans(A,A,[],true,[],true) :-
         not(include_preconditions),
