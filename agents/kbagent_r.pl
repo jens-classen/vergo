@@ -8,6 +8,7 @@
 :- ['../projection/reduction'].
 
 :- use_module('../reasoning/fol').
+:- use_module('../reasoning/fobdd').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations
@@ -86,11 +87,13 @@ senseresult2fml(Result,Action,Fml) :-
 
 regress_s(H,Fml1,Fml2) :- !,
         regress(H,Fml1,Fml3),
-        apply_una(Fml3,Fml2).
+        apply_una(Fml3,Fml4),
+        minimize(Fml4,Fml2).
         
 reduce_s(Fml1,Fml2) :- !,
         reduce(Fml1,Fml3),
-        simplify(Fml3,Fml2).
+        simplify(Fml3,Fml4),
+        minimize(Fml4,Fml2).
 
 new_program('__undef',_,'__undef') :- !.
 new_program(P,A,Q) :-
