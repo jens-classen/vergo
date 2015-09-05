@@ -49,7 +49,7 @@ init(Program) :- !,
 
 next_action(Action) :- !,
         program(Program),
-        trans(Program,Action,_,Condition),
+        trans_s(Program,Action,Condition),
         ask(Condition,true).        
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,9 +95,15 @@ reduce_s(Fml1,Fml2) :- !,
         simplify(Fml3,Fml4),
         minimize(Fml4,Fml2).
 
+trans_s(Program,Action,Condition) :-
+        trans(Program,Action,_,Cond1),
+        minimize(Cond1,Condition).
+
 new_program('__undef',_,'__undef') :- !.
 new_program(P,A,Q) :-
-        trans(P,A,Q,_), !.
+        trans(P,A,R,_), !,
+        simplify_program(R,Q).
+        
 new_program(_,_,_,failed).
 
 update_program(Action) :-
