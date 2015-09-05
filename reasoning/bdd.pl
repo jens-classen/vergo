@@ -23,9 +23,9 @@ ordering nodes.
 
  **/
 
-:- module(bdd, [reduce2ite/2,
-                reduce2dnf/2,
-                reduce2cnf/2]).
+:- module(bdd, [minimize2ite/2,
+                minimize2dnf/2,
+                minimize2cnf/2]).
 
 :- use_module('../reasoning/fol').
 :- use_module('../lib/utils').
@@ -46,16 +46,16 @@ bdd_node('___undef','___undef','___undef',1).
 % BDD Construction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% reduce using BDDs
-reduce2ite(Fml1,Fml2) :- !,
+% minimize using BDDs
+minimize2ite(Fml1,Fml2) :- !,
         formula2bdd(Fml1,BDD),
         bdd2formula(BDD,Fml2).
 
-reduce2dnf(Fml1,Fml2) :- !,
+minimize2dnf(Fml1,Fml2) :- !,
         formula2bdd(Fml1,BDD),
         bdd2dnf(BDD,Fml2).
 
-reduce2cnf(Fml1,Fml2) :- !,
+minimize2cnf(Fml1,Fml2) :- !,
         formula2bdd(Fml1,BDD),
         bdd2cnf(BDD,Fml2).
 

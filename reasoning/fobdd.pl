@@ -12,7 +12,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
  **/
 
-:- module(fobdd, [reduce/2]).
+:- module(fobdd, [minimize/2]).
 
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/bdd').
@@ -24,30 +24,30 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 mappings(0).
 
-reduce(Fml1,Fml2) :- !,
-        reduce(Fml1,Fml2,cnf).
+minimize(Fml1,Fml2) :- !,
+        minimize(Fml1,Fml2,cnf).
 
-reduce(Fml1,Fml2,ite) :- !,
+minimize(Fml1,Fml2,ite) :- !,
         free_variables(Fml1,Vars),
         preprocess(Fml1,Vars,Fml3),
         propositionalize(Fml3,Vars,Fml4),
-        bdd:reduce2ite(Fml4,Fml5),
+        bdd:minimize2ite(Fml4,Fml5),
         depropositionalize(Fml5,Vars,Fml6),
         simplify_deps(Fml6,Vars,Fml2).
 
-reduce(Fml1,Fml2,dnf) :- !,
+minimize(Fml1,Fml2,dnf) :- !,
         free_variables(Fml1,Vars),
         preprocess(Fml1,Vars,Fml3),
         propositionalize(Fml3,Vars,Fml4),
-        bdd:reduce2dnf(Fml4,Fml5),
+        bdd:minimize2dnf(Fml4,Fml5),
         depropositionalize(Fml5,Vars,Fml6),
         simplify_deps(Fml6,Vars,Fml2).
 
-reduce(Fml1,Fml2,cnf) :- !,
+minimize(Fml1,Fml2,cnf) :- !,
         free_variables(Fml1,Vars),
         preprocess(Fml1,Vars,Fml3),
         propositionalize(Fml3,Vars,Fml4),
-        bdd:reduce2cnf(Fml4,Fml5),
+        bdd:minimize2cnf(Fml4,Fml5),
         clausalform:fml2prime_implicates(Fml5,PIs),
         simplify_deps_clauses(PIs,Vars,SPIs),
         clausalform:clauses2cnf(SPIs,Fml6),
@@ -165,11 +165,11 @@ preprocess(Fml1*Fml2,Vars,R1*R2) :- !,
 preprocess(some(Vars1,Fml),Vars,some(Vars1,R)) :- !,
         append(Vars,Vars1,Vars2),
         preprocess(Fml,Vars2,R1),
-        reduce(R1,R).
+        minimize(R1,R).
 preprocess(all(Vars1,Fml),Vars,all(Vars1,R)) :- !,
         append(Vars,Vars1,Vars2),
         preprocess(Fml,Vars2,R1),
-        reduce(R1,R).
+        minimize(R1,R).
 
 % else do nothing
 preprocess(R,_Vars,R) :- !.
