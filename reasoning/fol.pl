@@ -1,7 +1,6 @@
 :- module(fol, [entails/2,
                 inconsistent/1,
                 consistent/1,
-                consistent/2,
                 valid/1,
                 equivalent/2,
                 check_equivalence/2,
@@ -69,11 +68,6 @@ inconsistent(ListOfFormulas) :-
 /* Succeeds if ListOfFormulas is consistent. */
 consistent(ListOfFormulas) :-
         not(inconsistent(ListOfFormulas)).
-
-/* Succeeds if union of ListOfFormulas1 and ListOfFormulas2 is consistent. */
-consistent(ListOfFormulas1, ListOfFormulas2) :-
-        append(ListOfFormulas1, ListOfFormulas2, ListOfFormulas),
-        consistent(ListOfFormulas).
 
 /* Succeeds if Formula is valid. */
 valid(Formula) :-
