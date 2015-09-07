@@ -61,7 +61,8 @@ The code is divided into the following subdirectories:
 Dependencies
 =================================================
 
-There are the following dependencies to external tools and systems:
+ESGolog uses SWI-Prolog (currently version 7.2.3). Furthermore, there
+are the following dependencies to external tools and systems:
 
 1. The E Theorem Prover
 
@@ -93,3 +94,35 @@ There are the following dependencies to external tools and systems:
 3. Graphviz/dot
 
    for visualization
+
+4. JPL (bidirectional Prolog/Java interface)
+
+   For some purposes, the Prolog->Java interface provided by the JPL
+   library is needed. Typically, JPL does not have to be installed
+   manually: Under Windows, it is already contained in the SWI-Prolog
+   distribution; under some Linuxes such as Ubuntu, it can be
+   installed through the package manager via
+
+   $ sudo apt-get install swi-prolog-java
+
+   For JPL to function properly, the LD_LIBRARY_PATH environment
+   variable should be modified so that it contains directories that
+   contain libjava.so, libjni.so, libjsig.so, and maybe some other
+   Java libraries. For example, this can be achieved via
+
+   $ export LD_LIBRARY_PATH=/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/amd64/server/
+
+   (where the specific path may differ for your system).
+
+5. The Konclude Description Logic (OWL 2) Reasoner
+
+   To use description logic reasoning, we require that the 'Konclude'
+   executable is visible in $PATH. The system has been developed and
+   tested with the (currently) most recent version
+   v0.6.1-527. Konclude can be obtained at
+
+   /http://www.derivo.de/products/konclude.html
+
+   as 64-bit binary for Windows, Linux and MacOS X, both in statically
+   and dynamically linked form. Its source code is published under the
+   LGPL.
