@@ -54,24 +54,25 @@ consistent_konclude(Ontology) :- !,
         process_create(path('Konclude'), 
                        ['consistency',
                         '-i', File],
-                       [pipe(Output),     % pipe to parse result
-                        process(PID)]),   % need PID for exit status
-        process_wait(PID, _Status), !,    % wait for completion
-        check_konclude_result(Output).    % return value
+                       [stdout(pipe(Output)), % pipe to parse result
+                        process(PID)]),       % need PID for exit status
+        process_wait(PID, _Status), !,        % wait for completion
+        read_string(Output,"","",_,String),
+        check_konclude_result(String).        % return value
 
-check_konclude_result(Stream) :-
-        read_string(Stream,"","",Sep,String),
-        sub_string(String,_,_,0,"is consistent."), !.
-check_konclude_result(Stream) :-
-        read_string(Stream,"","",Sep,String),
-        sub_string(String,_,_,0,"is inconsistent."), !,
-        fail.
-check_konclude_result(Stream) :- !,
+check_konclude_result(String) :- 
+        sub_string(String,_,_,_N,"(error)"), !,
         temp_file(File),
-        report_message(['Unexpected Konclude result!']),
+        report_message(['Konclude reported an error:']),
         report_message(['Aborting...']),
+        report_message([String]),
         report_message(['Check ', File, '.']),
         abort.        
+check_konclude_result(String) :-
+        sub_string(String,_,_,_N,"is consistent."), !.
+check_konclude_result(String) :-
+        sub_string(String,_,_,_N,"is inconsistent."), !,
+        fail.
 
 temp_file(File) :- !,
         temp_dir(TempDir),
@@ -79,15 +80,15 @@ temp_file(File) :- !,
 
 writeToFile(Ontology, FileName) :- !,
         open(FileName, write, Stream),
-        writeOntology(Stream, Ontology),
+        write_ontology(Stream, Ontology),
 	close(Stream).
 
 write_ontology(Stream, ontology(Names, Concepts, Roles, ABox, TBox)) :- !,
-        URL = 'http://example.com/owl/temp/',
+        URL = 'http://example.com/owl/temp',
         write_prefixes(Stream, URL),
         write(Stream, 'Ontology( <'),
         write(Stream, URL),
-        write(Stream, ' >\n'),
+        write(Stream, '>\n'),
         write_name_declarations(Stream, Names),
         write_conc_declarations(Stream, Concepts),
         write_role_declarations(Stream, Roles),
@@ -98,7 +99,7 @@ write_ontology(Stream, ontology(Names, Concepts, Roles, ABox, TBox)) :- !,
 write_prefixes(Stream, URL) :- !,
         write(Stream, 'Prefix(:=<'),
         write(Stream, URL),
-        write(Stream, '>)\n'),
+        write(Stream, '/>)\n'),
         write(Stream, 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n'),
         write(Stream, 'Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n').
 
@@ -168,7 +169,7 @@ write_concept(Stream, Indent, not(Concept)) :- !,
         write_indent(Stream,Indent),
         write(Stream, 'ObjectComplementOf(\n'),
         IndentN = Indent + 1,
-        write_concept(Stream, IndentN, Concepts),
+        write_concept(Stream, IndentN, Concept),
         write_indent(Stream,Indent),
         write(Stream, ')\n').
 write_concept(Stream, Indent, oneof(Names)) :- !,
@@ -222,7 +223,7 @@ write_name_list(_Stream, []) :- !.
 write_abox_axiom(Stream, concept_assertion(C,N)) :- !,
         write(Stream, '  ClassAssertion(\n'),
         write_concept(Stream, 2, C),
-        write_name(Stream, 2, C2),
+        write_name(Stream, 2, N),
         write(Stream, '   )\n').
 write_abox_axiom(Stream, role_assertion(R,N1,N2)) :- !,
         write(Stream, '  ObjectPropertyAssertion(\n'),
@@ -240,7 +241,7 @@ write_name(Stream, Indent, Name) :- !,
 write_indent(Stream, Indent) :-
         Indent > 0, !,
         write(Stream, '  '),
-        IndentN = Indent-1,
+        IndentN is Indent-1,
         write_indent(Stream, IndentN).
 write_indent(_Stream, Indent) :-
         Indent = 0, !.
