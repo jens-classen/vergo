@@ -35,6 +35,8 @@
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
 
+:- discontiguous write_axiom/2.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DL Reasoning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -96,6 +98,16 @@ write_ontology(Stream, ontology(Names, Concepts, Roles, ABox, TBox)) :- !,
         write_tbox(Stream, TBox),
         write(Stream, ')\n').
 
+write_ontology(Stream, Axioms) :-
+        is_list(Axioms), !,
+        URL = 'http://example.com/owl/temp',
+        write_prefixes(Stream, URL),
+        write(Stream, 'Ontology( <'),
+        write(Stream, URL),
+        write(Stream, '>\n'),
+        write_axioms(Axioms),
+        write(Stream, ')\n').
+
 write_prefixes(Stream, URL) :- !,
         write(Stream, 'Prefix(:=<'),
         write(Stream, URL),
@@ -128,18 +140,18 @@ write_role_declarations(Stream, []) :- !,
         write(Stream, '\n').
 
 write_tbox(Stream, [TBA|TBAs]) :- !,
-        write_tbox_axiom(Stream, TBA),
+        write_axiom(Stream, TBA),
         write_tbox(Stream, TBAs).
 write_tbox(Stream, []) :- !,
         write(Stream, '\n').
 
 write_abox(Stream, [ABA|ABAs]) :-  !,
-        write_abox_axiom(Stream, ABA),
+        write_axiom(Stream, ABA),
         write_abox(Stream, ABAs).
 write_abox(Stream, []) :- !,
         write(Stream, '\n').
 
-write_tbox_axiom(Stream, subsumedBy(C1,C2)) :- !,
+write_axiom(Stream, subsumedBy(C1,C2)) :- !,
         write(Stream, '  SubClassOf(\n'),
         write_concept(Stream, 2, C1),
         write_concept(Stream, 2, C2),
@@ -220,12 +232,12 @@ write_name_list(Stream, [Name|Names]) :- !,
         write_name_list(Stream,Names).
 write_name_list(_Stream, []) :- !.
 
-write_abox_axiom(Stream, concept_assertion(C,N)) :- !,
+write_axiom(Stream, concept_assertion(C,N)) :- !,
         write(Stream, '  ClassAssertion(\n'),
         write_concept(Stream, 2, C),
         write_name(Stream, 2, N),
         write(Stream, '   )\n').
-write_abox_axiom(Stream, role_assertion(R,N1,N2)) :- !,
+write_axiom(Stream, role_assertion(R,N1,N2)) :- !,
         write(Stream, '  ObjectPropertyAssertion(\n'),
         write_role(Stream, 2, R),
         write_name(Stream, 2, N1),
