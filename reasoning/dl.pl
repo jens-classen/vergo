@@ -326,7 +326,7 @@ construct_concept(Axiom, NamesRoles, Concept) :- !,
         append(CList, [C], Conjuncts),
         Concept = and(Conjuncts).
 
-construct_concept2([(N,R)|NamesRoles], [some(R,N),all(R,N)|Conjuncts]) :- !,
+construct_concept2([(N,R)|NamesRoles], [some(R,oneof([N])),all(R,oneof([N]))|Conjuncts]) :- !,
         construct_concept2(NamesRoles,Conjuncts).
 construct_concept2([],[]) :- !.
 
