@@ -1,5 +1,8 @@
 :- module(dl, [inconsistent/1,
-               consistent/1]).
+               consistent/1,
+               op(1130, xfy, <=>),
+               op(1110, xfy, <=),
+               op(1110, xfy, =>)]).
 
 /* We use the following symbols for writing formulas:
 
@@ -30,7 +33,24 @@
       concept_assertion(Concept,Name)
       role_assertion(Role,Name1,Name2)
 
+      boolean combinations using -,*,+,<=>,=>,<=
+
  */
+
+% % TPTP FOF operator definitions from Jens Otten's LeanCoP
+% /* Operator definitions for TPTP syntax. */
+:- op(1130, xfy, <=>). % equivalence
+:- op(1110, xfy, =>).  % implication
+:- op(1110, xfy, <=).  % implication
+% :- op( 500, fy, ~).    % negation
+% :- op( 500,xfy, :).
+
+% :- op(1100, xfy, '|').  % disjunction
+% :- op(1000, xfy, &).    % conjunction
+% :- op( 500, fy, !).     % universal quantifier
+% :- op( 500, fy, ?).     % existential quantifier
+% :- op( 400, xfx, =).    % equality
+% :- op( 299, fx, $).     % for $true/$false
 
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
@@ -94,8 +114,8 @@ write_ontology(Stream, ontology(Names, Concepts, Roles, ABox, TBox)) :- !,
         write_name_declarations(Stream, Names),
         write_conc_declarations(Stream, Concepts),
         write_role_declarations(Stream, Roles),
-        write_abox(Stream, ABox),
-        write_tbox(Stream, TBox),
+        write_axioms(Stream, ABox),
+        write_axioms(Stream, TBox),
         write(Stream, ')\n').
 
 write_ontology(Stream, Axioms) :-
@@ -105,15 +125,20 @@ write_ontology(Stream, Axioms) :-
         write(Stream, 'Ontology( <'),
         write(Stream, URL),
         write(Stream, '>\n'),
-        write_axioms(Axioms),
+        write_axioms(Stream, Axioms),
         write(Stream, ')\n').
 
 write_prefixes(Stream, URL) :- !,
         write(Stream, 'Prefix(:=<'),
         write(Stream, URL),
-        write(Stream, '/>)\n'),
+        write(Stream, '#>)\n'),
         write(Stream, 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n'),
         write(Stream, 'Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n').
+
+write_axioms(Stream, [Axiom|Axioms]) :- !,
+        write_axiom(Stream, Axiom),
+        write_axioms(Stream, Axioms).
+write_axioms(_Stream, []).
 
 write_name_declarations(Stream, [Name|Names]) :- !,
         write(Stream, '  Declaration( NamedIndividual( :'),
@@ -137,18 +162,6 @@ write_role_declarations(Stream, [Role|Roles]) :- !,
         write(Stream,  ' ) )\n'),
         write_role_declarations(Stream, Roles).
 write_role_declarations(Stream, []) :- !,
-        write(Stream, '\n').
-
-write_tbox(Stream, [TBA|TBAs]) :- !,
-        write_axiom(Stream, TBA),
-        write_tbox(Stream, TBAs).
-write_tbox(Stream, []) :- !,
-        write(Stream, '\n').
-
-write_abox(Stream, [ABA|ABAs]) :-  !,
-        write_axiom(Stream, ABA),
-        write_abox(Stream, ABAs).
-write_abox(Stream, []) :- !,
         write(Stream, '\n').
 
 write_axiom(Stream, subsumedBy(C1,C2)) :- !,
@@ -242,7 +255,13 @@ write_axiom(Stream, role_assertion(R,N1,N2)) :- !,
         write_role(Stream, 2, R),
         write_name(Stream, 2, N1),
         write_name(Stream, 2, N2),
-        write(Stream, '   )\n').        
+        write(Stream, '   )\n').
+write_axiom(Stream, A1*A2) :- !,
+        write_axiom(Stream, A1),
+        write_axiom(Stream, A2).
+write_axiom(Stream, BAxiom) :- !,
+        boolaxiom2assertion(BAxiom, Assertion),
+        write_axiom(Stream, Assertion).
 
 write_name(Stream, Indent, Name) :- !,
         write_indent(Stream,Indent),
@@ -257,3 +276,77 @@ write_indent(Stream, Indent) :-
         write_indent(Stream, IndentN).
 write_indent(_Stream, Indent) :-
         Indent = 0, !.
+
+boolaxiom2assertion(Axiom, Assertion) :- !,
+        get_names_roles(Axiom, NamesRoles),
+        get_new_name(NewName),
+        construct_concept(Axiom, NamesRoles, Concept),
+        Assertion=concept_assertion(Concept,NewName).
+
+get_names_roles(A1*A2, NamesRoles) :- !,
+        get_names_roles(A1, NR1),
+        get_names_roles(A2, NR2),
+        union(NR1, NR2, NamesRoles).
+get_names_roles(A1+A2, NamesRoles) :- !,
+        get_names_roles(A1, NR1),
+        get_names_roles(A2, NR2),
+        union(NR1, NR2, NamesRoles).
+get_names_roles(A1<=>A2, NamesRoles) :- !,
+        get_names_roles(A1, NR1),
+        get_names_roles(A2, NR2),
+        union(NR1, NR2, NamesRoles).
+get_names_roles(A1=>A2, NamesRoles) :- !,
+        get_names_roles(A1, NR1),
+        get_names_roles(A2, NR2),
+        union(NR1, NR2, NamesRoles).
+get_names_roles(A1<=A2, NamesRoles) :- !,
+        get_names_roles(A1, NR1),
+        get_names_roles(A2, NR2),
+        union(NR1, NR2, NamesRoles).
+get_names_roles(-A, NamesRoles) :- !,
+        get_names_roles(A, NamesRoles).
+get_names_roles(Atom, NamesRoles) :-
+        Atom = concept_assertion(_C,N), !,
+        get_new_role(N,R),
+        NamesRoles = [(N,R)].
+get_names_roles(Atom, NamesRoles) :-
+        Atom = role_assertion(_R,N1,N2), !,
+        get_new_role(N1,R1),
+        get_new_role(N2,R2),
+        NamesRoles = [(N1,R1),(N2,R2)].
+
+get_new_role(Name,Role) :- !,
+        atom_concat('__role_',Name,Role).
+
+get_new_name('__dummy') :- !.
+
+construct_concept(Axiom, NamesRoles, Concept) :- !,
+        construct_concept2(NamesRoles, CList),
+        construct_concept3(Axiom, NamesRoles, C),
+        append(CList, [C], Conjuncts),
+        Concept = and(Conjuncts).
+
+construct_concept2([(N,R)|NamesRoles], [some(R,N),all(R,N)|Conjuncts]) :- !,
+        construct_concept2(NamesRoles,Conjuncts).
+construct_concept2([],[]) :- !.
+
+construct_concept3(A1*A2, NamesRoles, and([R1,R2])) :- !,
+        construct_concept3(A1, NamesRoles, R1),
+        construct_concept3(A2, NamesRoles, R2).
+construct_concept3(A1+A2, NamesRoles, or([R1,R2])) :- !,
+        construct_concept3(A1, NamesRoles, R1),
+        construct_concept3(A2, NamesRoles, R2).
+construct_concept3(A1<=>A2, NamesRoles, Concept) :- !,
+        construct_concept3((A1=>A2)*(A2=>A1), NamesRoles, Concept).
+construct_concept3(A1=>A2, NamesRoles, Concept) :- !,
+        construct_concept3((-A1)+A2, NamesRoles, Concept).
+construct_concept3(A1<=A2, NamesRoles, Concept) :- !,
+        construct_concept3(A1+(-A2), NamesRoles, Concept).
+construct_concept3(-A, NamesRoles, not(C)) :- !,
+        construct_concept3(A, NamesRoles, C).
+construct_concept3(concept_assertion(C,N), NamesRoles, Concept) :- !,
+        member((N,R), NamesRoles),
+        Concept = some(R,C).
+construct_concept3(role_assertion(R,N1,N2), NamesRoles, Concept) :- !,
+        member((N1,R1), NamesRoles),
+        Concept = some(R1,some(R,oneof([N2]))).
