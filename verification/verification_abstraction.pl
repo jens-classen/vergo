@@ -14,6 +14,15 @@ Benjamin Zarrieß and Jens Claßen:
 On the Decidability of Verifying LTL Properties of Golog Programs. 
 Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 2013.
 
+Benjamin Zarrieß and Jens Claßen:
+Verification of Knowledge-Based Programs over Description Logic Actions.
+In Proceedings of the Twenty-Fourth International Joint Conference on Artificial Intelligence (IJCAI 2015),
+AAAI Press, 2015.
+
+Benjamin Zarrieß and Jens Claßen:
+Decidable Verification of Knowledge-Based Programs over Description Logic Actions with Sensing.
+In Proceedings of the Twenty-Eighth International Workshop on Description Logics (DL 2015),
+CEUR-WS.org, 2015.
 
 @author  Jens Claßen
 @license GPL
@@ -22,6 +31,10 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
+
+:- use_module('../reasoning/fol').
+:- use_module('../reasoning/dl', [consistent/1 as dl_consistent,
+                                  inconsistent/1 as dl_inconsistent]).
 
 % we make the UNA for constants
 unique_names_assumption.
@@ -510,6 +523,49 @@ is_inconsistent(Formulas) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DL reasoning with caching
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+stdnames_axioms(Axioms) :-
+        findall(-(X=Y),
+                (stdname(X),stdname(Y),not(X=Y),(X @< Y)),
+                Axioms).
+
+is_entailed(Formulas,Formula) :-
+        is_entailed_cached(Formulas,Formula,true), !.
+is_entailed(Formulas,Formula) :-
+        is_entailed_cached(Formulas,Formula,false), !, fail.
+is_entailed(Formulas,Formula) :-
+        stdnames_axioms(StdAxioms),
+        append(Formulas,StdAxioms,Axioms),
+        dl_entails(Axioms,Formula), !,
+        assert(is_entailed_cached(Formulas,Formula,true)).
+is_entailed(Formulas,Formula) :-
+        stdnames_axioms(StdAxioms),
+        append(Formulas,StdAxioms,Axioms),
+        not(dl_entails(Axioms,Formula)), !,
+        assert(is_entailed_cached(Formulas,Formula,false)),
+        fail.
+
+is_inconsistent(Formulas) :-
+        is_inconsistent_cached(Formulas,true), !.
+is_inconsistent(Formulas) :-
+        is_inconsistent_cached(Formulas,false), !, fail.
+is_inconsistent(Formulas) :-
+        stdnames_axioms(StdAxioms),
+        append(Formulas,StdAxioms,Axioms),
+        dl_inconsistent(Axioms), !,
+        assert(is_inconsistent_cached(Formulas,true)).
+is_inconsistent(Formulas) :-
+        stdnames_axioms(StdAxioms),
+        append(Formulas,StdAxioms,Axioms),
+        not(dl_inconsistent(Axioms)), !,
+        assert(is_inconsistent_cached(Formulas,false)),
+        fail.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Regression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -581,6 +637,12 @@ regress(all(Xs,F1),E,all(Xs,R1)) :- !,
 regress(X=Y,_,X=Y) :- !.
 regress(true,_,true) :- !.
 regress(false,_,false) :- !.
+
+regress(concept_assertion(C,N),E,concept_assertion(CR,N)) :- !,
+        regress_dl(C,E,CR).
+regress(role_assertion(R,N1,N2),E,R) :- !,
+        regress(concept_assertion(some(R,oneof([N2])),N1),E,R).
+
 regress(Atom,E,(Atom+RP)*RN) :-
         regress_pos(Atom,E,RP),
         regress_neg(Atom,E,RN).
@@ -640,6 +702,62 @@ neg_inequalities([Arg1|_Args1],[Arg2|_Args2],true):-
 neg_inequalities([Arg1|Args1],[Arg2|Args2],-(Arg1=Arg2)+Inequalities) :-
         neg_inequalities(Args1,Args2,Inequalities).
 neg_inequalities([],[],false).
+
+regress_dl(thing,_E,thing) :- !.
+regress_dl(nothing,_E,nothing) :- !.
+regress_dl(not(C),E,not(R)) :- !,
+        regress_dl(C,E,D).
+regress_dl(and(Cs),E,and(Rs)) :- !,
+        regress_dl_list(Cs,E,Rs).
+regress_dl(or(Cs),E,and(Rs)) :- !,
+        regress_dl_list(Cs,E,Rs).
+regress_dl(oneof(Ns),E,oneof(Ns)) :- !.
+regress_dl(some(R,C),E,Result) :- !,
+        all_individuals(Ind),
+        regress_dl(C,E,Res),
+        findall(and([oneof([A]),some(R,and([oneof([B]),Res]))]),
+                (member(A,Ind),
+                 member(B,Ind),
+                 not(member(role_assertion(R,A,B)),E),
+                 not(member(-role_assertion(R,A,B)),E)),
+                R3s),
+        findall(and([oneof([A]),some(universal,and([oneof([B],Res)]))]),
+                member(role_assertion(R,A,B),E),
+                R4s),                    
+        R1 = and([not(oneof(Ind)),some(R,Res)]),
+        R2 = and([oneof(Ind),some(R,and([not(oneof(Ind)),Res]))]),
+        R3 = or(R3s),
+        R4 = or(R4s),
+        Result = or([R1,R2,R3,R4]).
+regress_dl(all(R,C),E,R) :- !,
+        all_individuals(Ind),
+        regress_dl(C,E,Res),
+        findall(or([not(oneof([A])),all(R,or([not(oneof([B])),Res]))]),
+                (member(A,Ind),
+                 member(B,Ind),
+                 not(member(role_assertion(R,A,B)),E),
+                 not(member(-role_assertion(R,A,B)),E)),
+                R3s),
+        findall(or([not(oneof([A])),some(universal,and([oneof([B],Res)]))]),
+                member(role_assertion(R,A,B),E),
+                R4s),                    
+        R1 = or([oneof(Ind),all(R,Res)]),
+        R2 = or([not(oneof(Ind)),all(R,or([oneof(Ind),Res]))]),
+        R3 = or(R3s),
+        R4 = and(R4s),
+        Result = or([R1,R2,R3,R4]).
+regress_dl(C,E,R) :- !,
+        findall(A,member(-concept_assertion(C,A),E),PosInd),
+        findall(B,member(concept_assertion(C,B),E),NegInd),
+        R = or([and([C,not(oneof(NegInd))],oneof(PosInd)).
+
+regress_dl_list([C|Cs],E,[R|Rs]) :- !,
+        regress_dl(C,E,R),
+        regress_dl_list(Cs,E,Rs).
+regress_dl_list([],_E,[]) :- !.
+
+all_individuals(Ind) :- !,
+        findall(N,stdname(N),Ind).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
