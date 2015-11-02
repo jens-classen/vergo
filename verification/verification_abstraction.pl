@@ -36,6 +36,10 @@ CEUR-WS.org, 2015.
 :- use_module('../reasoning/dl', [consistent/1 as dl_consistent,
                                   inconsistent/1 as dl_inconsistent]).
 
+:- discontiguous(stdnames_axioms/1).
+:- discontiguous(is_entailed/2).
+:- discontiguous(is_inconsistent/1).
+
 % we make the UNA for constants
 unique_names_assumption.
 
@@ -284,8 +288,11 @@ create_state_if_not_exists(Formulas,Literals,NodeID) :- !,
         assert(abstract_state(Formulas,Literals,NodeID)).
 
 % draw transition system using dot
+% TODO: doesn't work, need node labels w/o brackets etc.
+%       ==> use pt_draw_graph instead for now
 draw_graph :-
-        open('transition_system.dot', write, Stream),
+        trans_file(TransFile),
+        open(TransFile, write, Stream),
         write(Stream, 'digraph G {\n'),
         write_nodes(Stream),
         write_edges(Stream),
@@ -313,6 +320,10 @@ write_edges(Stream) :-
         write(Stream, '\"];\n'),
         fail.
 write_edges(_Stream).
+
+trans_file(File) :-
+        temp_dir(TempDir),
+        string_concat(TempDir, '/trans.dot', File).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -410,7 +421,6 @@ cgraph_file(File) :-
         temp_dir(TempDir),
         string_concat(TempDir, '/cgraph.dot', File).
         
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Parse temporal property
@@ -705,13 +715,13 @@ neg_inequalities([],[],false).
 
 regress_dl(thing,_E,thing) :- !.
 regress_dl(nothing,_E,nothing) :- !.
-regress_dl(not(C),E,not(R)) :- !,
+regress_dl(not(C),E,not(D)) :- !,
         regress_dl(C,E,D).
 regress_dl(and(Cs),E,and(Rs)) :- !,
         regress_dl_list(Cs,E,Rs).
 regress_dl(or(Cs),E,and(Rs)) :- !,
         regress_dl_list(Cs,E,Rs).
-regress_dl(oneof(Ns),E,oneof(Ns)) :- !.
+regress_dl(oneof(Ns),_E,oneof(Ns)) :- !.
 regress_dl(some(R,C),E,Result) :- !,
         all_individuals(Ind),
         regress_dl(C,E,Res),
@@ -729,7 +739,7 @@ regress_dl(some(R,C),E,Result) :- !,
         R3 = or(R3s),
         R4 = or(R4s),
         Result = or([R1,R2,R3,R4]).
-regress_dl(all(R,C),E,R) :- !,
+regress_dl(all(R,C),E,Result) :- !,
         all_individuals(Ind),
         regress_dl(C,E,Res),
         findall(or([not(oneof([A])),all(R,or([not(oneof([B])),Res]))]),
@@ -749,7 +759,7 @@ regress_dl(all(R,C),E,R) :- !,
 regress_dl(C,E,R) :- !,
         findall(A,member(-concept_assertion(C,A),E),PosInd),
         findall(B,member(concept_assertion(C,B),E),NegInd),
-        R = or([and([C,not(oneof(NegInd))],oneof(PosInd)).
+        R = or([and([C,not(oneof(NegInd))],oneof(PosInd))]).
 
 regress_dl_list([C|Cs],E,[R|Rs]) :- !,
         regress_dl(C,E,R),
@@ -847,7 +857,8 @@ propositionalize_transitions.
 
 % draw propositionalized transition system using dot
 pt_draw_graph :-
-        open('prop_trans.dot', write, Stream),
+        ptrans_file(PTransFile),
+        open(PTransFile, write, Stream),
         write(Stream, 'digraph G {\n'),
         pt_write_nodes(Stream),
         pt_write_edges(Stream),
@@ -875,6 +886,10 @@ pt_write_edges(Stream) :-
         fail.
 pt_write_edges(_Stream).
 
+ptrans_file(File) :-
+        temp_dir(TempDir),
+        string_concat(TempDir, '/prop_trans.dot', File).
+        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Translate propositional transition system to SMV input language
