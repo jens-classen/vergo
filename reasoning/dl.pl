@@ -96,6 +96,7 @@ check_konclude_result(String) :-
         sub_string(String,_,_,_N,"is inconsistent."), !,
         fail.
 check_konclude_result(String) :- 
+        temp_file(File),
         report_message(['Unexpected Konclude output:']),
         report_message(['Aborting...']),
         report_message([String]),
