@@ -93,7 +93,12 @@ are the following dependencies to external tools and systems:
 
 3. Graphviz/dot
 
-   for visualization
+   To visualize some of the graph structures created during
+   verification, there are predicates to generate corresponding .dot
+   files in the temp directory. An image file can then be generated
+   for example using
+
+   $ dot -Tpng prop_trans.dot -o prop_trans.png
 
 4. JPL (bidirectional Prolog/Java interface)
 
