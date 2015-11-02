@@ -84,9 +84,10 @@ step(D,A,DP,F) :-
         trans(D,A,DP,F).
 step(D,terminate,terminated,F) :-
         final(D,F).
-step(D,fail,failed,-F) :-
+step(D,fail,failed,(-F1)*(-F2)) :-
+        final(D,F1),
         findall(FP,trans(D,_A,_DP,FP),L),
-        disjoin(L,F).
+        disjoin(L,F2).
 step(terminated,terminate,terminated,true).
 step(failed,fail,failed,true).
 
