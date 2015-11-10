@@ -175,6 +175,7 @@ construction_step :-
         % split states and transitions over this condition...
         split(Formulas,RegressedCondition).
 
+
 % construction step: split types by some property subformula
 construction_step :-
         
@@ -201,22 +202,23 @@ construction_step :-
         
         % split states and transitions over this condition...
         split(Formulas,RegressedFormula).
-        
 
 split(Formulas,RegressedCondition) :-
+        simplify(-RegressedCondition,NegRegressedCondition),
         retract(abstract_state(Formulas,Literals,NodeID)),
         assert(abstract_state([RegressedCondition|Formulas],Literals,
                               NodeID)),
-        assert(abstract_state([-RegressedCondition|Formulas],Literals,
+        assert(abstract_state([NegRegressedCondition|Formulas],Literals,
                               NodeID)),
         fail.
 
 split(Formulas,RegressedCondition) :-
+        simplify(-RegressedCondition,NegRegressedCondition),
         retract(abstract_trans(Formulas,Literals,NodeID,Action,
                                NewLiterals,NewNodeID)),
         assert(abstract_trans([RegressedCondition|Formulas],Literals,
                               NodeID,Action,NewLiterals,NewNodeID)), 
-        assert(abstract_trans([-RegressedCondition|Formulas],Literals,
+        assert(abstract_trans([NegRegressedCondition|Formulas],Literals,
                               NodeID,Action,NewLiterals,NewNodeID)), 
         fail.
         
@@ -227,9 +229,10 @@ split(Formulas,RegressedCondition) :-
         fail.
         
 split(Formulas,RegressedCondition) :-
-        is_inconsistent([-RegressedCondition|Formulas]),
-        retractall(abstract_state([-RegressedCondition|Formulas],_,_)),
-        retractall(abstract_trans([-RegressedCondition|Formulas],_,_,_,_)), 
+        simplify(-RegressedCondition,NegRegressedCondition),
+        is_inconsistent([NegRegressedCondition|Formulas]),
+        retractall(abstract_state([NegRegressedCondition|Formulas],_,_)),
+        retractall(abstract_trans([NegRegressedCondition|Formulas],_,_,_,_)), 
         fail.
 
 split(_,_).
@@ -238,7 +241,7 @@ split(_,_).
 % split over positive effect conditions
 create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
         
-        causes_true(Action,_Fluent,Condition),
+        causes_true(Action,Fluent,Condition),
         regression(Condition,Literals,RegressedCondition),
         
         not(is_entailed(Formulas,RegressedCondition)),
@@ -246,11 +249,20 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
         
         !,
         
+        report_message(['Doing split over positive action condition: \n',
+                        '\t action   : ', Action, '\n',
+                        '\t fluent   : ', Fluent, '\n',
+                        '\t condition: ', RegressedCondition, '\n',
+                        '\t type     : ', Formulas, '\n',
+                        '\t literals : ', Literals, '\n',
+                        '\t node     : ', NodeID, '\n']),
+        
         split(Formulas,RegressedCondition),
+        simplify(-RegressedCondition,NegRegressedCondition),
         
         create_transitions([RegressedCondition|Formulas],Literals,
                            NodeID,Action,NewNodeID),
-        create_transitions([-RegressedCondition|Formulas],Literals,
+        create_transitions([NegRegressedCondition|Formulas],Literals,
                            NodeID,Action,NewNodeID).
 
 % split over negative effect conditions
@@ -264,11 +276,20 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
         
         !,
         
+        report_message(['Doing split over negative action condition: \n',
+                        '\t action   : ', Action, '\n',
+                        '\t fluent   : ', Fluent, '\n',
+                        '\t condition: ', RegressedCondition, '\n',
+                        '\t type     : ', Formulas, '\n',
+                        '\t literals : ', Literals, '\n',
+                        '\t node     : ', NodeID, '\n']),
+        
         split(Formulas,RegressedCondition),
+        simplify(-RegressedCondition,NegRegressedCondition),
         
         create_transitions([RegressedCondition|Formulas],Literals,
                            NodeID,Action,NewNodeID),
-        create_transitions([-RegressedCondition|Formulas],Literals,
+        create_transitions([NegRegressedCondition|Formulas],Literals,
                            NodeID,Action,NewNodeID).
 
 % actually create transition
@@ -276,6 +297,8 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
         
         determine_effects(Formulas,Action,Effects),
         apply_effects(Literals,Effects,NewLiterals),
+        
+        !,
         
         assert(abstract_trans(Formulas,Literals,NodeID,Action,
                               NewLiterals,NewNodeID)),
@@ -592,7 +615,7 @@ is_effect(Formulas,Action,Effect) :-
         is_entailed(Formulas,Condition),
         Effect=(-Fluent).
 
-apply_effects(Literals,Effects,NewEffects) :-
+apply_effects(Literals,Effects,NewEffects) :- !,
         apply_neg_effects(Literals,Effects,Effects2),
         apply_pos_effects(Effects2,Effects,NewEffects2),
         sort(NewEffects2,NewEffects).
