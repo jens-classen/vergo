@@ -59,7 +59,7 @@ unique_names_assumption.
    map_number_of_subformulas/1,
    map_number_of_actions/1,
    map_number_of_states/1,
-   abstract_state/3,
+   abstract_state/4,
    abstract_trans/6,
    cg_number_of_nodes/1,
    cg_node/2,
@@ -109,7 +109,7 @@ init_construction :-
         findall(F,initially(F),KB),
         
         % remove old instances of dynamic predicates
-        retractall(abstract_state(_,_,_)),
+        retractall(abstract_state(_,_,_,_)),
         retractall(abstract_trans(_,_,_,_,_,_)),
         
         % initialize with first abstract state
@@ -118,19 +118,30 @@ init_construction :-
 % construction step: expand transition(s)
 construction_step :-
         
-        % if there is an abstract state...
-        abstract_state(Formulas,Literals,NodeID),
+        % if there is an abstract state at the fringe...
+        abstract_state(Formulas,Literals,NodeID,true),
         
-        % with a possible outgoing transition...
-        cg_edge(NodeID,Action,Condition,NewNodeID),
+        % where none of the three cases below applies...
+        not(can_expand(Formulas,Literals,NodeID,_,_,_)),
+        not(can_split_transition(Formulas,Literals,NodeID,_,_)),
+        not(can_split_property(Formulas,Literals,_)),
 
-        % whose regressed condition is entailed...
-        regression(Condition,Literals,RegressedCondition),
-        is_entailed(Formulas,RegressedCondition),
+        % then
+        !,
         
-        % and where the corresponding transition(s) do not yet exist
-        not(abstract_trans(Formulas,Literals,NodeID,Action,
-                           _NewLiterals,NewNodeID)),
+        % this state is not a fringe state anymore
+        retract(abstract_state(Formulas,Literals,NodeID,true)),
+        assert(abstract_state(Formulas,Literals,NodeID,false)).
+        
+% construction step: expand transition(s)
+construction_step :-
+        
+        % if there is an abstract state...
+        abstract_state(Formulas,Literals,NodeID,true),
+        
+        % where it is possible to expand an action...
+        can_expand(Formulas,Literals,NodeID,Action,RegressedCondition,
+                   NewNodeID),
         
         % then
         !,
@@ -151,16 +162,11 @@ construction_step :-
 construction_step :-
         
         % if there is an abstract state...
-        abstract_state(Formulas,Literals,NodeID),
+        abstract_state(Formulas,Literals,NodeID,true),
         
-        % with a possible outgoing transition...
-        cg_edge(NodeID,Action,Condition,_NewNodeID),
-        
-        % and whose (negated) regressed condition is not yet entailed
-        % by the type formulas
-        regression(Condition,Literals,RegressedCondition),
-        not(is_entailed(Formulas,RegressedCondition)),
-        not(is_entailed(Formulas,-RegressedCondition)),
+        % where we can split over a transition condition...
+        can_split_transition(Formulas,Literals,NodeID,Action,
+                             RegressedCondition),
         
         % then
         !,
@@ -172,7 +178,7 @@ construction_step :-
                         '\t literals : ', Literals, '\n',
                         '\t node     : ', NodeID, '\n']),
         
-        % split states and transitions over this condition...
+        % split states and transitions over this condition
         split(Formulas,RegressedCondition).
 
 
@@ -180,16 +186,10 @@ construction_step :-
 construction_step :-
         
         % if there is an abstract state...
-        abstract_state(Formulas,Literals,NodeID),
+        abstract_state(Formulas,Literals,NodeID,true),
         
-        % and a property subformula
-        property_subformula(Formula),
-        
-        % whose (negated) regressed condition is not yet entailed
-        % by the type formulas
-        regression(Formula,Literals,RegressedFormula),
-        not(is_entailed(Formulas,RegressedFormula)),
-        not(is_entailed(Formulas,-RegressedFormula)),
+        % where we can split over a property subformula...
+        can_split_property(Formulas,Literals,RegressedFormula),
         
         % then
         !,
@@ -200,16 +200,57 @@ construction_step :-
                         '\t literals : ', Literals, '\n',
                         '\t node     : ', NodeID, '\n']),
         
-        % split states and transitions over this condition...
+        % split states and transitions over this formula
         split(Formulas,RegressedFormula).
 
+% is it possible to expand a transition?
+can_expand(Formulas,Literals,NodeID,Action,RegressedCondition,
+           NewNodeID) :- 
+        
+        % there is a possible outgoing transition...
+        cg_edge(NodeID,Action,Condition,NewNodeID),
+
+        % whose regressed condition is entailed...
+        regression(Condition,Literals,RegressedCondition),
+        is_entailed(Formulas,RegressedCondition),
+        
+        % and where the corresponding transition(s) do not yet exist
+        not(abstract_trans(Formulas,Literals,NodeID,Action,
+                           _NewLiterals,NewNodeID)).
+        
+% is it possible to split over a transition condition?
+can_split_transition(Formulas,Literals,NodeID,Action,
+                     RegressedCondition) :-
+
+        % there is a possible outgoing transition...
+        cg_edge(NodeID,Action,Condition,_NewNodeID),
+        
+        % whose (negated) regressed condition is not yet entailed
+        % by the type formulas
+        regression(Condition,Literals,RegressedCondition),
+        not(is_entailed(Formulas,RegressedCondition)),
+        not(is_entailed(Formulas,-RegressedCondition)).
+        
+% is it possible to split over a property subformula?
+can_split_property(Formulas,Literals,RegressedFormula) :-
+        
+        % there is a property subformula
+        property_subformula(Formula),
+        
+        % whose (negated) regressed condition is not yet entailed
+        % by the type formulas
+        regression(Formula,Literals,RegressedFormula),
+        not(is_entailed(Formulas,RegressedFormula)),
+        not(is_entailed(Formulas,-RegressedFormula)).
+        
+% split Formulas over RegressedCondition
 split(Formulas,RegressedCondition) :-
         simplify(-RegressedCondition,NegRegressedCondition),
-        retract(abstract_state(Formulas,Literals,NodeID)),
+        retract(abstract_state(Formulas,Literals,NodeID,Fringe)),
         assert(abstract_state([RegressedCondition|Formulas],Literals,
-                              NodeID)),
+                              NodeID,Fringe)),
         assert(abstract_state([NegRegressedCondition|Formulas],Literals,
-                              NodeID)),
+                              NodeID,Fringe)),
         fail.
 
 split(Formulas,RegressedCondition) :-
@@ -224,14 +265,14 @@ split(Formulas,RegressedCondition) :-
         
 split(Formulas,RegressedCondition) :-
         is_inconsistent([RegressedCondition|Formulas]),
-        retractall(abstract_state([RegressedCondition|Formulas],_,_)),
+        retractall(abstract_state([RegressedCondition|Formulas],_,_,_)),
         retractall(abstract_trans([RegressedCondition|Formulas],_,_,_,_)), 
         fail.
         
 split(Formulas,RegressedCondition) :-
         simplify(-RegressedCondition,NegRegressedCondition),
         is_inconsistent([NegRegressedCondition|Formulas]),
-        retractall(abstract_state([NegRegressedCondition|Formulas],_,_)),
+        retractall(abstract_state([NegRegressedCondition|Formulas],_,_,_)),
         retractall(abstract_trans([NegRegressedCondition|Formulas],_,_,_,_)), 
         fail.
 
@@ -268,7 +309,7 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
 % split over negative effect conditions
 create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
         
-        causes_false(Action,_Fluent,Condition),
+        causes_false(Action,Fluent,Condition),
         regression(Condition,Literals,RegressedCondition),
         
         not(is_entailed(Formulas,RegressedCondition)),
@@ -306,9 +347,9 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
 
 % create a new abstract state if it does not exist already
 create_state_if_not_exists(Formulas,Literals,NodeID) :-
-        abstract_state(Formulas,Literals,NodeID), !.
+        abstract_state(Formulas,Literals,NodeID,_Fringe), !.
 create_state_if_not_exists(Formulas,Literals,NodeID) :- !,
-        assert(abstract_state(Formulas,Literals,NodeID)).
+        assert(abstract_state(Formulas,Literals,NodeID,true)).
 
 % draw transition system using dot
 % TODO: doesn't work, need node labels w/o brackets etc.
@@ -323,7 +364,7 @@ draw_graph :-
         close(Stream).
 
 write_nodes(Stream) :-
-        abstract_state(Formulas,Literals,NodeID),
+        abstract_state(Formulas,Literals,NodeID,_Fringe),
         write(Stream, '\t'),
         write(Stream, (Formulas,Literals,NodeID)),
         write(Stream, ';\n'),
@@ -860,7 +901,7 @@ memorize_actions([],N) :-
         assert(map_number_of_actions(N)).
 
 propositionalize_states :-
-        abstract_state(Formulas,Literals,NodeID),
+        abstract_state(Formulas,Literals,NodeID,_),
         retract(map_number_of_states(N)),
         N1 is N+1,
         assert(map_state(N,Formulas,Literals,NodeID)),
