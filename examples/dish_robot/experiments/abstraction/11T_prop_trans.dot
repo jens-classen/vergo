@@ -1,0 +1,31 @@
+digraph G {
+	0;
+	1;
+	2;
+	3;
+	4;
+	5;
+	6;
+	7;
+	8;
+	9;
+	10;
+	11;
+	0 -> 1 [label="gotoRoom(r1)"];
+	0 -> 2 [label="requestDDR(d1,r1)"];
+	1 -> 0 [label="gotoKitchen"];
+	1 -> 3 [label="requestDDR(d1,r1)"];
+	2 -> 3 [label="gotoRoom(r1)"];
+	3 -> 4 [label="load(d1,r1)"];
+	4 -> 5 [label="gotoKitchen"];
+	5 -> 6 [label="unload(d1)"];
+	6 -> 7 [label="gotoRoom(r1)"];
+	6 -> 8 [label="requestDDR(d1,r1)"];
+	7 -> 9 [label="gotoKitchen"];
+	7 -> 10 [label="requestDDR(d1,r1)"];
+	8 -> 10 [label="gotoRoom(r1)"];
+	9 -> 7 [label="gotoRoom(r1)"];
+	9 -> 11 [label="requestDDR(d1,r1)"];
+	10 -> 4 [label="load(d1,r1)"];
+	11 -> 10 [label="gotoRoom(r1)"];
+}

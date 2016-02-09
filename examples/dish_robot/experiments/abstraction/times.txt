@@ -1,0 +1,167 @@
+(1,1,true)
+==========
+
+Transitition system:
+% 66,935 inferences, 0.048 CPU in 0.685 seconds (7% CPU, 1403378 Lips)
+nodes: 12
+edges: 17
+
+Properties 1-5:
+% 5,948 inferences, 0.004 CPU in 0.058 seconds (8% CPU, 1346713 Lips)
+% 607 inferences, 0.001 CPU in 0.014 seconds (5% CPU, 908072 Lips)
+% 764 inferences, 0.001 CPU in 0.015 seconds (6% CPU, 920819 Lips)
+% 607 inferences, 0.001 CPU in 0.013 seconds (5% CPU, 829155 Lips)
+% 764 inferences, 0.001 CPU in 0.014 seconds (7% CPU, 754621 Lips)
+
+(1,2,true)
+==========
+
+Transitition system:
+% 214,313 inferences, 0.213 CPU in 2.032 seconds (10% CPU, 1004879 Lips)
+nodes: 66
+edges: 125
+
+Properties 1-5:
+% 5,948 inferences, 0.005 CPU in 0.120 seconds (4% CPU, 1189410 Lips)
+% 607 inferences, 0.001 CPU in 0.020 seconds (4% CPU, 826630 Lips)
+% 764 inferences, 0.001 CPU in 0.020 seconds (5% CPU, 796603 Lips)
+% 607 inferences, 0.001 CPU in 0.021 seconds (5% CPU, 643120 Lips)
+% 764 inferences, 0.001 CPU in 0.021 seconds (5% CPU, 776629 Lips)
+
+(2,1,true)
+==========
+
+Transitition system:
+% 175,443 inferences, 0.118 CPU in 1.482 seconds (8% CPU, 1486747 Lips)
+nodes: 44
+edges: 91
+
+Properties 1-5:
+% 5,948 inferences, 0.005 CPU in 0.121 seconds (4% CPU, 1167629 Lips)
+% 607 inferences, 0.001 CPU in 0.016 seconds (5% CPU, 809647 Lips)
+% 764 inferences, 0.001 CPU in 0.018 seconds (5% CPU, 848774 Lips)
+% 607 inferences, 0.001 CPU in 0.016 seconds (6% CPU, 679387 Lips)
+% 764 inferences, 0.001 CPU in 0.021 seconds (6% CPU, 673648 Lips)
+
+(2,2,true)
+==========
+
+Transition system:
+% 2,219,266 inferences, 36.087 CPU in 39.186 seconds (92% CPU, 61497 Lips)
+nodes: 580
+edges: 1564
+
+Properties 1-5:
+% 5,948 inferences, 0.004 CPU in 0.252 seconds (2% CPU, 1367685 Lips)
+% 607 inferences, 0.001 CPU in 0.319 seconds (0% CPU, 477679 Lips)
+% 764 inferences, 0.001 CPU in 0.262 seconds (1% CPU, 525109 Lips)
+% 607 inferences, 0.001 CPU in 0.281 seconds (0% CPU, 458086 Lips)
+% 764 inferences, 0.001 CPU in 0.259 seconds (0% CPU, 1189072 Lips)
+
+(3,1,true)
+==========
+
+Transition system:
+% 462,679 inferences, 0.530 CPU in 2.486 seconds (21% CPU, 873259 Lips)
+nodes: 130
+edges: 331
+
+Properties 1-5:
+% 5,948 inferences, 0.004 CPU in 0.038 seconds (11% CPU, 1391725 Lips)
+% 607 inferences, 0.000 CPU in 0.031 seconds (2% CPU, 1217900 Lips)
+% 764 inferences, 0.001 CPU in 0.032 seconds (3% CPU, 911963 Lips)
+% 607 inferences, 0.001 CPU in 0.031 seconds (2% CPU, 780931 Lips)
+% 764 inferences, 0.001 CPU in 0.032 seconds (3% CPU, 893528 Lips)
+
+(1,3,true)
+==========
+
+Transition system:
+% 1,355,094 inferences, 11.331 CPU in 17.155 seconds (66% CPU, 119594 Lips)
+nodes: 348
+edges: 843
+
+Properties 1-5:
+% 5,948 inferences, 0.004 CPU in 0.116 seconds (4% CPU, 1429900 Lips)
+% 607 inferences, 0.001 CPU in 0.106 seconds (1% CPU, 571330 Lips)
+% 764 inferences, 0.001 CPU in 0.107 seconds (1% CPU, 1196912 Lips)
+% 607 inferences, 0.001 CPU in 0.109 seconds (1% CPU, 602034 Lips)
+% 764 inferences, 0.001 CPU in 0.107 seconds (1% CPU, 1197691 Lips)
+
+(2,3,true)
+==========
+
+Transition system:
+% 155,783,477 inferences, 73757.070 CPU in 74000.083 seconds (100% CPU, 2112 Lips)
+% Execution Aborted
+nodes > 3818
+edges > 12796
+
+(3,2,true)
+==========
+
+Transition system:
+% 56,807,161 inferences, 15957.551 CPU in 15983.024 seconds (100% CPU, 3560 Lips)
+nodes: 3800
+edges: 12626
+
+Properties 1-5:
+% 5,948 inferences, 0.009 CPU in 12.768 seconds (0% CPU, 696033 Lips)
+% 607 inferences, 0.001 CPU in 9.517 seconds (0% CPU, 786679 Lips)
+% 764 inferences, 0.005 CPU in 8.093 seconds (0% CPU, 139337 Lips)
+% 607 inferences, 0.001 CPU in 9.430 seconds (0% CPU, 970882 Lips)
+% 764 inferences, 0.001 CPU in 8.690 seconds (0% CPU, 1164631 Lips)
+
+(1,1,false)
+===========
+
+Transition system:
+% 1,209,596 inferences, 2.179 CPU in 22.163 seconds (10% CPU, 555030 Lips)
+nodes: 121
+edges: 140
+
+Properties 1-5:
+% 5,948 inferences, 0.005 CPU in 0.115 seconds (4% CPU, 1203899 Lips)
+% 754 inferences, 0.001 CPU in 0.032 seconds (3% CPU, 872760 Lips)
+% 764 inferences, 0.001 CPU in 0.030 seconds (3% CPU, 753393 Lips)
+% 607 inferences, 0.001 CPU in 0.029 seconds (3% CPU, 650086 Lips)
+% 764 inferences, 0.001 CPU in 0.031 seconds (3% CPU, 954961 Lips)
+
+(1,2,false)
+===========
+
+Transition system:
+% 50,908,175 inferences, 3341.437 CPU in 3596.718 seconds (93% CPU, 15235 Lips)
+nodes: 1924
+edges: 2905
+
+Properties 1-5:
+% 5,948 inferences, 0.005 CPU in 2.068 seconds (0% CPU, 1126153 Lips)
+% 754 inferences, 0.001 CPU in 2.130 seconds (0% CPU, 1067284 Lips)
+% 866 inferences, 0.001 CPU in 2.032 seconds (0% CPU, 1188286 Lips)
+% 607 inferences, 0.001 CPU in 2.238 seconds (0% CPU, 1054109 Lips)
+% 866 inferences, 0.001 CPU in 2.185 seconds (0% CPU, 1168789 Lips)
+
+(2,1,false)
+===========
+
+Transition system:
+% 10,544,732 inferences, 185.860 CPU in 268.284 seconds (69% CPU, 56735 Lips)
+nodes: 904
+edges: 1406
+
+Properties 1-5:
+% 5,948 inferences, 0.005 CPU in 0.527 seconds (1% CPU, 1097931 Lips)
+% 788 inferences, 0.001 CPU in 0.516 seconds (0% CPU, 968346 Lips)
+% 754 inferences, 0.001 CPU in 0.472 seconds (0% CPU, 577699 Lips)
+% 607 inferences, 0.001 CPU in 0.519 seconds (0% CPU, 480848 Lips)
+% 764 inferences, 0.001 CPU in 0.513 seconds (0% CPU, 1141662 Lips
+
+(2,2,false)
+===========
+
+Transition system:
+% 495,566,020 inferences, 173008.435 CPU in 173698.307 seconds (100% CPU, 2864 Lips)
+% Execution Aborted
+nodes > 5834
+edges > 14306

@@ -75,3 +75,7 @@ property(prop4,
 property(prop5,
          main,
          allpaths(eventually(some([X,Y],dirtyDish(X,Y))))).
+% not yet supported!
+% property(prop6,
+%         main,
+%         some([X,Y],somepath(always(dirtyDish(X,Y))))).

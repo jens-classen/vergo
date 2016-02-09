@@ -1,0 +1,27 @@
+queue size 1
+============
+
+Cgraph:
+% 54,838 inferences, 0.027 CPU in 0.230 seconds (12% CPU, 2058952 Lips)
+nodes: 3
+edges: 7
+
+Properties:
+% 2,106,326 inferences, 1.124 CPU in 11.700 seconds (10% CPU, 1873627 Lips)
+% 647,275 inferences, 0.345 CPU in 2.925 seconds (12% CPU, 1874657 Lips)
+% 602,625 inferences, 0.291 CPU in 2.034 seconds (14% CPU, 2068231 Lips)
+iterations: 4,2,4
+
+queue size 2
+============
+
+Cgraph:
+% 54,838 inferences, 0.027 CPU in 0.261 seconds (10% CPU, 2035138 Lips)
+nodes: 3
+edges: 7
+
+Properties:
+% 19,320,602 inferences, 7.258 CPU in 24.570 seconds (30% CPU, 2662026 Lips)
+% 2,136,413 inferences, 0.786 CPU in 2.329 seconds (34% CPU, 2719402 Lips)
+% 1,985,018 inferences, 1.197 CPU in 4.980 seconds (24% CPU, 1658309 Lips)
+iterations: 5,2,5
