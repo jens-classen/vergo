@@ -1,0 +1,14 @@
+digraph G {
+	0;
+	1;
+	2;
+	0 -> 1 [label="unload(d1)"];
+	0 -> 2 [label="gotoRoom(r1)"];
+	0 -> 0 [label="requestDDR(d1,r1)"];
+	1 -> 1 [label="unload(d1)"];
+	1 -> 2 [label="gotoRoom(r1)"];
+	1 -> 1 [label="requestDDR(d1,r1)"];
+	2 -> 2 [label="load(d1,r1)"];
+	2 -> 0 [label="gotoKitchen"];
+	2 -> 2 [label="requestDDR(d1,r1)"];
+}

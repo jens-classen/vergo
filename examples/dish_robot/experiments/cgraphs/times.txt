@@ -1,0 +1,352 @@
+(1,1,true)
+==========
+
+CGraph:
+% 71,360 inferences, 0.021 CPU in 0.054 seconds (38% CPU, 3462788 Lips)
+nodes: 3
+edges: 9
+
+Properties 1-5:
+% 30,282 inferences, 0.023 CPU in 0.416 seconds (6% CPU, 1289329 Lips)
+% 10,826 inferences, 0.007 CPU in 0.101 seconds (7% CPU, 1593470 Lips)
+% 25,643 inferences, 0.019 CPU in 0.347 seconds (6% CPU, 1330308 Lips)
+% 48,841 inferences, 0.038 CPU in 0.704 seconds (5% CPU, 1283247 Lips)
+% 86,348 inferences, 0.070 CPU in 1.218 seconds (6% CPU, 1240152 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(1,2,true)
+==========
+
+CGraph:
+% 160,209 inferences, 0.041 CPU in 0.129 seconds (32% CPU, 3883245 Lips)
+nodes: 3
+edges: 15
+
+Properties 1-5:
+% 35,539 inferences, 0.025 CPU in 0.403 seconds (6% CPU, 1412725 Lips)
+% 14,707 inferences, 0.008 CPU in 0.100 seconds (8% CPU, 1854579 Lips)
+% 28,208 inferences, 0.019 CPU in 0.442 seconds (4% CPU, 1513737 Lips)
+% 61,816 inferences, 0.043 CPU in 0.810 seconds (5% CPU, 1429413 Lips)
+% 163,180 inferences, 0.123 CPU in 2.479 seconds (5% CPU, 1328825 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(2,1,true)
+==========
+
+CGraph:
+% 311,136 inferences, 0.078 CPU in 0.143 seconds (55% CPU, 3977080 Lips)
+nodes: 4
+edges: 18
+
+Properties 1-5:
+% 44,984 inferences, 0.034 CPU in 0.764 seconds (4% CPU, 1324887 Lips)
+% 18,126 inferences, 0.010 CPU in 0.133 seconds (7% CPU, 1904770 Lips)
+% 35,306 inferences, 0.024 CPU in 0.528 seconds (5% CPU, 1476304 Lips)
+% 77,809 inferences, 0.056 CPU in 1.092 seconds (5% CPU, 1382772 Lips)
+% 170,782 inferences, 0.125 CPU in 2.294 seconds (5% CPU, 1368462 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(2,2,true)
+==========
+
+CGraph:
+% 728,824 inferences, 0.173 CPU in 0.245 seconds (71% CPU, 4208311 Lips)
+nodes: 4
+edges: 30
+
+Properties 1-5:
+% 53,607 inferences, 0.038 CPU in 0.614 seconds (6% CPU, 1427175 Lips)
+% 25,383 inferences, 0.012 CPU in 0.163 seconds (7% CPU, 2116736 Lips)
+% 45,747 inferences, 0.028 CPU in 0.462 seconds (6% CPU, 1629414 Lips)
+% 102,423 inferences, 0.069 CPU in 1.215 seconds (6% CPU, 1481274 Lips)
+% 344,573 inferences, 0.241 CPU in 4.601 seconds (5% CPU, 1430408 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(3,1,true)
+==========
+
+CGraph:
+% 904,347 inferences, 0.212 CPU in 0.265 seconds (80% CPU, 4273040 Lips)
+nodes: 5
+edges: 29
+
+Properties 1-5:
+% 60,818 inferences, 0.045 CPU in 0.776 seconds (6% CPU, 1350323 Lips)
+% 26,560 inferences, 0.012 CPU in 0.160 seconds (8% CPU, 2129758 Lips)
+% 51,072 inferences, 0.033 CPU in 0.578 seconds (6% CPU, 1537001 Lips)
+% 110,456 inferences, 0.075 CPU in 1.345 seconds (6% CPU, 1468320 Lips)
+% 286,635 inferences, 0.200 CPU in 2.989 seconds (7% CPU, 1435789 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+
+(1,3,true)
+==========
+
+CGraph:
+% 284,424 inferences, 0.071 CPU in 0.111 seconds (64% CPU, 4003865 Lips)
+nodes: 3
+edges: 21
+
+Properties 1-5:
+% 39,362 inferences, 0.026 CPU in 0.387 seconds (7% CPU, 1512748 Lips)
+% 18,555 inferences, 0.009 CPU in 0.099 seconds (9% CPU, 2143339 Lips)
+% 33,408 inferences, 0.020 CPU in 0.330 seconds (6% CPU, 1650465 Lips)
+% 70,954 inferences, 0.048 CPU in 0.850 seconds (6% CPU, 1484220 Lips)
+% 243,445 inferences, 0.176 CPU in 3.011 seconds (6% CPU, 1379709 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(2,3,true)
+==========
+
+CGraph:
+% 1,313,202 inferences, 0.308 CPU in 0.398 seconds (77% CPU, 4258068 Lips)
+nodes: 4
+edges: 42
+
+Properties 1-5:
+% 60,770 inferences, 0.040 CPU in 0.607 seconds (7% CPU, 1535142 Lips)
+% 32,571 inferences, 0.014 CPU in 0.125 seconds (11% CPU, 2393124 Lips)
+% 55,068 inferences, 0.031 CPU in 0.452 seconds (7% CPU, 1784960 Lips)
+% 119,129 inferences, 0.074 CPU in 1.206 seconds (6% CPU, 1601733 Lips)
+% 558,543 inferences, 0.356 CPU in 4.929 seconds (7% CPU, 1567081 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(3,2,true)
+==========
+
+CGraph:
+% 2,179,824 inferences, 0.499 CPU in 0.711 seconds (70% CPU, 4367095 Lips)
+nodes: 5
+edges: 49
+
+Properties 1-5:
+% 72,898 inferences, 0.049 CPU in 0.807 seconds (6% CPU, 1482040 Lips)
+% 38,199 inferences, 0.017 CPU in 0.158 seconds (11% CPU, 2286620 Lips)
+% 67,818 inferences, 0.040 CPU in 0.628 seconds (6% CPU, 1709946 Lips)
+% 149,087 inferences, 0.097 CPU in 1.609 seconds (6% CPU, 1533046 Lips)
+% 594,730 inferences, 0.401 CPU in 5.450 seconds (7% CPU, 1483148 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(3,3,true)
+==========
+
+CGraph:
+% 3,965,613 inferences, 0.890 CPU in 1.067 seconds (83% CPU, 4454086 Lips)
+nodes: 5
+edges: 69
+
+Properties 1-5:
+% 84,436 inferences, 0.052 CPU in 0.795 seconds (6% CPU, 1634041 Lips)
+% 49,761 inferences, 0.019 CPU in 0.151 seconds (13% CPU, 2589172 Lips)
+% 82,525 inferences, 0.044 CPU in 0.689 seconds (6% CPU, 1863505 Lips)
+% 175,779 inferences, 0.103 CPU in 1.631 seconds (6% CPU, 1702709 Lips)
+% 935,567 inferences, 0.576 CPU in 8.499 seconds (7% CPU, 1623164 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(5,5,true)
+==========
+
+CGraph:
+% 44,146,522 inferences, 9.636 CPU in 10.230 seconds (94% CPU, 4581220 Lips)
+nodes: 7
+edges: 225
+
+Properties 1-5:
+% 191,446 inferences, 0.097 CPU in 1.263 seconds (8% CPU, 1969924 Lips)
+% 142,035 inferences, 0.045 CPU in 0.222 seconds (20% CPU, 3177796 Lips)
+% 204,899 inferences, 0.086 CPU in 0.883 seconds (10% CPU, 2369664 Lips)
+% 422,643 inferences, 0.206 CPU in 2.454 seconds (8% CPU, 2056462 Lips)
+% 4,204,102 inferences, 2.257 CPU in 16.815 seconds (13% CPU, 1862562 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(10,10,true)
+============
+
+CGraph:
+% 1,643,421,032 inferences, 353.961 CPU in 358.276 seconds (99% CPU, 4642938 Lips)
+nodes: 12
+edges: 1350
+
+Properties 1-5:
+% 885,950 inferences, 0.315 CPU in 2.547 seconds (12% CPU, 2808117 Lips)
+% 799,615 inferences, 0.217 CPU in 0.520 seconds (42% CPU, 3678188 Lips)
+% 1,012,299 inferences, 0.338 CPU in 1.742 seconds (19% CPU, 2997285 Lips)
+% 2,006,803 inferences, 0.732 CPU in 4.863 seconds (15% CPU, 2741838 Lips)
+% Execution Aborted (> 5mins)
+iterations: 1, 1, 1, 1+2, >1
+
+(1,1,false)
+===========
+
+CGraph:
+% 71,360 inferences, 0.021 CPU in 0.040 seconds (53% CPU, 3335248 Lips)
+nodes: 3
+edges: 9
+
+Properties 1-5:
+% 30,217 inferences, 0.023 CPU in 0.355 seconds (6% CPU, 1342460 Lips)
+% 10,761 inferences, 0.007 CPU in 0.101 seconds (7% CPU, 1556581 Lips)
+% 25,578 inferences, 0.018 CPU in 0.340 seconds (5% CPU, 1405188 Lips)
+% 48,776 inferences, 0.038 CPU in 0.756 seconds (5% CPU, 1296057 Lips)
+% 86,283 inferences, 0.067 CPU in 1.204 seconds (6% CPU, 1285006 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(1,2,false)
+===========
+
+CGraph:
+% 160,209 inferences, 0.041 CPU in 0.069 seconds (61% CPU, 3864214 Lips)
+nodes: 3
+edges: 15
+
+Properties 1-5:
+% 35,474 inferences, 0.025 CPU in 0.383 seconds (7% CPU, 1423184 Lips)
+% 14,642 inferences, 0.007 CPU in 0.097 seconds (8% CPU, 1998694 Lips)
+% 28,143 inferences, 0.019 CPU in 0.323 seconds (6% CPU, 1475647 Lips)
+% 61,751 inferences, 0.045 CPU in 0.790 seconds (6% CPU, 1385149 Lips)
+% 163,115 inferences, 0.124 CPU in 2.249 seconds (6% CPU, 1316048 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(2,1,false)
+===========
+
+CGraph:
+% 311,136 inferences, 0.075 CPU in 0.108 seconds (70% CPU, 4148680 Lips)
+nodes: 4
+edges: 18
+
+Properties 1-5:
+% 44,919 inferences, 0.033 CPU in 0.559 seconds (6% CPU, 1347983 Lips)
+% 18,061 inferences, 0.009 CPU in 0.123 seconds (8% CPU, 1914170 Lips)
+% 35,241 inferences, 0.024 CPU in 0.419 seconds (6% CPU, 1472667 Lips)
+% 77,744 inferences, 0.054 CPU in 0.984 seconds (6% CPU, 1431205 Lips)
+% 170,717 inferences, 0.122 CPU in 2.018 seconds (6% CPU, 1396594 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(2,2,false)
+===========
+
+CGraph:
+% 728,824 inferences, 0.174 CPU in 0.237 seconds (73% CPU, 4180252 Lips)
+nodes: 4
+edges: 30
+
+Properties 1-5:
+% 53,542 inferences, 0.038 CPU in 0.645 seconds (6% CPU, 1414506 Lips)
+% 25,318 inferences, 0.011 CPU in 0.128 seconds (9% CPU, 2204365 Lips)
+% 45,682 inferences, 0.028 CPU in 0.476 seconds (6% CPU, 1617424 Lips)
+% 102,358 inferences, 0.069 CPU in 1.203 seconds (6% CPU, 1487585 Lips)
+% 344,508 inferences, 0.240 CPU in 3.716 seconds (6% CPU, 1437015 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(3,1,false)
+===========
+
+CGraph:
+% 904,347 inferences, 0.211 CPU in 0.265 seconds (79% CPU, 4287880 Lips)
+nodes: 5
+edges: 29
+
+Properties 1-5:
+% 60,753 inferences, 0.045 CPU in 0.781 seconds (6% CPU, 1348364 Lips)
+% 26,495 inferences, 0.012 CPU in 0.147 seconds (8% CPU, 2192319 Lips)
+% 51,007 inferences, 0.035 CPU in 0.604 seconds (6% CPU, 1456762 Lips)
+% 110,391 inferences, 0.078 CPU in 1.350 seconds (6% CPU, 1423787 Lips)
+% 286,570 inferences, 0.204 CPU in 2.957 seconds (7% CPU, 1403390 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(1,3,false)
+===========
+
+CGraph:
+% 284,424 inferences, 0.072 CPU in 0.110 seconds (65% CPU, 3966297 Lips)
+nodes: 3
+edges: 21
+
+Properties 1-5:
+% 39,297 inferences, 0.027 CPU in 0.386 seconds (7% CPU, 1454561 Lips)
+% 18,490 inferences, 0.009 CPU in 0.099 seconds (9% CPU, 2022673 Lips)
+% 33,343 inferences, 0.020 CPU in 0.327 seconds (6% CPU, 1647856 Lips)
+% 70,889 inferences, 0.048 CPU in 0.823 seconds (6% CPU, 1472587 Lips)
+% 243,380 inferences, 0.182 CPU in 2.982 seconds (6% CPU, 1339592 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(2,3,false)
+===========
+
+CGraph:
+% 1,313,202 inferences, 0.306 CPU in 0.387 seconds (79% CPU, 4287006 Lips)
+nodes: 4
+edges: 42
+
+Properties 1-5:
+% 60,705 inferences, 0.041 CPU in 0.628 seconds (7% CPU, 1480980 Lips)
+% 32,506 inferences, 0.013 CPU in 0.307 seconds (4% CPU, 2436089 Lips)
+% 55,003 inferences, 0.031 CPU in 0.498 seconds (6% CPU, 1777377 Lips)
+% 119,064 inferences, 0.076 CPU in 1.214 seconds (6% CPU, 1568254 Lips)
+% 558,478 inferences, 0.363 CPU in 4.990 seconds (7% CPU, 1540298 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(3,2,false)
+===========
+
+CGraph:
+% 2,179,824 inferences, 0.498 CPU in 0.598 seconds (83% CPU, 4380667 Lips)
+nodes: 5
+edges: 49
+
+Properties 1-5:
+% 72,833 inferences, 0.051 CPU in 0.815 seconds (6% CPU, 1439713 Lips)
+% 38,134 inferences, 0.016 CPU in 0.154 seconds (11% CPU, 2322826 Lips)
+% 67,753 inferences, 0.041 CPU in 0.633 seconds (6% CPU, 1662119 Lips)
+% 149,022 inferences, 0.101 CPU in 1.774 seconds (6% CPU, 1478444 Lips)
+% 594,665 inferences, 0.411 CPU in 5.572 seconds (7% CPU, 1446565 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(3,3,false)
+===========
+
+CGraph:
+% 3,965,613 inferences, 0.895 CPU in 1.065 seconds (84% CPU, 4430418 Lips)
+nodes: 5
+edges: 69
+
+Properties 1-5:
+% 84,371 inferences, 0.052 CPU in 0.810 seconds (6% CPU, 1621645 Lips)
+% 49,696 inferences, 0.019 CPU in 0.157 seconds (12% CPU, 2655972 Lips)
+% 82,460 inferences, 0.045 CPU in 0.665 seconds (7% CPU, 1843210 Lips)
+% 175,714 inferences, 0.102 CPU in 1.701 seconds (6% CPU, 1720048 Lips)
+% 935,502 inferences, 0.581 CPU in 7.021 seconds (8% CPU, 1610550 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(5,5,false)
+===========
+
+CGraph:
+% 44,146,522 inferences, 9.623 CPU in 10.369 seconds (93% CPU, 4587368 Lips)
+nodes: 7
+edges: 225
+
+Properties 1-5:
+% 191,381 inferences, 0.097 CPU in 1.241 seconds (8% CPU, 1981113 Lips)
+% 141,970 inferences, 0.045 CPU in 0.222 seconds (20% CPU, 3184087 Lips)
+% 204,834 inferences, 0.086 CPU in 0.906 seconds (10% CPU, 2369244 Lips)
+% 422,578 inferences, 0.201 CPU in 2.411 seconds (8% CPU, 2105280 Lips)
+% 4,204,037 inferences, 2.247 CPU in 16.964 seconds (13% CPU, 1870699 Lips)
+iterations: 1, 1, 1, 1+2, 1
+
+(10,10,false)
+=============
+
+CGraph:
+% 1,643,421,032 inferences, 353.365 CPU in 360.000 seconds (98% CPU, 4650778 Lips)
+nodes: 12
+edges: 1350
+
+Properties 1-5:
+% 885,885 inferences, 0.322 CPU in 2.527 seconds (13% CPU, 2747099 Lips)
+% 799,550 inferences, 0.218 CPU in 0.510 seconds (43% CPU, 3668764 Lips)
+% 1,012,234 inferences, 0.333 CPU in 1.773 seconds (19% CPU, 3038226 Lips)
+% 2,006,738 inferences, 0.719 CPU in 4.783 seconds (15% CPU, 2791051 Lips)
+% Execution Aborted (> 5mins)
+iterations: 1, 1, 1, 1+2, >1
