@@ -67,7 +67,9 @@ ask4result(false,true,false).
 ask4result(false,false,unknown).
 
 wh_ask(Fml,Result) :- !,
-        reduce_s(know(Fml),Result).
+        history(H),
+        regress_s(H,know(Fml),Fml2),
+        reduce_s(Fml2,Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper Predicates
