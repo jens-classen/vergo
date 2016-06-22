@@ -178,21 +178,28 @@ neg_disjunct_inequalities(Var,[Name|Names],(-(Var=Name))*Inequalities) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO: integrate this into reasoner!!!
-
-initially(-(X=Y)) :-
-        stdname(X),
-        stdname(Y),
-        X \= Y.
-
 % TODO: duplicate code!!! (verification_cgraphs)                             
-                             
+% TODO: what about defs???
+
+%% Don't want this as init axiom, integrate it into entails_initially
+%% instead.
+% initially(-(X=Y)) :-
+%        stdname(X),
+%        stdname(Y),
+%        X \= Y.
+                            
 entails_initially(Fml,Truth) :-
         findall(IniFml,
                 initially(IniFml),
                 KB),
-        entails(KB,Fml), !,
+        findall(StdNameAxiom,
+                (stdname(X),
+                 stdname(Y),
+                 X \= Y,
+                 StdNameAxiom = -(X=Y)),
+                StdNameAxioms),
+        union(KB,StdNameAxioms,KBWithAxioms),
+        entails(KBWithAxioms,Fml), !,
         Truth = true.
 entails_initially(_Fml,Truth) :- !,
         Truth = false.
-
-% TODO: what about defs???
