@@ -87,8 +87,8 @@ senseresult2fml(Result,Action,Fml) :-
 
 regress_s(H,Fml1,Fml2) :- !,
         regress(H,Fml1,Fml3),
-        apply_una(Fml3,Fml4),
-        minimize(Fml4,Fml2).
+        apply_una(Fml3,Fml2).
+        % minimize(Fml4,Fml2). %% No: may contain 'know'!
         
 reduce_s(Fml1,Fml2) :- !,
         reduce(Fml1,Fml3),
