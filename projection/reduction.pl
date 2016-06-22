@@ -35,8 +35,9 @@ reduce(Fml,Result) :-
         def(Fml,Def), !,
         reduce(Def,Result).
 reduce(know(Fml),Result) :- !,
-        free_variables(Fml,Vars),
-        resolve(Fml,Vars,Result).
+        reduce(Fml,FmlR),
+        free_variables(FmlR,Vars),
+        resolve(FmlR,Vars,Result).
 reduce(Fml,Fml) :- !.                             
                              
 resolve(Fml,[],Result) :- !,
