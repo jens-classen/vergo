@@ -1,13 +1,11 @@
 
 rel_rigid(teach(_,_)).
 
-initially(teach(tom, sam)).
-initially(teach(tina, sue) * (teach(tom, sue) + teach(ted, sue))).
-initially(some(X,teach(X, sara))).
-initially(all(X,(teach(X, sandy) <=> (X=ted)))).
-initially(all([X,Y],(teach(X, Y) => ((Y=sam) + (Y=sue) + (Y=sara) + (Y= sandy))))).
-
-stdname(X) :- member(X, [tom,tina,ted,sam,sue,sara,sandy]).
+initially(teach('#tom', '#sam')).
+initially(teach('#tina', '#sue') * (teach('#tom', '#sue') + teach('#ted', '#sue'))).
+initially(some(X,teach(X, '#sara'))).
+initially(all(X,(teach(X, '#sandy') <=> (X = '#ted')))).
+initially(all([X,Y],(teach(X, Y) => ((Y = '#sam') + (Y = '#sue') + (Y = '#sara') + (Y = '#sandy'))))).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Testing
@@ -23,18 +21,18 @@ stdname(X) :- member(X, [tom,tina,ted,sam,sue,sara,sandy]).
 /**
   * query(+Number,+Formula,+ExpectResultForAsk4)
   **/
-query( 1,teach(tom,sam),true).
-query( 2,teach(tom,sandy),false).
-query( 3,teach(tom,sue),unknown).
-query( 4,know(teach(tom,sue)),false).
-query( 5,some(X,teach(X,sara)),true).
-query( 6,some(X,know(teach(X,sara))),false).
-query( 7,some(X,know(teach(X,sue))),true).
-query( 8,some(X,teach(X,sue) * -know(teach(X,sue))),true).
-query( 9,some(X,teach(X,sandy) * -know(teach(X,sandy))),false).
-query(10,some(X,teach(X,sam) * -know(teach(X,sam))),unknown).
+query( 1,teach('#tom','#sam'),true).
+query( 2,teach('#tom','#sandy'),false).
+query( 3,teach('#tom','#sue'),unknown).
+query( 4,know(teach('#tom','#sue')),false).
+query( 5,some(X,teach(X,'#sara')),true).
+query( 6,some(X,know(teach(X,'#sara'))),false).
+query( 7,some(X,know(teach(X,'#sue'))),true).
+query( 8,some(X,teach(X,'#sue') * -know(teach(X,'#sue'))),true).
+query( 9,some(X,teach(X,'#sandy') * -know(teach(X,'#sandy'))),false).
+query(10,some(X,teach(X,'#sam') * -know(teach(X,'#sam'))),unknown).
 query(11,some(Y,know(all(X,teach(X,Y) => know(teach(X,Y))))),true).
-query(12,some(Y,-(Y=sam) * -kwhether(all(X,teach(X,Y)=>know(teach(X,Y))))),false).
+query(12,some(Y,-(Y ='#sam') * -kwhether(all(X,teach(X,Y)=>know(teach(X,Y))))),false).
 query(13,some(Y,know(some(X,teach(X,Y) * some(Z,-(Y=Z)*know(teach(X,Z)))))),true).
 
 def(kwhether(F),know(F)+know(-F)).

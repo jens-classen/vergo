@@ -189,7 +189,7 @@ write_formula(Stream, true) :-
 write_formula(Stream, false) :-
         write(Stream, '$false').
 write_formula(Stream, F) :-
-        write(Stream, F).
+        writeq(Stream, F). % use (single) quotes where necessary
 
 write_binary_formula(Stream, F1, Symbol, F2) :-
         write(Stream, '( '),

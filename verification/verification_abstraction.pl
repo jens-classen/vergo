@@ -33,6 +33,7 @@ CEUR-WS.org, 2015.
 :- use_module('../lib/env').
 
 :- use_module('../reasoning/fol').
+:- use_module('../reasoning/l').
 :- use_module('../reasoning/dl', [consistent/1 as dl_consistent,
                                   inconsistent/1 as dl_inconsistent]).
 
@@ -40,6 +41,7 @@ CEUR-WS.org, 2015.
 :- discontiguous(is_entailed/2).
 :- discontiguous(is_inconsistent/1).
 
+% TODO: use standard names instead
 % we make the UNA for constants
 unique_names_assumption.
 
@@ -554,52 +556,33 @@ no_temporal_operators(F) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% FOL reasoning with caching
+%% L reasoning with caching
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-stdnames_axioms(Axioms) :-
-        findall(-(X=Y),
-                (stdname(X),stdname(Y),not(X=Y),(X @< Y)),
-                Axioms).
 
 is_entailed(Formulas,Formula) :-
         is_entailed_cached(Formulas,Formula,true), !.
 is_entailed(Formulas,Formula) :-
         is_entailed_cached(Formulas,Formula,false), !, fail.
 is_entailed(Formulas,Formula) :-
-        stdnames_axioms(StdAxioms),
-        append(Formulas,StdAxioms,Axioms),
-        entails(Axioms,Formula), !,
-        assert(is_entailed_cached(Formulas,Formula,true)).
-is_entailed(Formulas,Formula) :-
-        stdnames_axioms(StdAxioms),
-        append(Formulas,StdAxioms,Axioms),
-        not(entails(Axioms,Formula)), !,
-        assert(is_entailed_cached(Formulas,Formula,false)),
-        fail.
+        entails_l(Formulas,Formula,Truth), !,
+        assert(is_entailed_cached(Formulas,Formula,Truth)).
 
 is_inconsistent(Formulas) :-
         is_inconsistent_cached(Formulas,true), !.
 is_inconsistent(Formulas) :-
         is_inconsistent_cached(Formulas,false), !, fail.
 is_inconsistent(Formulas) :-
-        stdnames_axioms(StdAxioms),
-        append(Formulas,StdAxioms,Axioms),
-        inconsistent(Axioms), !,
-        assert(is_inconsistent_cached(Formulas,true)).
-is_inconsistent(Formulas) :-
-        stdnames_axioms(StdAxioms),
-        append(Formulas,StdAxioms,Axioms),
-        not(inconsistent(Axioms)), !,
-        assert(is_inconsistent_cached(Formulas,false)),
-        fail.
+        inconsistent_l(Formulas,Truth), !,
+        assert(is_inconsistent_cached(Formulas,Truth)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DL reasoning with caching
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TODO: incorporate standard names into dl.pl as in l.pl
 
 stdnames_axioms(Axioms) :-
         findall(-(X=Y),

@@ -21,8 +21,8 @@ fun_fluent(queue).
 rel_fluent(occ(_)).
 
 poss(wait,true).
-poss(requestCoffee(P),-(P=e)*lastFree(queue)).
-poss(selectRequest(P),-(P=e)*isFirst(queue,P)).
+poss(requestCoffee(P),-(P='#e')*lastFree(queue)).
+poss(selectRequest(P),-(P='#e')*isFirst(queue,P)).
 poss(pickupCoffee,-holdingCoffee).
 poss(bringCoffee(_P),holdingCoffee).
 
@@ -36,24 +36,20 @@ causes_true(A,occ(B),(A=B)).
 causes_false(A,occ(B),-(A=B)).
 
 def(isFirst(Q,P),
-    (some(P2,Q=q(P,P2)))).
+    (some(P2,Q='#q'(P,P2)))).
 def(empty(Q),    
-    Q=q(e,e)).
+    Q='#q'('#e','#e')).
 def(lastFree(Q),
-    some(P,Q=q(P,e))).
+    some(P,Q='#q'(P,'#e'))).
 def(full(Q),
-    some([P1,P2],(-(P1=e))*(-(P2=e))*(Q=q(P1,P2)))).
+    some([P1,P2],(-(P1='#e'))*(-(P2='#e'))*(Q='#q'(P1,P2)))).
 def(enqueue(Qold,P,Qnew),
-    ((Qold=q(e,e))*(Qnew=q(P,e)))
-    +(some(X1,(-(X1=e))*(Qold=q(X1,e))*(Qnew=q(X1,P))))).
+    ((Qold='#q'('#e','#e'))*(Qnew='#q'(P,'#e')))
+    +(some(X1,(-(X1='#e'))*(Qold='#q'(X1,'#e'))*(Qnew='#q'(X1,P))))).
 def(dequeue(Qold,P,Qnew), 
-    some(X2,(Qold=q(P,X2))*(Qnew=q(X2,e)))).
+    some(X2,(Qold='#q'(P,X2))*(Qnew='#q'(X2,'#e')))).
 
 exo(requestCoffee(_),true).
-
-stdname(e).
-stdname(q(_,_)).
-stdname(bob).
 
 include_preconditions. % everything is precondition-extended
 

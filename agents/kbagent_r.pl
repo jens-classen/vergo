@@ -7,6 +7,7 @@
 :- ['../projection/regression'].
 :- ['../projection/reduction'].
 
+:- use_module('../reasoning/l').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/fobdd').
 

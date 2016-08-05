@@ -4,6 +4,7 @@
 
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
+:- use_module('../reasoning/l').
 
 :- multifile prim_action/1.
 :- multifile rel_fluent/1.
@@ -19,11 +20,8 @@
 :- multifile exo/2.
 :- multifile senses/2.
 :- multifile senses/3.
-:- multifile stdname/1.
 :- multifile include_preconditions/0.
 :- multifile sensing_style/1.
-
-:- dynamic(stdname/1).
 
 % poss if A is a variable => big disjunction over all cases
 precond(A,Precondition) :- var(A), !, 
@@ -57,15 +55,13 @@ sfcond(A,Y,Sensecondition) :- var(A), sensing_style(object), !,
         condition(senses(B,Y,Phi),Phi,B,A,Cond),
         copy_term((Cond,Y,A),(CondC,Y,A)),
         subv(Y,X,CondC,CondD), % Y may not be a variable
-        Condition2 = Cond+(-some(X,CondD)*(Y=ok)),
+        Condition2 = Cond+(-some(X,CondD)*(Y = '#ok')),
         simplify(Condition2,Sensecondition).
 % sf if A is instantiated => take predefined axiom
 sfcond(A,Y,Sensecondition) :- nonvar(A), sensing_style(object),
         senses(A,Y,Sensecondition).
-% sf otherwise: "ok"
-sfcond(_,Y,(Y=ok)) :- sensing_style(object), !.
-% ok is a standard name
-stdname(ok).
+% sf otherwise: '#ok'
+sfcond(_,Y,(Y = '#ok')) :- sensing_style(object), !.
 
 % ssa if exists pre-instantiated axiom by user => use it
 ssa(Fluent,A,Condition) :- ssa_inst(Fluent,A,Condition), !.
@@ -308,7 +304,7 @@ make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :- !,
 
 unique_name(X) :-
         prim_action(X);
-        stdname(X).
+        X =.. [F|_], is_stdname(F).
 
 /**
   * action_equality_conjunct(-A,-Act,+Fml1,-Fml2,-Vars) is nondet

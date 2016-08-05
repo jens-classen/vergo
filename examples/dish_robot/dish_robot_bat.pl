@@ -30,12 +30,10 @@ causes_false(load(X,Y),dirtyDish(X,Y),true).
 causes_true(load(X,_Y),onRobot(X),true).
 causes_false(unload(X),onRobot(X),true).
 
-domain(dish,d1).
-domain(dish,d2).
-domain(room,r1).
-domain(room,r2).
-
-stdname(X) :- domain(dish,X); domain(room,X).
+domain(dish,'#d1').
+domain(dish,'#d2').
+domain(room,'#r1').
+domain(room,'#r2').
 
 program(control,
         loop([while(some(X,onRobot(X)),
@@ -62,16 +60,16 @@ program(main,
 
 property(prop1,
          main,
-         somepath(always(dirtyDish(d1,r1)))).
+         somepath(always(dirtyDish('#d1','#r1')))).
 property(prop2,
          main,
-         allpaths(eventually(-dirtyDish(d1,r1)))).
+         allpaths(eventually(-dirtyDish('#d1','#r1')))).
 property(prop3,
          main,
-         allpaths(eventually(dirtyDish(d1,r1)))).
+         allpaths(eventually(dirtyDish('#d1','#r1')))).
 property(prop4,
          main,
-         somepath(until(-some(X,dirtyDish(d1,X)),some(X,dirtyDish(d1,X))))).
+         somepath(until(-some(X,dirtyDish('#d1',X)),some(X,dirtyDish('#d1',X))))).
 property(prop5,
          main,
          allpaths(eventually(some([X,Y],dirtyDish(X,Y))))).

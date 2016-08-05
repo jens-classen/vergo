@@ -16,6 +16,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
+:- use_module('../reasoning/l').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/fobdd').
 
@@ -339,20 +340,6 @@ cg_label(P,Phi,I,M,Psi) :-
         check_label(P,Phi,I,M,Psi),
         %not(cached_label(P,Phi,I,M,Psi)),
         assert(cached_label(P,Phi,I,M,Psi)).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Check result against initial theory
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-entails_initially(Fml,Truth) :-
-        findall(IniFml2,
-                (initially(IniFml),
-                 regress(IniFml,IniFml2)), % b/c of defs
-                KB),
-        entails(KB,Fml), !,
-        Truth = true.
-entails_initially(_Fml,Truth) :- !,
-        Truth = false.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
