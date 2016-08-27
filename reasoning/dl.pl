@@ -1,5 +1,7 @@
-:- module(dl, [inconsistent/1,
+:- module(dl, [entails/2,
+               inconsistent/1,
                consistent/1,
+               simplify/2,
                op(1130, xfy, <=>),
                op(1110, xfy, <=),
                op(1110, xfy, =>)]).
@@ -60,6 +62,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DL Reasoning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/* Succeeds if Ontology entails Conjecture. */
+entails(Ontology,Conjecture) :- !,
+        add_to_ontology(Ontology,-Conjecture,NOntology),
+        inconsistent(NOntology).
 
 /* Succeeds if Ontology is inconsistent. */
 inconsistent(Ontology) :- !,
@@ -357,3 +364,24 @@ construct_concept3(concept_assertion(C,N), NamesRoles, Concept) :- !,
 construct_concept3(role_assertion(R,N1,N2), NamesRoles, Concept) :- !,
         member((N1,R1), NamesRoles),
         Concept = some(R1,some(R,oneof([N2]))).
+
+% add formula to ontology: distinguish the two representation styles
+add_to_ontology(ontology(Names, Concepts, Roles, ABox, TBox), Formula,
+                NOntology) :-
+        (Formula = concept_assertion(_,_);
+         Formula = role_assertion(_,_,_)), !,
+        NOntology = ontology(Names,Concepts,Roles,[Formula|ABox],
+                             TBox).
+add_to_ontology(ontology(Names, Concepts, Roles, ABox, TBox), Formula,
+                NOntology) :-
+        Formula = subsumedBy(_,_), !,
+        NOntology = ontology(Names,Concepts,Roles,ABox,
+                             [Formula|TBox]).
+add_to_ontology(Ontology,Formula,[Formula|Ontology]) :-  !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Formula Simplification
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% change nothing so far
+simplify(F,F).
