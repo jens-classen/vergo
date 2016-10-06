@@ -67,6 +67,8 @@ ask4result(true,false,true).
 ask4result(false,true,false).
 ask4result(false,false,unknown).
 
+% todo: fix this (instantiation of variables)
+% example: wumpus2: senseBreeze, then wh_ask(pit(X),R).
 wh_ask(Fml,Result) :- !,
         history(H),
         regress_s(H,know(Fml),Fml2),
@@ -91,12 +93,14 @@ senseresult2fml(Result,Action,Fml) :-
 regress_s(H,Fml1,Fml2) :- !,
         regress(H,Fml1,Fml3),
         apply_una(Fml3,Fml2).
+        % apply_cwa(Fml3,Fml2). %% No: may contain 'know'!
         % minimize(Fml4,Fml2). %% No: may contain 'know'!
         
 reduce_s(Fml1,Fml2) :- !,
         reduce(Fml1,Fml3),
-        simplify(Fml3,Fml4),
-        minimize(Fml4,Fml2).
+        apply_cwa(Fml3,Fml4),
+        simplify(Fml4,Fml5),
+        minimize(Fml5,Fml2).
 
 trans_s(Program,Action,Condition) :-
         trans(Program,Action,_,Cond1),
