@@ -16,5 +16,5 @@ del_facts([]).
 
 add_facts([Fact|Facts]) :- 
         assert(initially(Fact)),
-        del_facts(Facts).
+        add_facts(Facts).
 add_facts([]).
