@@ -16,20 +16,31 @@
 sensing_style(truth).
 include_preconditions.
 
-initially(inDungeon).
-initially(at(room(1,1)).
+initially(at('#room-1-1')).
 initially(-hasGold).
 initially(hasArrow).
 initially(wumpusAlive).
 
-% todo: initially adj
+initially(adj(R1,D,R2)) :-
+        domain(coordinate,X1),
+        domain(coordinate,X2),
+        domain(coordinate,Y1),
+        domain(coordinate,Y2),
+        ((D = '#n', X2 is X1, Y2 is Y1+1);
+         (D = '#w', X2 is X1-1, Y2 is Y1);
+         (D = '#s', X2 is X1, Y2 is Y1-1);
+         (D = '#e', X2 is X1+1, Y2 is Y1)),
+        atomic_list_concat(['#room', X1, Y1], '-', R1),
+        atomic_list_concat(['#room', X2, Y2], '-', R2).
 
-domain(loc, L) :- 
-        L = room(X,Y),
-        member(X,[1,2,3,4,5,6,7,8]),
-        member(Y,[1,2,3,4,5,6,7,8]).
 domain(dir, D) :-
-        member(D, [n,w,s,e]).
+        member(D, ['#n','#w','#s','#e']).
+domain(loc, L) :- 
+        domain(coordinate,X),
+        domain(coordinate,Y),
+        atomic_list_concat(['#room', X, Y], '-', L).
+domain(coordinate,X) :-
+        member(X, [1,2,3,4,5,6,7,8]).
 
 prim_action(senseStench).
 prim_action(senseBreeze).
@@ -38,7 +49,7 @@ prim_action(senseGold).
 prim_action(pick).
 prim_action(move(_)).    % domain: direction
 
-rel_fluent(at).
+rel_fluent(at(_)).       % domain: location
 rel_fluent(wumpusAlive).
 rel_fluent(hasArrow).
 rel_fluent(hasGold).
@@ -48,12 +59,15 @@ rel_rigid(adj(_,_,_)).   % domains: location, direction, location
 rel_rigid(pit(_)).       % domain: location
 rel_rigid(wumpus(_)).    % domain: location
 
+cwa(at(_)).
+cwa(adj(_,_,_)).
+
 poss(senseStench, true).
 poss(senseBreeze, true).
 poss(senseGold, true).
 poss(shoot, hasArrow).
 poss(pick, some([X],at(X)*gold(X))).
-poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2)).
+poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2))).
 
 causes_true(move(D), at(R2), some([R1],at(R1)*adj(R1,D,R2))).
 causes_false(move(D), at(R1), at(R1)).
