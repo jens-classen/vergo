@@ -40,7 +40,7 @@ domain(loc, L) :-
         domain(coordinate,Y),
         atomic_list_concat(['#room', X, Y], '-', L).
 domain(coordinate,X) :-
-        member(X, [1,2,3,4,5,6,7,8]).
+        member(X, [1,2,3]).
 
 prim_action(senseStench).
 prim_action(senseBreeze).
@@ -70,7 +70,7 @@ poss(pick, some([X],at(X)*gold(X))).
 poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2))).
 
 causes_true(move(D), at(R2), some([R1],at(R1)*adj(R1,D,R2))).
-causes_false(move(D), at(R1), at(R1)).
+causes_false(move(_), at(R1), at(R1)).
 
 %causes_false(shoot(D), wumpusAlive, aimingAtWumpus(D)).
 %causes_false(shoot(D), hasArrow, true).
