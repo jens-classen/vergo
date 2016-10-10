@@ -131,7 +131,7 @@ preprocess(some(Vars1,Fml),Vars,R) :-
         conjuncts_with_without(Vars1,Fml,ConW,ConWO),
         ConWO \= true, !,
         preprocess(some(Vars1,ConW)*ConWO,Vars,R).
-% reduce scope of universal to conjuncts where that variable appears
+% reduce scope of universal to disjuncts where that variable appears
 preprocess(all(Vars1,Fml),Vars,R) :-
         disjuncts_with_without(Vars1,Fml,DisW,DisWO),
         DisWO \= false, !,
