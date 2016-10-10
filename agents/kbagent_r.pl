@@ -71,8 +71,8 @@ ask4result(false,false,unknown).
 % example: wumpus2: senseBreeze, then wh_ask(pit(X),R).
 wh_ask(Fml,Result) :- !,
         history(H),
-        regress_s(H,know(Fml),Fml2),
-        reduce_s(Fml2,Result).
+        regress_s(H,Fml,Fml2),
+        reduce_s(know(Fml2),Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper Predicates
