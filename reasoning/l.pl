@@ -1,39 +1,23 @@
 % Note: standard names are Prolog atoms starting with '#', e.g. '#bob'
 
-:- module(l, [is_stdname/1,
-              entails_initially/2,
-              entails_l/3,
+:- module(l, [entails_l/3,
               inconsistent_l/2,
+              consistent_l/2,
+              valid_l/2,
+              equivalent_l/3,
+              entails_initially/2,
+              is_stdname/1,
               get_fml_std_names/2,
               get_ini_std_names/1,
               get_new_std_name/2]).
 
 :- use_module('../reasoning/fol').
-:- use_module('../reasoning/fobdd').
 
 % standard name: any constant (Prolog atom) starting with '#'
 % e.g. '#1', '#2', '#bob'
 is_stdname(X) :-
         atomic(X),
         atom_concat('#',_,X).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Check consistency of set of formulas
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                            
-inconsistent_l(Formulas,Truth) :-
-        get_fml_std_names(Formulas,Names),
-        findall(StdNameAxiom,
-                (member(X,Names),
-                 member(Y,Names),
-                 X @< Y,
-                 StdNameAxiom = -(X=Y)),
-                StdNameAxioms),
-        union(Formulas,StdNameAxioms,FormulasWithAxioms),
-        inconsistent(FormulasWithAxioms), !,
-        Truth = true.
-inconsistent_l(_Formulas,Truth) :- !,
-        Truth = false.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check formula against set of formulas
@@ -51,6 +35,51 @@ entails_l(Formulas,Fml,Truth) :-
         entails(FormulasWithAxioms,Fml), !,
         Truth = true.
 entails_l(_Formulas,_Fml,Truth) :- !,
+        Truth = false.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Check inconsistency of set of formulas
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            
+inconsistent_l(Formulas,Truth) :-
+        get_fml_std_names(Formulas,Names),
+        findall(StdNameAxiom,
+                (member(X,Names),
+                 member(Y,Names),
+                 X @< Y,
+                 StdNameAxiom = -(X=Y)),
+                StdNameAxioms),
+        union(Formulas,StdNameAxioms,FormulasWithAxioms),
+        inconsistent(FormulasWithAxioms), !,
+        Truth = true.
+inconsistent_l(_Formulas,Truth) :- !,
+        Truth = false.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Check consistency of set of formulas
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            
+consistent_l(Formulas,true) :-
+        inconsistent_l(Formulas,false), !.
+consistent_l(Formulas,false) :-
+        inconsistent_l(Formulas,true), !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Check validity of formula
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            
+valid_l(Formula,Truth) :-
+        entails_l([true],Formula,Truth), !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Check equivalence of two formulas
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            
+equivalent_l(Formula1,Formula2,Truth) :-
+        entails_l([Formula1],Formula2,true),
+        entails_l([Formula2],Formula1,true), !,
+        Truth = true.
+equivalent_l(_Formula1,_Formula2,Truth) :- !,
         Truth = false.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

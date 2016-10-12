@@ -288,7 +288,7 @@ check_not_converged(P,Phi,I) :-
         cg_node(P,_,_,N),
         cg_label(P,Phi,I,N,L),
         cg_label(P,Phi,I1,N,L1),
-        not(equivalent(L,L1)).
+        equivalent_l(L,L1,false).
         
 % compute labels for all nodes
 compute_labels(P,Phi,I) :-
