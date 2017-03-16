@@ -4,7 +4,7 @@
 
 % todo: domains
 % todo: nested functional fluents
-% todo: CWA
+% todo: CWA (local CWA, \cite{DBLP:journals/ai/EtzioniGW97})
 % todo: definitions (grid, adjacency)
 
 :- discontiguous causes_true/3.
