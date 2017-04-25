@@ -88,6 +88,7 @@ entails_eprover(ListOfAxioms,Conjecture) :-
                         '--silent',       % almost no output
                         File],            % input file
                        [stdout(null),     % completely silent
+                        stderr(null),
                         process(PID)]),   % need PID for exit status
         process_wait(PID, Status), !,     % wait for completion
         check_eprover_status(Status).     % return value
