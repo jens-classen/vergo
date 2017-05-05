@@ -89,6 +89,7 @@ step(D,fail,failed,(-F1)*(-F2)) :-
         findall(FP,trans(D,_A,_DP,FP),L),
         disjoin(L,F2).
 step(D,fail,failed,-F2) :-
+        not(D=terminated),
         not(final(D,_F1)),
         findall(FP,trans(D,_A,_DP,FP),L),
         disjoin(L,F2).
