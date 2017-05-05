@@ -573,9 +573,12 @@ is_inconsistent(Formulas) :-
 is_inconsistent(Formulas) :-
         is_inconsistent_cached(Formulas,false), !, fail.
 is_inconsistent(Formulas) :-
-        inconsistent_l(Formulas,Truth), !,
-        assert(is_inconsistent_cached(Formulas,Truth)).
-
+        inconsistent_l(Formulas,true), !,
+        assert(is_inconsistent_cached(Formulas,true)).
+is_inconsistent(Formulas) :- !,
+        assert(is_inconsistent_cached(Formulas,false)),
+        fail.
+        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DL reasoning with caching
