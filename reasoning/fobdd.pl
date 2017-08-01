@@ -55,6 +55,10 @@ minimize(Fml1,Fml2,cnf) :- !,
         depropositionalize(Fml6,Vars,Fml7),
         simplify_deps(Fml7,Vars,Fml2).
 
+% todo: make application of prime implicates optional
+% todo: make choice between (ite|dnf|cnf) optional
+% todo: make application of simplify_dep optional
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preprocessing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

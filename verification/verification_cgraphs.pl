@@ -32,12 +32,12 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% To Do List
 %% ----------
-%% - property(propX,somepath(main,always(F)))
-%% - remove defs without call to regress
-%% - pretty print formulas/programs (also using defs)
-%% - full check method
-%% - work directly on BDDs
-%% - CTL*
+%% - todo: property(propX,somepath(main,always(F)))
+%% - todo: remove defs without call to regress
+%% - todo: pretty print formulas/programs (also using defs)
+%% - todo: full check method
+%% - todo: work directly on BDDs
+%% - todo: CTL*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
