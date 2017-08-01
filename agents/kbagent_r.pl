@@ -75,6 +75,12 @@ wh_ask(Fml,Result) :- !,
         regress_s(H,Fml,Fml2),
         reduce_s(know(Fml2),Result).
 
+print_kb :-
+        initially(F),
+        writeln(F),
+        fail.
+print_kb.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper Predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
