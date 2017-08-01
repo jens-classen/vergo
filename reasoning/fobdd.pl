@@ -14,6 +14,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- module(fobdd, [minimize/2]).
 
+:- use_module('../reasoning/una').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/bdd').
 :- use_module('../reasoning/clausalform').
@@ -140,6 +141,12 @@ preprocess(all(Vars1,Fml),Vars,R) :-
 % apply simple FOL simplifications if possible
 preprocess(F,Vars,R) :-
         simplify(F,F2),
+        F \= F2, !,
+        preprocess(F2,Vars,R).
+
+% apply unique names assumption where possible
+preprocess(F,Vars,R) :-
+        apply_una(F,F2),
         F \= F2, !,
         preprocess(F2,Vars,R).
 

@@ -10,6 +10,7 @@
 :- use_module('../reasoning/l').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/fobdd').
+:- use_module('../reasoning/una').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations
