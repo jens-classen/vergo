@@ -68,8 +68,8 @@ are the following dependencies to external tools and systems:
 
    To use FOL theorem proving, we require that the 'eprover'
    executable is visible in $PATH. The system has been developed and
-   tested with the (currently) most recent version "1.8-001
-   Gopaldhara". E can be downloaded from 
+   tested with the (currently) most recent version "2.0 Turzum". E can
+   be downloaded from
 
    http://www.eprover.org 
 
