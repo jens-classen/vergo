@@ -53,18 +53,18 @@ resolve(Fml,[Var|Vars],Result) :- !,
 resolve_pos_disjunct(Fml,Var,Vars,[Name],Result) :- !,
         subv(Var,Name,Fml,FmlS),
         resolve(FmlS,Vars,ResC),
-        Result = (Var=Name)*ResC.
+        simplify((Var=Name)*ResC,Result).
 resolve_pos_disjunct(Fml,Var,Vars,[Name|Names],Result) :- !,
         subv(Var,Name,Fml,FmlS),
         resolve(FmlS,Vars,ResC),
         resolve_pos_disjunct(Fml,Var,Vars,Names,ResR),
-        Result = (Var=Name)*ResC + ResR.
+        simplify((Var=Name)*ResC + ResR,Result).
 resolve_neg_disjunct(Fml,Var,Vars,Names,New,Result) :- !,
         subv(Var,New,Fml,FmlS),
         resolve(FmlS,Vars,ResC),
         subv(New,Var,ResC,ResR),
         neg_disjunct_inequalities(Var,Names,Inequalities),
-        Result = Inequalities * ResR.
+        simplify(Inequalities * ResR,Result).
 
 neg_disjunct_inequalities(_Var,[],true) :- !.
 neg_disjunct_inequalities(Var,[Name],(-(Var=Name))) :- !.
