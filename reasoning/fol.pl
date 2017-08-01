@@ -93,6 +93,12 @@ entails_eprover(ListOfAxioms,Conjecture) :-
         process_wait(PID, Status), !,     % wait for completion
         check_eprover_status(Status).     % return value
 
+entails_eprover(_ListOfAxioms,_Conjecture) :-
+        report_message(['Failed while attempting to use E theorem prover!']),
+        report_message(['Aborting...']),
+        report_message(['Check your settings! (PATH_GOLOG variable set?)']),
+        abort.
+        
 % eprover's return status determines the truth value:
 % 0 =    proof found = Conjecture derivable     => succeed
 % 1 = no proof found = Conjecture not derivable => fail
