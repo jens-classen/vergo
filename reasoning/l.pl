@@ -91,13 +91,13 @@ equivalent_l(_Formula1,_Formula2,Truth) :- !,
 % TODO: redundancies: iterate twice through KB
 
 entails_initially(Fml,Truth) :-
-        expand_init_definitions_if_necessary,
         expand_defs(Fml,FmlP),
         get_ini_std_names(KNames),
         get_fml_std_names(FmlP,FNames),
         union(KNames,FNames,Names),
         findall(IniFml,
-                initially(IniFml),
+                (initially(IniFml2),
+                 expand_defs(IniFml2,IniFml)),
                 KB),
         findall(StdNameAxiom,
                 (member(X,Names),
@@ -211,16 +211,6 @@ smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
         (member(Atom,S1);member(Atom,S2)),
         Char = 122, !,
         smallest_name_not_contained2(S1,S2,C,[97,122|Chars]).
-
-% expand macros in 'initially' axioms (only once)
-expand_init_definitions_if_necessary :-
-        expanded_init_definitions, !.
-expand_init_definitions_if_necessary :- !,
-        findall(Fml,initially(Fml),KB),
-        retractall(initially(_)),
-        expand_defs_list(KB,KBP),
-        memorize_new_kb(KBP),
-        assert(expanded_init_definitions).
 
 expand_defs(Fml1,Fml2) :-
         nonvar(Fml1),
