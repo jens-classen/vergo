@@ -13,6 +13,8 @@
 
 :- use_module('../reasoning/fol').
 
+:- dynamic(expanded_init_definitions/0).
+
 % standard name: any constant (Prolog atom) starting with '#'
 % e.g. '#1', '#2', '#bob'
 is_stdname(X) :-
@@ -86,12 +88,13 @@ equivalent_l(_Formula1,_Formula2,Truth) :- !,
 % Check formula against initial theory
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO: what about defs???
 % TODO: redundancies: iterate twice through KB
 
 entails_initially(Fml,Truth) :-
+        expand_init_definitions_if_necessary,
+        expand_defs(Fml,FmlP),
         get_ini_std_names(KNames),
-        get_fml_std_names(Fml,FNames),
+        get_fml_std_names(FmlP,FNames),
         union(KNames,FNames,Names),
         findall(IniFml,
                 initially(IniFml),
@@ -103,7 +106,7 @@ entails_initially(Fml,Truth) :-
                  StdNameAxiom = -(X=Y)),
                 StdNameAxioms),
         union(KB,StdNameAxioms,KBWithAxioms),
-        entails(KBWithAxioms,Fml), !,
+        entails(KBWithAxioms,FmlP), !,
         Truth = true.
 entails_initially(_Fml,Truth) :- !,
         Truth = false.
@@ -208,3 +211,36 @@ smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
         (member(Atom,S1);member(Atom,S2)),
         Char = 122, !,
         smallest_name_not_contained2(S1,S2,C,[97,122|Chars]).
+
+% expand macros in 'initially' axioms (only once)
+expand_init_definitions_if_necessary :-
+        expanded_init_definitions, !.
+expand_init_definitions_if_necessary :- !,
+        findall(Fml,initially(Fml),KB),
+        retractall(initially(_)),
+        expand_defs_list(KB,KBP),
+        memorize_new_kb(KBP),
+        assert(expanded_init_definitions).
+
+expand_defs(Fml1,Fml2) :-
+        nonvar(Fml1),
+        def(Fml1,Fml3), !,
+        expand_defs(Fml3,Fml2).
+expand_defs(Fml1,Fml2) :-
+        nonvar(Fml1),
+        not(atomic(Fml1)), !,
+        Fml1 =.. [Fml3|Fml4],
+        expand_defs(Fml3,Fml5),
+        expand_defs_list(Fml4,Fml6),
+        Fml2 =.. [Fml5|Fml6].
+expand_defs(Fml,Fml) :- !.
+
+expand_defs_list([],[]) :- !.
+expand_defs_list([X|Xs],[Y|Ys]) :- !,
+        expand_defs(X,Y),
+        expand_defs_list(Xs,Ys).
+
+memorize_new_kb([]) :- !.
+memorize_new_kb([Fml|Fmls]) :- !,
+        assert(initially(Fml)),
+        memorize_new_kb(Fmls).
