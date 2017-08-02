@@ -30,7 +30,7 @@ tell(Fml) :- !,
         history(H),
         regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
-        assert(initially(Result)).
+        extend_initial_kb_by(Result).
 
 execute(Action,SenseResult) :- !,
         retract(history(H)),
@@ -39,7 +39,7 @@ execute(Action,SenseResult) :- !,
         reduce_s(Fml2,Result),
         update_program(Action),
         assert(history([Action|H])),
-        assert(initially(Result)).
+        extend_initial_kb_by(Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Program Operations
@@ -86,6 +86,12 @@ print_kb.
 % Helper Predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% todo: make this optional, may be costly
+extend_initial_kb_by(Fml) :-
+        entails_initially(Fml,true), !.
+extend_initial_kb_by(Fml) :- !,
+        assert(initially(Fml)).
+
 senseresult2fml(Result,Action,Fml) :-
         sensing_style(truth),
         Result=true, !,
@@ -101,8 +107,8 @@ senseresult2fml(Result,Action,Fml) :-
 regress_s(H,Fml1,Fml2) :- !,
         regress(H,Fml1,Fml3),
         apply_una(Fml3,Fml2).
-        % apply_cwa(Fml3,Fml2). %% No: may contain 'know'!
-        % minimize(Fml4,Fml2). %% No: may contain 'know'!
+        % No apply_cwa here since may contain 'know'!
+        % No minimize here since may contain 'know'!
         
 reduce_s(Fml1,Fml2) :- !,
         reduce(Fml1,Fml3),
