@@ -77,7 +77,8 @@ wh_ask(Fml,Result) :- !,
 
 print_kb :-
         initially(F),
-        writeln(F),
+        write_readable(F),
+        write('\n'),
         fail.
 print_kb.
 
