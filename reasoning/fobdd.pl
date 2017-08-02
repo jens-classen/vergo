@@ -216,7 +216,7 @@ distribute_exists_disjuncts(Vars,Fml1+Fml2,R1+R2) :- !,
 distribute_exists_disjuncts(Vars,Fml,some(Vars,Fml)) :- !.
 
 conjuncts((F1*F2)+F3,Vars,F4*F5) :- !,        
-        copy_term((F3;Vars),(F6,Vars)),
+        copy_term((F3,Vars),(F6,Vars)),
         conjuncts(F1+F3,Vars,F4),
         conjuncts(F2+F6,Vars,F5).
 conjuncts(F1+(F2*F3),Vars,F4*F5) :- !,
