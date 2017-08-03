@@ -1,11 +1,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Basic Action Theory for Wumpus world, grid size 8x8
+% Basic Action Theory for (simple version) of Wumpus world
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % todo: domains
-% todo: nested functional fluents
-% todo: CWA (local CWA, \cite{DBLP:journals/ai/EtzioniGW97})
+% todo: CWA
 % todo: definitions (grid, adjacency)
+% todo: exogenous actions (howl)
+% todo: shooting
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
@@ -15,69 +16,72 @@
 sensing_style(truth).
 include_preconditions.
 
-initially(inDungeon).
-initially(location(locWumpus)).
-initially(locRobot=loc(1,1)).
-initially(dirRobot=right).
-initially(all(X,(isGold(X) => location(X)))).
+initially(at('#room-1-1')).
 initially(-hasGold).
-initially(all(X,(isPit(X) => location(X)))).
 initially(hasArrow).
-initially(aliveWumpus).
-initially(all(X,(visited(X) <=> X=loc(1,1)))).
+initially(wumpusAlive).
 
-prim_action(smell).
+initially(adj(R1,D,R2)) :-
+        domain(coordinate,X1),
+        domain(coordinate,X2),
+        domain(coordinate,Y1),
+        domain(coordinate,Y2),
+        ((D = '#n', X2 is X1, Y2 is Y1+1);
+         (D = '#w', X2 is X1-1, Y2 is Y1);
+         (D = '#s', X2 is X1, Y2 is Y1-1);
+         (D = '#e', X2 is X1+1, Y2 is Y1)),
+        atomic_list_concat(['#room', X1, Y1], '-', R1),
+        atomic_list_concat(['#room', X2, Y2], '-', R2).
+
+domain(dir, D) :-
+        member(D, ['#n','#w','#s','#e']).
+domain(loc, L) :- 
+        domain(coordinate,X),
+        domain(coordinate,Y),
+        atomic_list_concat(['#room', X, Y], '-', L).
+domain(coordinate,X) :-
+        member(X, [1,2,3]).
+
+prim_action(senseStench).
 prim_action(senseBreeze).
 prim_action(senseGold).
-prim_action(shootFwd).
-prim_action(pickGold).
-prim_action(moveFwd).
-prim_action(turn).
-prim_action(climb).
-prim_action(enter).
-prim_action(scream).
+%prim_action(shoot(_)).   % domain: direction
+prim_action(pick).
+prim_action(move(_)).    % domain: direction
 
-rel_fluent(inDungeon).
-fun_fluent(locWumpus).
-fun_fluent(locRobot).
-fun_fluent(dirRobot).
-rel_fluent(isGold(_)).  % domain: location
-rel_fluent(hasGold).
-rel_fluent(isPit(_)).   % domain: location
+rel_fluent(at(_)).       % domain: location
+rel_fluent(wumpusAlive).
 rel_fluent(hasArrow).
-rel_fluent(aliveWumpus).
-rel_fluent(visited(_)). % domain: location
+rel_fluent(hasGold).
+rel_fluent(gold(_)).     % domain: location
 
-poss(smell, true).
+rel_rigid(adj(_,_,_)).   % domains: location, direction, location
+rel_rigid(pit(_)).       % domain: location
+rel_rigid(wumpus(_)).    % domain: location
+
+cwa(at(_)).
+cwa(adj(_,_,_)).
+
+poss(senseStench, true).
 poss(senseBreeze, true).
 poss(senseGold, true).
-poss(shootFwd, hasArrow).
-poss(pickGold, isGold(locRobot)).
-poss(moveFwd, -(inTheEdge(locRobot,dirRobot))).
-poss(turn, true).
-poss(climb, true).
-poss(enter, true).
-poss(scream, true).
+poss(shoot, hasArrow).
+poss(pick, some([X],at(X)*gold(X))).
+poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2))).
 
-causes_true(enter, inDungeon, true).
-causes_false(climb, inDungeon, locRobot=loc(1,1)).
+causes_true(move(D), at(R2), some([R1],at(R1)*adj(R1,D,R2))).
+causes_false(move(_), at(R1), at(R1)).
 
-causes(moveFwd, locRobot, Y, apply(dirRobot,[locRobot,Y])).
+%causes_false(shoot(D), wumpusAlive, aimingAtWumpus(D)).
+%causes_false(shoot(D), hasArrow, true).
 
-causes(turn, dirRobot, Y, rotateRight(dirRobot,Y)).
+causes_true(pick, hasGold, some([X],at(X)*gold(X))).
+causes_false(pick, gold(X), at(X)).
 
-causes_false(pickGold, isGold(L), locRobot=L).
+senses(senseStench,wumpusNearby).
+senses(senseBreeze,pitNearby).
+senses(senseGold,some([X],at(X)*gold(X))).
 
-causes_true(pickGold, hasGold, true).
-
-causes_false(shootFwd, hasArrow, true).
-
-causes_false(scream, aliveWumpus, true).
-
-causes_true(moveFwd, visited(L), apply(dirRobot,[locRobot,L])).
-
-senses(smell,adj(locRobot,locWumpus)).
-senses(senseBreeze,some(X,(adj(locRobot,X)*isPit(X)))).
-senses(senseGold,isGold(locRobot)).
-
-exo(scream).
+def(wumpusNearby, some([R1,D,R2],at(R1)*adj(R1,D,R2)*wumpus(R2))).
+def(pitNearby, some([R1,D,R2],at(R1)*adj(R1,D,R2)*pit(R2))).
+%def(aimingAtWumpus(D), some([R1,R2],at(R1)*wumpus(R2)*facing(R1,D,R2))).
