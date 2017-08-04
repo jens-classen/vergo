@@ -73,16 +73,16 @@ wh_ask(Fml,Result) :- !,
         regress_s(H,Fml,Fml2),
         reduce_s(know(Fml2),Result).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Helper Predicates
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 print_kb :-
         initially(F),
         write_readable(F),
         write('\n'),
         fail.
 print_kb.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper Predicates
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % todo: make this optional, may be costly
 extend_initial_kb_by(Fml) :-
