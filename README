@@ -117,7 +117,8 @@ are the following dependencies to external tools and systems:
 
    $ export LD_LIBRARY_PATH=/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/amd64/server/
 
-   (where the specific path may differ for your system).
+   (where the specific path and Java version may differ for your
+   system).
 
 5. The Konclude Description Logic (OWL 2) Reasoner
 
