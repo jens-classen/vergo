@@ -68,8 +68,6 @@ ask4result(true,false,true).
 ask4result(false,true,false).
 ask4result(false,false,unknown).
 
-% todo: fix this (instantiation of variables)
-% example: wumpus2: senseBreeze, then wh_ask(pit(X),R).
 wh_ask(Fml,Result) :- !,
         history(H),
         regress_s(H,Fml,Fml2),
