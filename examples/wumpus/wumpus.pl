@@ -3,9 +3,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % todo: domains
-% todo: CWA
-% todo: definitions (grid, adjacency)
-% todo: exogenous actions (howl)
 % todo: shooting
 
 :- discontiguous causes_true/3.
@@ -74,6 +71,7 @@ causes_false(move(_), at(R1), at(R1)).
 
 %causes_false(shoot(D), wumpusAlive, aimingAtWumpus(D)).
 %causes_false(shoot(D), hasArrow, true).
+%senses(shoot(D), -wumpusAlive).
 
 causes_true(pick, hasGold, some([X],at(X)*gold(X))).
 causes_false(pick, gold(X), at(X)).
