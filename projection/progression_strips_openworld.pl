@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% STRIPS-style progression
+% Open-World STRIPS progression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 progress(Action) :-
@@ -11,10 +11,12 @@ progress(Action) :-
 
 del_facts([Fact|Facts]) :- 
         retract(initially(Fact)),
+        assert(initially(-Fact)),
         del_facts(Facts).
 del_facts([]).
 
-add_facts([Fact|Facts]) :- 
+add_facts([Fact|Facts]) :-
+        retract(initially(-Fact)),
         assert(initially(Fact)),
         add_facts(Facts).
 add_facts([]).
