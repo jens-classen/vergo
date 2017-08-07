@@ -1,3 +1,7 @@
+:- ['regression'].
+
+:- discontiguous progress/2.
+
 progress(Action) :-
         progression_style(Style),
         progress(Action,Style).
@@ -14,7 +18,7 @@ progress(Action,strips(closed)) :-
         add_facts_closed(Adds).
 
 del_facts_closed([Fact|Facts]) :- 
-        retract(initially(Fact)),
+        retractall(initially(Fact)),
         del_facts_closed(Facts).
 del_facts_closed([]).
 
@@ -35,16 +39,22 @@ progress(Action,strips(open)) :-
         add_facts_open(Adds).
 
 del_facts_open([Fact|Facts]) :- 
-        retract(initially(Fact)),
+        retractall(initially(Fact)),
         assert(initially(-Fact)),
         del_facts_open(Facts).
 del_facts_open([]).
 
 add_facts_open([Fact|Facts]) :-
-        retract(initially(-Fact)),
+        retractall(initially(-Fact)),
         assert(initially(Fact)),
         add_facts_open(Facts).
 add_facts_open([]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Relatively Complete Initial Databases (+CWA)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% todo...
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Progression for local-effect theories
@@ -53,8 +63,8 @@ add_facts_open([]).
 progress(Action,local_effect) :-
         ground(Action), !,
         findall(Fluent,
-                (causes_false(Action,Fluent,_Cond);
-                 causes_true(Action,Fluent,_Cond)),
+                (causes_false(Action,Fluent,_Cond1);
+                 causes_true(Action,Fluent,_Cond2)),
                 CharacteristicSet).
         % generate all combinations / truth assignment
         % generate all instantiated SSAs
