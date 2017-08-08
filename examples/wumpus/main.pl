@@ -30,6 +30,7 @@ initialize :-
         create, % wumpus_sim
         init.   % kbagent_r
 
+% todo: what if action not possible? (Java exception, sensing result?)
 perform(Action) :-
         do_action(Action,SensingResult),  % wumpus_sim
         execute(Action,SensingResult).    % kbagent_r
