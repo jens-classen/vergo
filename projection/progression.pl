@@ -51,10 +51,42 @@ add_facts_open([Fact|Facts]) :-
 add_facts_open([]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Relatively Complete Initial Databases (+CWA)
+% ADL (PDDL subset, i.e. CWA + domain closure)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% todo...
+progress(Action,adl) :-
+        ground(Action), !,
+        findall(Fluent,(causes_false(Action,Fluent,Cond),
+                        adl_holds(Cond)),Dels),
+        findall(Fluent,(causes_true(Action,Fluent,Cond),
+                        adl_holds(Cond)),Adds),
+        del_facts_closed(Dels),
+        add_facts_closed(Adds).
+
+adl_holds(Atom) :-
+        cwa(Atom), !,
+        initially(Atom).
+adl_holds(true) :- !.
+adl_holds(false) :- !,
+        fail.
+adl_holds(F1*F2) :- !,
+        adl_holds(F1),
+        adl_holds(F2).
+adl_holds(F1+F2) :- !,
+        adl_holds(F1);
+        adl_holds(F2).
+adl_holds(-F) :- !,
+        not(adl_holds(F)).
+adl_holds(F1<=>F2) :- !,
+        adl_holds((F1=>F2)*(F2=>F1)).
+adl_holds(F1=>F2) :- !,
+        adl_holds((-F1)+F2).
+adl_holds(F1<=F2) :- !,
+        adl_holds(F2=>F1).
+adl_holds(some(_V,F)) :- !,
+        adl_holds(F). %succeed if able to instantiate _V
+adl_holds(all(V,F)) :- !,
+        not(adl_holds(some(V,-F))).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Progression for local-effect theories
