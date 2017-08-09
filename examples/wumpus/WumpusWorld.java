@@ -232,28 +232,31 @@ public class WumpusWorld extends JFrame {
 	    // pits
 	    for (int i=0; i<wumpusWorld.getXDim(); i++)
 		for (int j=0; j<wumpusWorld.getYDim(); j++)
-		    if (wumpusWorld.getPit(i+1,j+1))
-			g.fillRoundRect(
-                                margin+i*gridCellSize+cellMargin,
-                                margin+j*gridCellSize+cellMargin,
-                                gridCellSize-2*cellMargin,
-                                gridCellSize-2*cellMargin,
-                                margin,margin);
+		    {
+			int k = wumpusWorld.getYDim() - j - 1;
+			if (wumpusWorld.getPit(i+1,j+1))
+			    g.fillRoundRect(
+					    margin+i*gridCellSize+cellMargin,
+					    margin+k*gridCellSize+cellMargin,
+					    gridCellSize-2*cellMargin,
+					    gridCellSize-2*cellMargin,
+					    margin,margin);
+		    }
 
 	    // agent
 	    g.drawString("A",
                     margin+(wumpusWorld.getAgentPosX()-1)*gridCellSize+20,
-                    margin+(wumpusWorld.getAgentPosY()-1)*gridCellSize+20);
+                    margin+(wumpusWorld.getYDim() - wumpusWorld.getAgentPosY())*gridCellSize+20);
 
 	    // wumpus
 	    g.drawString("W",
-                    margin+(wumpusWorld.getWumpusPosX()-1)*gridCellSize+20,
-                    margin+(wumpusWorld.getWumpusPosY()-1)*gridCellSize+20);
+                    margin+(wumpusWorld.getWumpusPosX()-1)*gridCellSize+7,
+                    margin+(wumpusWorld.getYDim() - wumpusWorld.getWumpusPosY())*gridCellSize+20);
 
 	    // gold
 	    g.drawString("G",
-                    margin+(wumpusWorld.getGoldPosX()-1)*gridCellSize+20,
-                    margin+(wumpusWorld.getGoldPosY()-1)*gridCellSize+20);	    
+                    margin+(wumpusWorld.getGoldPosX()-1)*gridCellSize+33,
+                    margin+(wumpusWorld.getYDim() - wumpusWorld.getGoldPosY())*gridCellSize+20);	    
         }
     }
 
