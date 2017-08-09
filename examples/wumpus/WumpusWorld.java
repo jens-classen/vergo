@@ -254,9 +254,10 @@ public class WumpusWorld extends JFrame {
                     margin+(wumpusWorld.getYDim() - wumpusWorld.getWumpusPosY())*gridCellSize+20);
 
 	    // gold
-	    g.drawString("G",
-                    margin+(wumpusWorld.getGoldPosX()-1)*gridCellSize+33,
-                    margin+(wumpusWorld.getYDim() - wumpusWorld.getGoldPosY())*gridCellSize+20);	    
+	    if (!has_gold)
+		g.drawString("G",
+			     margin+(wumpusWorld.getGoldPosX()-1)*gridCellSize+33,
+			     margin+(wumpusWorld.getYDim() - wumpusWorld.getGoldPosY())*gridCellSize+20);	    
         }
     }
 
