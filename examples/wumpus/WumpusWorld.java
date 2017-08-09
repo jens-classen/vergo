@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -119,6 +120,43 @@ public class WumpusWorld extends JFrame {
     
     public boolean hasGold() {
 	return has_gold;
+    }
+
+    public void randomize(int goldPieces, float pitProbability) {
+        Random random = new Random();
+        randomize(random, goldPieces, pitProbability);        
+    }
+    
+    public void randomize(long seed, int goldPieces, float pitProbability) {
+        Random random = new Random(seed);
+        randomize(random, goldPieces, pitProbability);
+    }
+    
+    private void randomize(Random random, int goldPieces, float pitProbability) {
+	
+        // pits
+	for (int i=0; i<xdim; i++) {
+	    for (int j=0; j<ydim; j++) {
+                pit[i][j] = false;
+                if (random.nextFloat() <= pitProbability && !(i==0 && j==0))
+                    pit[i][j] = true;
+            }
+        }
+        
+        // gold
+        
+        // wumpus
+        int x = 0;
+        int y = 0;
+        while ((x == 0 && y == 0) || pit[x][y]) {
+            x = random.nextInt(xdim);
+            y = random.nextInt(ydim);
+        }
+        wumpus_x = x;
+        wumpus_y = y;
+        
+        repaint();
+	
     }
     
     public void moveAgent(String dir) {

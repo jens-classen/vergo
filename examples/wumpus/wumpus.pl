@@ -10,6 +10,8 @@
 :- discontiguous rel_fluent/1.
 :- discontiguous def/2.
 
+:- dynamic grid_size/1.
+
 sensing_style(truth).
 include_preconditions.
 progression_style(adl).
@@ -39,7 +41,9 @@ domain(loc, L) :-
         domain(coordinate,Y),
         atomic_list_concat(['#room', X, Y], '-', L).
 domain(coordinate,X) :-
-        member(X, [1,2,3]).
+        grid_size(G),
+        between(1,G,X).
+        %member(X, [1,2,3]).
 
 prim_action(senseStench).
 prim_action(senseBreeze).

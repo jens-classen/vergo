@@ -27,6 +27,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 initialize :-
+        initialize(3).
+
+initialize(GridSize) :-
+        assert(grid_size(GridSize)),
         create, % wumpus_sim
         init.   % kbagent_r
 
