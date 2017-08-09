@@ -18,6 +18,7 @@ initially(at('#room-1-1')).
 % initially(-hasGold). % by CWA
 initially(hasArrow).
 initially(wumpusAlive).
+initially(all([X,Y],(wumpus(X)*wumpus(Y))=>(X=Y))).
 
 initially(adj(R1,D,R2)) :-
         domain(coordinate,X1),
