@@ -42,8 +42,9 @@ domain(loc, L) :-
         atomic_list_concat(['#room', X, Y], '-', L).
 domain(coordinate,X) :-
         grid_size(G),
-        between(1,G,X).
-        %member(X, [1,2,3]).
+        N is G-1,
+        between(0,N,X).
+        %member(X, [0,1,2]).
 
 prim_action(senseStench).
 prim_action(senseBreeze).
