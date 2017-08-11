@@ -74,11 +74,12 @@ cwa(adj(_,_,_)).
 cwa(facing(_,_,_)).
 cwa(hasGold).
 cwa(hasArrow).
+cwa(wumpusAlive).
 
 poss(senseStench, true).
 poss(senseBreeze, true).
 poss(senseGold, true).
-poss(shoot, hasArrow).
+poss(shoot(_), hasArrow).
 poss(pick, some([X],at(X)*gold(X))).
 poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2))).
 
@@ -87,7 +88,7 @@ causes_false(move(_), at(R1), at(R1)).
 
 causes_false(shoot(D), wumpusAlive, aimingAtWumpus(D)).
 causes_false(shoot(_), hasArrow, true).
-senses(shoot(_), -wumpusAlive).
+senses(shoot(D), wumpusAlive*aimingAtWumpus(D)).
 
 causes_true(pick, hasGold, some([X],at(X)*gold(X))).
 causes_false(pick, gold(X), at(X)).
