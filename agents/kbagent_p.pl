@@ -31,11 +31,11 @@ tell(Fml) :- !,
         extend_initial_kb_by(Result).
 
 execute(Action,SenseResult) :- !,
-        progress(Action),
         senseresult2fml(SenseResult,Action,Fml),
         regress_s([],Fml,Fml2),
         reduce_s(Fml2,Result),
         extend_initial_kb_by(Result),
+        progress(Action),
         update_program(Action),
         retract(history(H)),
         assert(history([Action|H])).
