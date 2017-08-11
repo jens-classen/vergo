@@ -16,7 +16,7 @@ sensing_style(truth).
 include_preconditions.
 progression_style(adl).
 
-initially(at('#room-1-1')).
+initially(at('#room-0-0')).
 % initially(-hasGold). % by CWA
 initially(hasArrow).
 initially(wumpusAlive).
