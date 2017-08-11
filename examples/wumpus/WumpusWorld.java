@@ -1,12 +1,18 @@
 import java.awt.*;
 import static java.awt.Color.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.RoundRectangle2D;
 import java.util.Random;
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 
 public class WumpusWorld extends JFrame {
     
@@ -35,24 +41,26 @@ public class WumpusWorld extends JFrame {
         
 	this.xdim = xdim;
 	this.ydim = ydim;
-	pit = new boolean[xdim][ydim];
-        gold = new boolean[xdim][ydim];
+        
 	agent_x = 0;
 	agent_y = 0;
 	agent_alive = true;
-	wumpus_x = xdim-1;
+	
+        wumpus_x = xdim-1;
 	wumpus_y = ydim-1;
 	wumpus_alive = true;
-	has_gold = false;
+	
+        has_gold = false;
         has_arrow = true;
+	
+        pit = new boolean[xdim][ydim];
+        gold = new boolean[xdim][ydim];
       
-	// super.setResizable(false);
-	// super.setLocation(gridCellSize, gridCellSize);
-	super.setVisible(true);
-        // super.setDefaultCloseOperation(EXIT_ON_CLOSE);
+	super.setResizable(false);
 	wp = new WPanel(this);
 	super.add(wp);
         super.pack();
+	super.setVisible(true);
         
     }
 
@@ -147,24 +155,24 @@ public class WumpusWorld extends JFrame {
     private void randomize(Random random, int goldPieces, float pitProbability) {
 	
         // wumpus
-        int xw = 0;
-        int yw = 0;
-        while (xw == 0 && yw == 0) {
+        int xw;
+        int yw;
+        do {
             xw = random.nextInt(xdim);
             yw = random.nextInt(ydim);
-        }
+        } while (xw == agent_x && yw == agent_y);
         wumpus_x = xw;
         wumpus_y = yw;
         
         // gold
         gold = new boolean[xdim][ydim]; // reset
         for (int i=0; i<Math.min(goldPieces,xdim*ydim); i++) {
-            int x = 0;
-            int y = 0;
-            while (gold[x][y]) {
+            int x;
+            int y;
+            do {
                 x = random.nextInt(xdim);
                 y = random.nextInt(ydim);
-            }
+            } while (gold[x][y]);
             gold[x][y] = true;
         }
         
@@ -172,8 +180,9 @@ public class WumpusWorld extends JFrame {
         pit = new boolean[xdim][ydim]; // reset
 	for (int i=0; i<xdim; i++) {
 	    for (int j=0; j<ydim; j++) {
-                if (i != wumpus_x && j != wumpus_y && !gold[i][j] &&
-                        random.nextFloat() <= pitProbability)
+                if (i != wumpus_x && j != wumpus_y && !gold[i][j]
+                        && i != agent_x && j != agent_y 
+                        && random.nextFloat() <= pitProbability)
                     pit[i][j] = true;
             }
         }
@@ -245,6 +254,7 @@ public class WumpusWorld extends JFrame {
         }
         if (result)
             wumpus_alive = false;
+        has_arrow = false;
         repaint();
         return result;
     }
@@ -270,43 +280,37 @@ public class WumpusWorld extends JFrame {
     class WPanel extends JPanel {
 	
 	WumpusWorld wumpusWorld;
-	int gridCellSize = 50;
-        int margin = 10;
-        int cellMargin = 5;
 	
         public WPanel(WumpusWorld wumpusWorld) {
-            // super.setPreferredSize(new Dimension(300, 300));
-            super.setPreferredSize(
-                    new Dimension(
-                            wumpusWorld.xdim*gridCellSize+2*margin,
-                            wumpusWorld.ydim*gridCellSize+2*margin));
-	    this.wumpusWorld = wumpusWorld;
-            // this.gridCellSize = this.getWidth()/wumpusWorld.xdim;
+	    this.wumpusWorld = wumpusWorld;            
+            super.setPreferredSize(new Dimension(500, 500));
         }
 
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
+            
+            int gridCellSize = Math.min(
+                    (int) this.getSize().getWidth() / xdim,
+                    (int) this.getSize().getHeight() / ydim);
+            int cellMargin = gridCellSize / 10;
 
 	    // grid
 	    for (int i=0; i<xdim+1; i++)
-		g.drawLine(margin+i*gridCellSize,margin,margin+i*gridCellSize,
-                        margin+ydim*gridCellSize);
+		g.drawLine(i*gridCellSize,0,i*gridCellSize,ydim*gridCellSize);
 	    for (int i=0; i<wumpusWorld.getYDim()+1; i++)
-		g.drawLine(margin,margin+i*gridCellSize,
-                        margin+xdim*gridCellSize,
-                        margin+i*gridCellSize);
+		g.drawLine(0,i*gridCellSize,xdim*gridCellSize,i*gridCellSize);
 
 	    // pits
 	    for (int i=0; i<xdim; i++)
 		for (int j=0; j<ydim; j++) {
                     int k = ydim - j - 1;
                     if (pit[i][j])
-                        g.fillRoundRect(margin+i*gridCellSize+cellMargin,
-                                margin+k*gridCellSize+cellMargin,
+                        g.fillRoundRect(i*gridCellSize+cellMargin,
+                                k*gridCellSize+cellMargin,
 				gridCellSize-2*cellMargin,
 				gridCellSize-2*cellMargin,
-				margin,margin);
+				2*cellMargin,2*cellMargin);
 		}
 
 	    // gold
@@ -315,22 +319,22 @@ public class WumpusWorld extends JFrame {
                     int k = ydim - j - 1;
                     if (gold[i][j]) {
                         g.drawString("G",
-                                margin+i*gridCellSize+33,
-                                margin+k*gridCellSize+20);
+                                i*gridCellSize+33,
+                                k*gridCellSize+20);
                     }
 		}
             
             if (agent_alive)
                 paintAgent((Graphics2D) g,
-                        agent_x*gridCellSize+cellMargin+margin,
-                        (ydim-agent_y-1)*gridCellSize+cellMargin+margin,
+                        agent_x*gridCellSize+cellMargin,
+                        (ydim-agent_y-1)*gridCellSize+cellMargin,
                         gridCellSize-2*cellMargin,
                         gridCellSize-2*cellMargin);
             
             if (wumpus_alive)
                 paintWumpus((Graphics2D) g,
-                        wumpus_x*gridCellSize+cellMargin+margin,
-                        (ydim-wumpus_y-1)*gridCellSize+cellMargin+margin,
+                        wumpus_x*gridCellSize+cellMargin,
+                        (ydim-wumpus_y-1)*gridCellSize+cellMargin,
                         gridCellSize-2*cellMargin,
                         gridCellSize-2*cellMargin);
    
@@ -681,7 +685,7 @@ public class WumpusWorld extends JFrame {
 
     }
 
-    
+            
         
         
     }       
