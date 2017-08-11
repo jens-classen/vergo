@@ -36,6 +36,7 @@ initialize(GridSize) :-
 
 % todo: what if action not possible? (Java exception, sensing result?)
 perform(Action) :-
+        ask(poss(Action),true),
         do_action(Action,SensingResult),  % wumpus_sim
         execute(Action,SensingResult).    % kbagent_r
 
