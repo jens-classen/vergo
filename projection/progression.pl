@@ -54,6 +54,9 @@ add_facts_open([]).
 % ADL (PDDL subset, i.e. CWA + domain closure)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% todo: Cond may contain non-CWA atoms => need reasoning!
+%       (example: Wumpus shoot action)
+
 progress(Action,adl) :-
         ground(Action), !,
         findall(Fluent,(causes_false(Action,Fluent,Cond),
@@ -64,29 +67,32 @@ progress(Action,adl) :-
         add_facts_closed(Adds).
 
 adl_holds(Atom) :-
-        cwa(Atom), !,
+        cwa(Atom),
         initially(Atom).
-adl_holds(true) :- !.
-adl_holds(false) :- !,
+adl_holds(true).
+adl_holds(false) :-
         fail.
-adl_holds(F1*F2) :- !,
+adl_holds(F1*F2) :-
         adl_holds(F1),
         adl_holds(F2).
-adl_holds(F1+F2) :- !,
+adl_holds(F1+F2) :-
         adl_holds(F1);
         adl_holds(F2).
-adl_holds(-F) :- !,
+adl_holds(-F) :-
         not(adl_holds(F)).
-adl_holds(F1<=>F2) :- !,
+adl_holds(F1<=>F2) :-
         adl_holds((F1=>F2)*(F2=>F1)).
-adl_holds(F1=>F2) :- !,
+adl_holds(F1=>F2) :-
         adl_holds((-F1)+F2).
-adl_holds(F1<=F2) :- !,
+adl_holds(F1<=F2) :-
         adl_holds(F2=>F1).
-adl_holds(some(_V,F)) :- !,
+adl_holds(some(_V,F)) :-
         adl_holds(F). %succeed if able to instantiate _V
-adl_holds(all(V,F)) :- !,
+adl_holds(all(V,F)) :-
         not(adl_holds(some(V,-F))).
+adl_holds(F) :-
+        def(F,FD),
+        adl_holds(FD).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Progression for local-effect theories
