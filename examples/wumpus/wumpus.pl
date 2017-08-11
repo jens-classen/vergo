@@ -3,7 +3,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % todo: domains
-% todo: shooting
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
@@ -34,6 +33,12 @@ initially(adj(R1,D,R2)) :-
         atomic_list_concat(['#room', X1, Y1], '-', R1),
         atomic_list_concat(['#room', X2, Y2], '-', R2).
 
+initially(facing(R1,D,R2)) :-
+        initially(adj(R1,D,R2)).
+initially(facing(R1,D,R2)) :-
+        initially(adj(R1,D,R3)),
+        initially(facing(R3,D,R2)).
+
 domain(dir, D) :-
         member(D, ['#n','#w','#s','#e']).
 domain(loc, L) :- 
@@ -49,7 +54,7 @@ domain(coordinate,X) :-
 prim_action(senseStench).
 prim_action(senseBreeze).
 prim_action(senseGold).
-%prim_action(shoot(_)).   % domain: direction
+prim_action(shoot(_)).   % domain: direction
 prim_action(pick).
 prim_action(move(_)).    % domain: direction
 
@@ -60,11 +65,13 @@ rel_fluent(hasGold).
 rel_fluent(gold(_)).     % domain: location
 
 rel_rigid(adj(_,_,_)).   % domains: location, direction, location
+rel_rigid(facing(_,_,_)).% domains: location, direction, location
 rel_rigid(pit(_)).       % domain: location
 rel_rigid(wumpus(_)).    % domain: location
 
 cwa(at(_)).
 cwa(adj(_,_,_)).
+cwa(facing(_,_,_)).
 cwa(hasGold).
 cwa(hasArrow).
 
@@ -78,9 +85,9 @@ poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2))).
 causes_true(move(D), at(R2), some([R1],at(R1)*adj(R1,D,R2))).
 causes_false(move(_), at(R1), at(R1)).
 
-%causes_false(shoot(D), wumpusAlive, aimingAtWumpus(D)).
-%causes_false(shoot(D), hasArrow, true).
-%senses(shoot(D), -wumpusAlive).
+causes_false(shoot(D), wumpusAlive, aimingAtWumpus(D)).
+causes_false(shoot(_), hasArrow, true).
+senses(shoot(_), -wumpusAlive).
 
 causes_true(pick, hasGold, some([X],at(X)*gold(X))).
 causes_false(pick, gold(X), at(X)).
@@ -91,4 +98,4 @@ senses(senseGold,some([X],at(X)*gold(X))).
 
 def(wumpusNearby, some([R1,D,R2],at(R1)*adj(R1,D,R2)*wumpus(R2))).
 def(pitNearby, some([R1,D,R2],at(R1)*adj(R1,D,R2)*pit(R2))).
-%def(aimingAtWumpus(D), some([R1,R2],at(R1)*wumpus(R2)*facing(R1,D,R2))).
+def(aimingAtWumpus(D), some([R1,R2],at(R1)*wumpus(R2)*facing(R1,D,R2))).
