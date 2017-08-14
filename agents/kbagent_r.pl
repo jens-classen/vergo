@@ -112,8 +112,7 @@ regress_s(H,Fml1,Fml2) :- !,
 reduce_s(Fml1,Fml2) :- !,
         reduce(Fml1,Fml3),
         apply_cwa(Fml3,Fml4),
-        simplify(Fml4,Fml5),
-        minimize(Fml5,Fml2).
+        minimize(Fml4,Fml2).
 
 trans_s(Program,Action,Condition) :-
         trans(Program,Action,_,Cond1),
