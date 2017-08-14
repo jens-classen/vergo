@@ -92,24 +92,11 @@ equivalent_l(_Formula1,_Formula2,Truth) :- !,
 
 entails_initially(Fml,Truth) :-
         expand_defs(Fml,FmlP),
-        get_ini_std_names(KNames),
-        get_fml_std_names(FmlP,FNames),
-        union(KNames,FNames,Names),
         findall(IniFml,
                 (initially(IniFml2),
                  expand_defs(IniFml2,IniFml)),
                 KB),
-        findall(StdNameAxiom,
-                (member(X,Names),
-                 member(Y,Names),
-                 X @< Y,
-                 StdNameAxiom = -(X=Y)),
-                StdNameAxioms),
-        union(KB,StdNameAxioms,KBWithAxioms),
-        entails(KBWithAxioms,FmlP), !,
-        Truth = true.
-entails_initially(_Fml,Truth) :- !,
-        Truth = false.
+        entails_l(KB,FmlP, Truth), !.
 
 get_fml_std_names(Fml,Names) :- !,
         collect_names(Fml,Names2),
