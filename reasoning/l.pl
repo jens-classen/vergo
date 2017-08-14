@@ -88,8 +88,6 @@ equivalent_l(_Formula1,_Formula2,Truth) :- !,
 % Check formula against initial theory
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO: redundancies: iterate twice through KB
-
 entails_initially(Fml,Truth) :-
         expand_defs(Fml,FmlP),
         findall(IniFml,
