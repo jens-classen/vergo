@@ -6,6 +6,8 @@
               valid_l/2,
               equivalent_l/3,
               entails_initially/2,
+              extend_initial_kb_by/1,
+              print_kb/0,
               is_stdname/1,
               get_fml_std_names/2,
               get_ini_std_names/1,
@@ -95,6 +97,31 @@ entails_initially(Fml,Truth) :-
                  expand_defs(IniFml2,IniFml)),
                 KB),
         entails_l(KB,FmlP, Truth), !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Pretty-print KB
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+print_kb :-
+        initially(F),
+        write_readable(F),
+        write('\n'),
+        fail.
+print_kb.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Extend initial theory by new formula
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% todo: make this optional, may be costly
+extend_initial_kb_by(Fml) :-
+        entails_initially(Fml,true), !.
+extend_initial_kb_by(Fml) :- !,
+        assert(initially(Fml)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Helper predicates
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 get_fml_std_names(Fml,Names) :- !,
         collect_names(Fml,Names2),

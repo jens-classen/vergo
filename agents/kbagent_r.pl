@@ -78,19 +78,6 @@ wh_ask(Fml,Result) :- !,
 % Helper Predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-print_kb :-
-        initially(F),
-        write_readable(F),
-        write('\n'),
-        fail.
-print_kb.
-
-% todo: make this optional, may be costly
-extend_initial_kb_by(Fml) :-
-        entails_initially(Fml,true), !.
-extend_initial_kb_by(Fml) :- !,
-        assert(initially(Fml)).
-
 senseresult2fml(Result,Action,Fml) :-
         sensing_style(truth),
         Result=true, !,
