@@ -11,6 +11,7 @@
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/fobdd').
 :- use_module('../reasoning/una').
+:- use_module('../reasoning/cwa').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations
