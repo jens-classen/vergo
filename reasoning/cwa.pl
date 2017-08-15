@@ -1,10 +1,13 @@
-:- module(cwa, [apply_cwa/2]).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Closed-World Assumption
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/l').
 
-:- discontiguous(cwa/1).
+% not a module, otherwise cannot "see" cwa clauses
+:- multifile cwa/1.
 
 % replace atoms for which CWA holds by their truth value
 % note: not in regression operator because may not be in
