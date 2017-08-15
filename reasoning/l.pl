@@ -12,8 +12,6 @@
 
 :- use_module('../reasoning/fol').
 
-:- dynamic(expanded_init_definitions/0).
-
 % standard name: any constant (Prolog atom) starting with '#'
 % e.g. '#1', '#2', '#bob'
 is_stdname(X) :-
