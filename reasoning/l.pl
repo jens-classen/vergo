@@ -187,8 +187,3 @@ smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
         (member(Atom,S1);member(Atom,S2)),
         Char = 122, !,
         smallest_name_not_contained2(S1,S2,C,[97,122|Chars]).
-
-memorize_new_kb([]) :- !.
-memorize_new_kb([Fml|Fmls]) :- !,
-        assert(initially(Fml)),
-        memorize_new_kb(Fmls).
