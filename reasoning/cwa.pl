@@ -4,6 +4,8 @@
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/l').
 
+:- discontiguous(cwa/1).
+
 % replace atoms for which CWA holds by their truth value
 % note: not in regression operator because may not be in
 % initial situation (e.g. fixpoint loop in verification)
