@@ -38,9 +38,16 @@ query(13,some(Y,know(some(X,teach(X,Y) * some(Z,-(Y=Z)*know(teach(X,Z)))))),true
 def(kwhether(F),know(F)+know(-F)).
 
 test_all_queries :-
+        init,
+        report_message(['KB:']),
+        print_kb,
+        report_message(['\n']),
+        test_all_queries2.
+
+test_all_queries2 :-
         test_query(N),
         fail.
-test_all_queries.
+test_all_queries2.
 
 test_query(Number) :-
         query(Number,Formula,ExpectedResult),
