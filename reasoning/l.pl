@@ -5,9 +5,6 @@
               consistent_l/2,
               valid_l/2,
               equivalent_l/3,
-              entails_initially/2,
-              extend_initial_kb_by/1,
-              print_kb/0,
               is_stdname/1,
               get_fml_std_names/2,
               get_ini_std_names/1,
@@ -85,39 +82,6 @@ equivalent_l(Formula1,Formula2,Truth) :-
         Truth = true.
 equivalent_l(_Formula1,_Formula2,Truth) :- !,
         Truth = false.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Check formula against initial theory
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-entails_initially(Fml,Truth) :-
-        expand_defs(Fml,FmlP),
-        findall(IniFml,
-                (initially(IniFml2),
-                 expand_defs(IniFml2,IniFml)),
-                KB),
-        entails_l(KB,FmlP, Truth), !.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Pretty-print KB
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-print_kb :-
-        initially(F),
-        write_readable(F),
-        write('\n'),
-        fail.
-print_kb.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Extend initial theory by new formula
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% todo: make this optional, may be costly
-extend_initial_kb_by(Fml) :-
-        entails_initially(Fml,true), !.
-extend_initial_kb_by(Fml) :- !,
-        assert(initially(Fml)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper predicates
@@ -223,24 +187,6 @@ smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
         (member(Atom,S1);member(Atom,S2)),
         Char = 122, !,
         smallest_name_not_contained2(S1,S2,C,[97,122|Chars]).
-
-expand_defs(Fml1,Fml2) :-
-        nonvar(Fml1),
-        def(Fml1,Fml3), !,
-        expand_defs(Fml3,Fml2).
-expand_defs(Fml1,Fml2) :-
-        nonvar(Fml1),
-        not(atomic(Fml1)), !,
-        Fml1 =.. [Fml3|Fml4],
-        expand_defs(Fml3,Fml5),
-        expand_defs_list(Fml4,Fml6),
-        Fml2 =.. [Fml5|Fml6].
-expand_defs(Fml,Fml) :- !.
-
-expand_defs_list([],[]) :- !.
-expand_defs_list([X|Xs],[Y|Ys]) :- !,
-        expand_defs(X,Y),
-        expand_defs_list(Xs,Ys).
 
 memorize_new_kb([]) :- !.
 memorize_new_kb([Fml|Fmls]) :- !,
