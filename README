@@ -67,7 +67,7 @@ are the following dependencies to external tools and systems:
 1. The E Theorem Prover
 
    To use FOL theorem proving, we require that the 'eprover'
-   executable is visible in $PATH. The system has been developed and
+   executable is visible in PATH. The system has been developed and
    tested with the (currently) most recent version "2.0 Turzum". E can
    be downloaded from
 
@@ -82,7 +82,7 @@ are the following dependencies to external tools and systems:
 2. The NuSMV Model Checker
 
    To use verification based on abstraction and model checking, we
-   require that the 'nusmv' executable is visible in $PATH. The system
+   require that the 'nusmv' executable is visible in PATH. The system
    has been developed and tested with the (currently) most recent
    version 2.5.4, which can be downloaded from
 
@@ -123,7 +123,7 @@ are the following dependencies to external tools and systems:
 5. The Konclude Description Logic (OWL 2) Reasoner
 
    To use description logic reasoning, we require that the 'Konclude'
-   executable is visible in $PATH. The system has been developed and
+   executable is visible in PATH. The system has been developed and
    tested with the (currently) most recent version
    v0.6.1-527. Konclude can be obtained at
 
@@ -132,3 +132,27 @@ are the following dependencies to external tools and systems:
    as 64-bit binary for Windows, Linux and MacOS X, both in statically
    and dynamically linked form. Its source code is published under the
    LGPL.
+
+6. FO²-Solver
+
+   Verification based on abstraction and model checking relies on
+   deciding consistency of sets of first-order formulas. As a theorem
+   prover is not a decision procedure for this problem, one variant
+   uses Tomer Kotek's FO²-Solver
+
+   http://forsyte.at/people/kotek/fo2-solver/
+
+   (version 0.3d), which in turn requires a propositional SAT solver
+   such as Glucose
+
+   http://www.labri.fr/perso/lsimon/glucose/
+
+   or Lingeling
+
+   http://fmv.jku.at/lingeling/
+
+   as well as a Java runtime environment. The environment variable
+   PATH_FO2SOLVER has to point to the location of the installation of
+   FO²-Solver, e.g. using
+
+   $ export PATH_FO2SOLVER=~/local/FO2-Solver/
