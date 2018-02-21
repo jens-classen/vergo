@@ -128,10 +128,27 @@ writeToFile(Formulas, FileName) :-
    Writes Formulas to Stream in SMT-LIBv2 syntax. */
 writeFormulas(_Stream, []).
 writeFormulas(Stream, [Formula|Formulas]) :-
-        write_formula(Stream, Formula),
+        convert_formula_to_fo2(Formula,CFormula),
+        write_formula(Stream, CFormula),
         write(Stream, '\n'),
         writeFormulas(Stream, Formulas).
-        
+
+/* convert_formula_to_fo2(+Formula,-ConvertedFormula)
+
+   Converts formula to FO^2 in the sense that ConvertedFormula is the
+   result of instantiating one of the two variable symbols in Formula
+   by 'x' and the other by 'y'. Should Formula contain more than two
+   variable symbols, the process is aborted with an error message. */
+convert_formula_to_fo2(Formula,ConvertedFormula) :-
+        copy_term(Formula,ConvertedFormula),
+        term_variables(ConvertedFormula,[x,y]), !.
+convert_formula_to_fo2(Formula,_ConvertedFormula) :- !,
+        report_message(['Failed while attempting to use FO²-Solver!']),
+        report_message(['Input formula contains more than two variable symbols:']),
+        report_message([Formula]),
+        report_message(['Aborting...']),
+        abort.
+
 write_formula(Stream, F1<=>F2) :- !,
         write_binary_formula(Stream, F1, '<=>', F2).
 write_formula(Stream, F1=>F2) :- !,
@@ -203,7 +220,7 @@ write_quantified_formula(Stream,Quantifier,V,F) :-
         write_formula(Stream, F),
         write(Stream, ')').
 write_quantified_formula(Stream,Quantifier,V,F) :-
-        var(V), !,
+        not(is_list(V)), !,
         write_quantified_formula(Stream,Quantifier,[V],F).
 write_quantified_formula(Stream,_Quantifier,[],F) :- !,
         write_formula(Stream,F).
@@ -212,7 +229,7 @@ write_quantified_formula(Stream,_Quantifier,[],F) :- !,
 
 write_variable_list(Stream,[Var|Vars]) :-
         write(Stream, '('),
-        write_fml_variable(Stream, Var),
+        write(Stream, Var),
         write(Stream, ' V)'),
         write_variable_list(Stream,Vars).
 write_variable_list(_Stream,[]).
