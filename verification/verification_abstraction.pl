@@ -41,10 +41,6 @@ CEUR-WS.org, 2015.
 :- discontiguous(is_entailed/2).
 :- discontiguous(is_inconsistent/1).
 
-% TODO: use standard names instead
-% we make the UNA for constants
-unique_names_assumption.
-
 :- dynamic   
    is_entailed_cached/3,
    is_inconsistent_cached/2,
@@ -719,17 +715,15 @@ regress_pos(Atom,[_|E],RP) :-
         regress_pos(Atom,E,RP).
 
 pos_equalities([Arg1|Args1],[Arg2|Args2],Equalities) :- 
-        % same constants => true
-        unique_names_assumption,
-        atom(Arg1),
-        atom(Arg2),
+        is_stdname(Arg1),
+        is_stdname(Arg2),
+        % same names => true
         Arg1=Arg2, !,
         pos_equalities(Args1,Args2,Equalities).
 pos_equalities([Arg1|_Args1],[Arg2|_Args2],false) :- 
-        % distinct constants => false
-        unique_names_assumption,
-        atom(Arg1),
-        atom(Arg2),
+        is_stdname(Arg1),
+        is_stdname(Arg2),
+        % distinct names => true
         not(Arg1=Arg2), !.
 pos_equalities([Arg1|Args1],[Arg2|Args2],(Arg1=Arg2)*Equalities) :-
         pos_equalities(Args1,Args2,Equalities).
@@ -747,17 +741,15 @@ regress_neg(Atom,[_|E],RN) :-
         regress_neg(Atom,E,RN).
 
 neg_inequalities([Arg1|Args1],[Arg2|Args2],Inequalities) :- 
-        % same constants => false
-        unique_names_assumption,
-        atom(Arg1),
-        atom(Arg2),
+        is_stdname(Arg1),
+        is_stdname(Arg2),
+        % same names => false
         Arg1=Arg2, !,
         neg_inequalities(Args1,Args2,Inequalities).
 neg_inequalities([Arg1|_Args1],[Arg2|_Args2],true):- 
-        % distinct constants => true
-        unique_names_assumption,
-        atom(Arg1),
-        atom(Arg2),
+        is_stdname(Arg1),
+        is_stdname(Arg2),
+        % distinct names => true
         not(Arg1=Arg2), !.
 neg_inequalities([Arg1|Args1],[Arg2|Args2],-(Arg1=Arg2)+Inequalities) :-
         neg_inequalities(Args1,Args2,Inequalities).
