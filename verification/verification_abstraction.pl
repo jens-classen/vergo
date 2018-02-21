@@ -79,10 +79,10 @@ verify(PropertyName) :-
        map_property(N,PropertyName,Property),
        call_smv(N, TruthValue, Type, Actions),
        report_message(['Verified: \n',
-                       '\t Property   : ', Property, '\n',
-                       '\t Truth Value: ', TruthValue, '\n',
-                       '\t Type       : ', Type, '\n',
-                       '\t Trace      : ', Actions, '\n']).        
+                       '\t Property            : ', Property, '\n',
+                       '\t Truth Value         : ', TruthValue, '\n',
+                       '\t Counterexample Type : ', Type, '\n',
+                       '\t Counterexample Trace: ', Actions, '\n']).        
 
 construct_abstract_transition_system :-
         init_construction,
@@ -1112,7 +1112,7 @@ get_truth_value([Line|_], false) :-
 get_truth_value([_|Lines], Value) :-
         get_truth_value(Lines, Value).
 
-get_counterexample(_Lines, true, [], nil).
+get_counterexample(_Lines, true, nil, nil).
 
 get_counterexample(Lines, false, Type, Actions) :-
         skip_to_counterexample(Lines,Lines2),
