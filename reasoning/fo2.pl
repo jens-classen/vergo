@@ -3,9 +3,14 @@
                 consistent/1,
                 valid/1,
                 equivalent/2,
+                check_equivalence/2,
                 op(1130, xfy, <=>),
                 op(1110, xfy, <=),
                 op(1110, xfy, =>)]).
+:- reexport('../../fol',[simplify/2,
+                         disjoin/2,
+                         conjoin/2,
+                         free_variables/2]).
 
 /* We use the following symbols for writing formulas:
 
@@ -109,6 +114,16 @@ get_fo2_solver_result(String,_) :- !,
         report_message([String]),
         report_message(['Check ', File, '.']),
         abort.
+
+% check for equivalence, abort if fails
+% useful as assertion for debugging purposes
+check_equivalence(F2,F3) :-
+        equivalent(F2,F3), !.
+check_equivalence(F2,F3) :-  !,
+        report_message(['Not equivalent: ']),
+        report_message(['Fml1 = ', F2]),
+        report_message(['Fml2 = ', F3]),
+        gtrace.
 
 temp_file(File) :-
         temp_dir(TempDir),
