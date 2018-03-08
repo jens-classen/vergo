@@ -1,16 +1,32 @@
-:- module(fo2, [entails/2,
-                inconsistent/1,
-                consistent/1,
-                valid/1,
-                equivalent/2,
-                check_equivalence/2,
-                op(1130, xfy, <=>),
-                op(1110, xfy, <=),
-                op(1110, xfy, =>)]).
-:- reexport('../../fol',[simplify/2,
-                         disjoin/2,
-                         conjoin/2,
-                         free_variables/2]).
+/** <module> fo2solver
+
+This module implements an interface to the FO²-Solver from 
+
+http://forsyte.at/people/kotek/fo2-solver/
+
+and as described in 
+
+Shachar Itzhaky et al.:
+On the Automated Verification of Web Applications with Embedded SQL
+In Proceedings of the Twentieth International Conference on Database Theory (ICDT 2017),
+Schloss Dagstuhl - Leibniz-Zentrum fuer Informatik, 2017.
+
+The purpose of this module is to provide one of multiple alternative
+implementations of a reasoner to be used by the FOL module.
+
+@author  Jens Claßen
+@license GPL
+
+ **/
+
+:- module(fo2solver, [entails/2,
+                      inconsistent/1,
+                      consistent/1,
+                      valid/1,
+                      equivalent/2,
+                      op(1130, xfy, <=>),
+                      op(1110, xfy, <=),
+                      op(1110, xfy, =>)]).
 
 /* We use the following symbols for writing formulas:
 
@@ -54,7 +70,7 @@ fo2solver_dir(Path) :-
         getenv('PATH_FO2SOLVER', Path).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Reasoning by FO^2 SAT Checking
+% Interface to FO²-Solver
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* Succeeds if ListOfFormulas is consistent. */
@@ -73,12 +89,11 @@ entails(ListOfAxioms,Conjecture) :-
 
 /* Succeeds if Formula is valid. */
 valid(Formula) :-
-        inconsistent(-Formula).
+        inconsistent([-Formula]).
 
 /* Succeeds if Formula1 and Formula2 are equivalent. */
 equivalent(Formula1,Formula2) :-
-        entails([Formula1],Formula2),
-        entails([Formula2],Formula1).
+        inconsistent([(Formula1*(-Formula2))+((-Formula1)*Formula2)]).
 
 /* Calls FO²-Solver on Formulas, Result is either 'sat' or 'unsat'. */
 fo2_solver(Formulas,Result) :-
@@ -115,16 +130,6 @@ get_fo2_solver_result(String,_) :- !,
         report_message(['Check ', File, '.']),
         abort.
 
-% check for equivalence, abort if fails
-% useful as assertion for debugging purposes
-check_equivalence(F2,F3) :-
-        equivalent(F2,F3), !.
-check_equivalence(F2,F3) :-  !,
-        report_message(['Not equivalent: ']),
-        report_message(['Fml1 = ', F2]),
-        report_message(['Fml2 = ', F3]),
-        gtrace.
-
 temp_file(File) :-
         temp_dir(TempDir),
         string_concat(TempDir, '/fo2problem.smt2', File).
@@ -156,7 +161,21 @@ writeFormulas(Stream, [Formula|Formulas]) :-
    variable symbols, the process is aborted with an error message. */
 convert_formula_to_fo2(Formula,ConvertedFormula) :-
         copy_term(Formula,ConvertedFormula),
+        term_variables(ConvertedFormula,[]), !.
+convert_formula_to_fo2(Formula,ConvertedFormula) :-
+        copy_term(Formula,ConvertedFormula),
+        term_variables(ConvertedFormula,[x]), !.
+convert_formula_to_fo2(Formula,ConvertedFormula) :-
+        copy_term(Formula,ConvertedFormula),
         term_variables(ConvertedFormula,[x,y]), !.
+convert_formula_to_fo2(-F1,-CF1) :- !,
+        convert_formula_to_fo2(F1,CF1).
+convert_formula_to_fo2(F1*F2,CF1*CF2) :- !,
+        convert_formula_to_fo2(F1,CF1),
+        convert_formula_to_fo2(F2,CF2).
+convert_formula_to_fo2(F1+F2,CF1+CF2) :- !,
+        convert_formula_to_fo2(F1,CF1),
+        convert_formula_to_fo2(F2,CF2).
 convert_formula_to_fo2(Formula,_ConvertedFormula) :- !,
         report_message(['Failed while attempting to use FO²-Solver!']),
         report_message(['Input formula contains more than two variable symbols:']),
@@ -183,9 +202,9 @@ write_formula(Stream, some(V,F)) :- !,
 write_formula(Stream, all(V,F)) :- !,
         write_quantified_formula(Stream,'forall',V,F).
 write_formula(Stream, true) :- !,
-        write(Stream, 'true').
+        write_formula(Stream,all(X,(X=X))).
 write_formula(Stream, false) :- !,
-        write(Stream, 'false').
+        write_formula(Stream,-true).
 write_formula(Stream, (X=Y)) :- !,
         write(Stream, '(= '),
         write_fml_term(Stream, X),
@@ -239,8 +258,6 @@ write_quantified_formula(Stream,Quantifier,V,F) :-
         write_quantified_formula(Stream,Quantifier,[V],F).
 write_quantified_formula(Stream,_Quantifier,[],F) :- !,
         write_formula(Stream,F).
-
-% TODO: only 'x' and 'y' allowed as variables
 
 write_variable_list(Stream,[Var|Vars]) :-
         write(Stream, '('),

@@ -578,6 +578,7 @@ implies(Fml1,Fml2,[]) :-
 implies(Fml1,Fml2,Vars) :-
         % as one formula b/c of free variables
         % => use (automatic) universal closure
+        Vars \= [],
         valid(all(Vars,Fml1=>Fml2)), !,
         assert(cached_implies(Fml1,Fml2,Vars,true)).
 implies(Fml1,Fml2,Vars) :- !,
