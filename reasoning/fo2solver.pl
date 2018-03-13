@@ -202,7 +202,7 @@ write_formula(Stream, some(V,F)) :- !,
 write_formula(Stream, all(V,F)) :- !,
         write_quantified_formula(Stream,'forall',V,F).
 write_formula(Stream, true) :- !,
-        write_formula(Stream,all(X,(X=X))).
+        write_formula(Stream,all(x,(x=x))).
 write_formula(Stream, false) :- !,
         write_formula(Stream,-true).
 write_formula(Stream, (X=Y)) :- !,
