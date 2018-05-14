@@ -32,15 +32,15 @@ def(isFirst(Q,P),N,F) :-
         First = P,
         construct_exists(Others,Q=QTerm,F).
 def(empty(Q),N,F) :-
-        generate_queue_term_inst(QTerm,N,e),
+        generate_queue_term_inst(QTerm,N,'#e'),
         F = (Q=QTerm).
 def(lastFree(Q),N,F) :-
         generate_queue_term_vars(QTerm,N,Vars),
-        instantiate_last(Vars,e,QTerm,Vars2),
+        instantiate_last(Vars,'#e',QTerm,Vars2),
         construct_exists(Vars2,Q=QTerm,F).
 def(full(Q),N,F) :-
         generate_queue_term_vars(QTerm,N,Vars),
-        construct_inequalities(Vars,e,Inequalities),
+        construct_inequalities(Vars,'#e',Inequalities),
         construct_exists(Vars,Inequalities*(Q=QTerm),F).
 def(enqueue(Qold,P,Qnew),N,F) :-
         construct_enqueue_disjuncts(Qold,P,Qnew,N,Disj),
@@ -48,15 +48,15 @@ def(enqueue(Qold,P,Qnew),N,F) :-
 def(dequeue(Qold,P,Qnew),N,F) :-
         N1 is N-1,
         generate_fresh_variables(N1,Vars),
-        append(Vars,[e],VarsE),
-        QoldTerm =.. [q,P|Vars],
-        QnewTerm =.. [q|VarsE],
+        append(Vars,['#e'],VarsE),
+        QoldTerm =.. ['#q',P|Vars],
+        QnewTerm =.. ['#q'|VarsE],
         construct_exists(Vars,(Qold=QoldTerm)*(Qnew=QnewTerm),F).
               
 
 generate_queue_term_vars(QTerm,N,Vars) :-
         generate_fresh_variables(N,Vars),
-        QTerm =.. [q|Vars].
+        QTerm =.. ['#q'|Vars].
 
 generate_fresh_variables(0,[]).
 generate_fresh_variables(N,[Var|Vars]) :-
@@ -66,7 +66,7 @@ generate_fresh_variables(N,[Var|Vars]) :-
 
 generate_queue_term_inst(QTerm,N,Const) :-
         generate_inst_list(N,Const,List),
-        QTerm =.. [q|List].
+        QTerm =.. ['#q'|List].
 
 generate_inst_list(0,_Const,[]).
 generate_inst_list(N,Const,[Const|List]) :-
@@ -101,13 +101,13 @@ construct_enqueue_disjunct(Qold,P,Qnew,N,M,Disj) :-
         M1 is N-M,
         M2 is N-M-1,
         generate_fresh_variables(M,Vars),
-        generate_inst_list(M1,e,EList1),
-        generate_inst_list(M2,e,EList2),
-        construct_inequalities(Vars,e,Inequalities),
+        generate_inst_list(M1,'#e',EList1),
+        generate_inst_list(M2,'#e',EList2),
+        construct_inequalities(Vars,'#e',Inequalities),
         append(Vars,EList1,Args1),
         append(Vars,[P|EList2],Args2),
-        QoldTerm =.. [q|Args1],
-        QnewTerm =.. [q|Args2],
+        QoldTerm =.. ['#q'|Args1],
+        QnewTerm =.. ['#q'|Args2],
         construct_exists(Vars,Inequalities*(Qold=QoldTerm)*(Qnew=QnewTerm),Disj).
 
 construct_exists([],F,F) :- !.
