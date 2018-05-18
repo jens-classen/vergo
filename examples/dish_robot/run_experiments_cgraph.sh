@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE=results.csv
+FILE=results_cgraph.csv
 
 swipl -g "experiment( 1, 1, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
 swipl -g "experiment( 1, 2, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
