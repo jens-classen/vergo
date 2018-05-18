@@ -14,7 +14,12 @@
            nth2/3,
            forall/2,
            write_readable/2,
-           write_readable/1]).
+           write_readable/1,
+           measure_time_with_limit/4,
+           append_to_csv/2,
+           local_time_and_date_as_string/1]).
+
+:- use_module(library(csv)).
 
 /*  T2 is T1 with X1 replaced by X2  */
 subv(X1,X2,T1,T2) :- var(T1), T1 == X1, !, T2 = X2.
@@ -106,3 +111,50 @@ write_readable(Term) :-
                              quoted(true)
                            ])
               ).
+
+/**
+ * measure_time_with_limit(+Goal,+TimeOut,-ExecutionTime,-CPUTime) is det
+ * 
+ * Executes Goal with time limit TimeOut and returns the ExecutionTime (wall time) 
+ * and CPUTime needed. Should the limit be execeeded, ExecutionTime and CPUTime
+ * are unified with 'timeout'. Times are also reported to stdout via 
+ * report_message/1.
+ **/
+measure_time_with_limit(Goal,TimeOut,ExecutionTime,CPUTime) :-
+        statistics(walltime, [_TimeSinceStart, _TimeSinceLastCall]),
+        statistics(runtime, [_CPUTime1, _CPUTimeSinceLastCall]),
+        catch(call_with_time_limit(TimeOut,Goal),
+              time_limit_exceeded,
+              ReachedTimeOut=true),
+        (ReachedTimeOut==true ->
+            (CPUTime       = timeout,
+             ExecutionTime = timeout,
+             report_message(['Goal \'', Goal, '\' reached timeout of ',
+                             TimeOut, ' seconds!']));
+            (statistics(runtime, [_CPUTime2, CPUTime]),
+             statistics(walltime, [_NewTimeSinceStart, ExecutionTime]),
+             report_message(['Goal \'', Goal, '\' took ', ExecutionTime,
+                             ' ms walltime and ', CPUTime,
+                             ' ms CPU time.']))).
+
+/**
+ * append_to_csv(+FileName,+Data) is det
+ * 
+ * Appends the data given in the list Data to a CSV file specified by
+ * FileName. Uses standard separator (',').
+ **/
+append_to_csv(FileName,Data) :-
+        Row =.. [row|Data],
+        setup_call_cleanup(open(FileName, append, Out),
+                           csv_write_stream(Out, [Row], []),
+                           close(Out)).
+
+/**
+ * local_time_and_date_as_string(+Time) is det
+ *
+ * Returns the local time and date as a string Time.
+ **/
+local_time_and_date_as_string(Time) :-
+        get_time(X),
+        stamp_date_time(X,Y,local),
+        format_time(string(Time),'%x %X',Y).

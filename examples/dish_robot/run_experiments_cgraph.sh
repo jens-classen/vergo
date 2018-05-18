@@ -1,0 +1,26 @@
+#!/bin/bash
+
+FILE=results.csv
+
+swipl -g "experiment( 1, 1, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 1, 2, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 2, 1, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 2, 2, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 3, 1, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 1, 3, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 2, 3, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 3, 2, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 3, 3, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 5, 5, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment(10,10, true,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 1, 1,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 1, 2,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 2, 1,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 2, 2,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 3, 1,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 1, 3,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 2, 3,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 3, 2,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 3, 3,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment( 5, 5,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
+swipl -g "experiment(10,10,false,'$FILE',360,60)." -t "halt(1)" eval_cgraphs.pl
