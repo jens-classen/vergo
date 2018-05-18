@@ -2,7 +2,9 @@
 
 :- ['main_fct'].
 
-experiment(QueueSize) :- 
+experiment(QueueSize,FileName,TimeOutC,TimeOutP) :- 
+        local_time_and_date_as_string(TimeS),
+        atom_string(Time,TimeS),
         retractall(def(isFirst(_,_),_)),
         retractall(def(empty(_),_)),
         retractall(def(lastFree(_),_)),
@@ -21,10 +23,45 @@ experiment(QueueSize) :-
         assert(def(full(Q4),F4)),
         assert(def(enqueue(Qold5,P5,Qnew5),F5)),
         assert(def(dequeue(Qold6,P6,Qnew6),F6)),
-        time(construct_characteristic_graph(main)),
-        %time(verify(main,prop1)),
-        %time(verify(main,prop2)),
-        time(verify(main,prop4)).        
+        measure_time_with_limit(construct_characteristic_graph(main),
+                                TimeOutC,TWC,TCC),
+        (TWC = timeout ->
+            (Nodes = 'n/a', Edges = 'n/a', 
+             TW1 = 'n/a',
+             TW2 = 'n/a',
+             % TW3 = 'n/a',
+             TW4 = 'n/a',
+             % TW5 = 'n/a',
+             TC1 = 'n/a',
+             TC2 = 'n/a',
+             % TC3 = 'n/a',
+             TC4 = 'n/a'
+             % TC5 = 'n/a'
+             );
+            (number_of_nodes(Nodes),
+             number_of_edges(Edges),
+             measure_time_with_limit(verify(main,prop1),TimeOutP,TW1,TC1),
+             measure_time_with_limit(verify(main,prop2),TimeOutP,TW2,TC2),
+             % measure_time_with_limit(verify(main,prop3),TimeOutP,TW3,TC3),
+             measure_time_with_limit(verify(main,prop4),TimeOutP,TW4,TC4))),
+             % measure_time_with_limit(verify(main,prop5),TimeOutP,TW5,TC5))),
+        Row = [Time,
+               QueueSize,
+               Nodes,
+               Edges,
+               TWC,TCC,
+               TW1,TC1,
+               TW2,TC2,
+               % TW3,TC3,
+               TW4,TC4
+               % TW5,TC5
+              ],
+             append_to_csv(FileName,Row).     
+
+number_of_nodes(Nodes) :-
+        cg_number_of_nodes(main,Nodes).
+number_of_edges(Edges) :-
+        count(cg_edge(main,_,_,_,_,_,_), Edges).
 
 def(isFirst(Q,P),N,F) :-
         generate_queue_term_vars(QTerm,N,Vars),
@@ -52,14 +89,13 @@ def(dequeue(Qold,P,Qnew),N,F) :-
         QoldTerm =.. ['#q',P|Vars],
         QnewTerm =.. ['#q'|VarsE],
         construct_exists(Vars,(Qold=QoldTerm)*(Qnew=QnewTerm),F).
-              
 
 generate_queue_term_vars(QTerm,N,Vars) :-
         generate_fresh_variables(N,Vars),
         QTerm =.. ['#q'|Vars].
 
 generate_fresh_variables(0,[]).
-generate_fresh_variables(N,[Var|Vars]) :-
+generate_fresh_variables(N,[_Var|Vars]) :-
         N > 0, !,
         N1 is N-1,
         generate_fresh_variables(N1,Vars).
@@ -74,7 +110,7 @@ generate_inst_list(N,Const,[Const|List]) :-
         N1 is N-1,
         generate_inst_list(N1,Const,List).
 
-instantiate_last([Var],Const,QTerm,[]) :- !,
+instantiate_last([Var],Const,_QTerm,[]) :- !,
         Var=Const.
 instantiate_last([Var|Vars],Const,QTerm,[Var|Vars2]) :- !,
         instantiate_last(Vars,Const,QTerm,Vars2).
