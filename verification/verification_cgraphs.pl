@@ -243,17 +243,22 @@ final_label(P,N,A,F) :-
 /**
   * path_label(+Program,+Node,-Result)
   **/
-path_label(P,N,Result) :-
-        cg_max_iteration(P,path,I), !, % use cached values
-        cg_label(P,path,I,N,Result).
+% path_label(P,N,Result) :-
+%         cg_max_iteration(P,path,I), !, % use cached values
+%         cg_label(P,path,I,N,Result).
 
-path_label(P,N,Result) :-        
-        report_message(['--------------------------------------']),
-        report_message(['Computing PATH labels first...']),
-        check_iterate(P,path,0,K),
-        cg_label(P,path,K,N,Result),
-        report_message(['Done computing PATH labels.']),
-        report_message(['--------------------------------------']).
+% path_label(P,N,Result) :-
+%         report_message(['--------------------------------------']),
+%         report_message(['Computing PATH labels first...']),
+%         check_iterate(P,path,0,K),
+%         cg_label(P,path,K,N,Result),
+%         report_message(['Done computing PATH labels.']),
+%         report_message(['--------------------------------------']).
+
+%% TODO: double-check this, then remove entirely!
+%% We do not need path labels anymore since we use sink states for
+%% success and failure! => simply return true...
+path_label(_Program,_Node,true).
 
 check_label(_P,path,-1,_N,false).
 
