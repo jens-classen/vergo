@@ -28,6 +28,9 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- dynamic cached_label/5.
 :- dynamic cg_max_iteration/3.
 
+% options
+use_sink_states(false).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% To Do List
 %% ----------
@@ -233,8 +236,16 @@ check_label(P,post(Phi),I,N,F) :-
         simplify_fml(Old+Pre,F).
 
 final_label(P,N,A,F) :-
+        use_sink_states(false), !,
         cg_node(P,_Program,Final,N),
         simplify_fml(A*Final,F).
+final_label(P,N,A,A) :-
+        use_sink_states(true),
+        cg_node(P,terminated,false,N), !.
+final_label(P,N,_A,false) :-
+        use_sink_states(true),
+        cg_node(P,Program,false,N),
+        Program \= terminated, !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Path
@@ -243,22 +254,20 @@ final_label(P,N,A,F) :-
 /**
   * path_label(+Program,+Node,-Result)
   **/
-% path_label(P,N,Result) :-
-%         cg_max_iteration(P,path,I), !, % use cached values
-%         cg_label(P,path,I,N,Result).
+path_label(P,N,Result) :-
+        cg_max_iteration(P,path,I), !, % use cached values
+        cg_label(P,path,I,N,Result).
 
-% path_label(P,N,Result) :-
-%         report_message(['--------------------------------------']),
-%         report_message(['Computing PATH labels first...']),
-%         check_iterate(P,path,0,K),
-%         cg_label(P,path,K,N,Result),
-%         report_message(['Done computing PATH labels.']),
-%         report_message(['--------------------------------------']).
-
-%% TODO: double-check this, then remove entirely!
-%% We do not need path labels anymore since we use sink states for
-%% success and failure! => simply return true...
-path_label(_Program,_Node,true).
+path_label(P,N,Result) :-
+        use_sink_states(false), !,
+        report_message(['--------------------------------------']),
+        report_message(['Computing PATH labels first...']),
+        check_iterate(P,path,0,K),
+        cg_label(P,path,K,N,Result),
+        report_message(['Done computing PATH labels.']),
+        report_message(['--------------------------------------']).
+path_label(_Program,_Node,true) :-
+        use_sink_states(true), !.
 
 check_label(_P,path,-1,_N,false).
 
@@ -383,7 +392,8 @@ cg_construction_step(ProgramName) :-
         cg_node(ProgramName,Program,_Final,ID),
         
         % whose program has a possible transition
-        trans(Program,Action,NewProgram,Condition1,Vars,Condition2),
+        transition(Program,Action,NewProgram,Condition1,Vars,Condition2),
+
         simplify_fml(Condition1,SimplifiedCondition1),
         SimplifiedCondition1\=false,
         simplify_fml(Condition2,SimplifiedCondition2),
@@ -402,13 +412,25 @@ cg_construction_step(ProgramName) :-
                        SimplifiedCondition1,Vars,
                        SimplifiedCondition2)).
 
+transition(Program,Action,NewProgram,Condition1,Vars,Condition2) :-
+        use_sink_states(true), !,
+        step(Program,Action,NewProgram,Condition1,Vars,Condition2).
+transition(Program,Action,NewProgram,Condition1,Vars,Condition2) :-
+        use_sink_states(false), !,
+        trans(Program,Action,NewProgram,Condition1,Vars,Condition2).
+is_final(_Program,false) :-
+        use_sink_states(true), !.
+is_final(Program,Final) :-
+        use_sink_states(false), !,
+        final(Program,Final).
+
 cg_get_node_id(ProgramName,Program,ID) :-
         cg_node(ProgramName,Program,_Final,ID), !.
 cg_get_node_id(ProgramName,Program,ID) :-
         retract(cg_number_of_nodes(ProgramName,ID)),
         NextID is ID+1,
         assert(cg_number_of_nodes(ProgramName,NextID)),
-        final(Program,Final),
+        is_final(Program,Final),
         simplify_fml(Final,FinalS),
         assert(cg_node(ProgramName,Program,FinalS,ID)).
 
