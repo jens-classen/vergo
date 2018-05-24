@@ -88,6 +88,35 @@ trans(D,A,DP,F1,Vars,F2) :-
         trans(M,A,DP,F1,Vars,F2).
 
 /**
+ * step(+Prog1,?Act,?Prog2,?Cond1,?Vars:List,?Cond2) is nondet
+ *
+ * This predictate is a meta-relation over trans/6 that integrates
+ * "sink" states for program termination and failure, thus
+ * extending finite execution paths to infinite ones. This is
+ * mainly used for verification.
+ **/
+step(D,A,DP,F1,Vars,F2) :-
+        trans(D,A,DP,F1,Vars,F2).
+step(D,terminate,terminated,F,[],true) :-
+        final(D,F).
+step(D,fail,failed,(-F1)*(-F2),[],true) :-
+        D \= terminated,
+        final(D,F1),
+        findall(FP1*some(Vars,FP2),
+                trans(D,_A,_DP,FP1,Vars,FP2),
+                L),
+        disjoin(L,F2).
+step(D,fail,failed,-F2,[],true) :-
+        D \= terminated,
+        not(final(D,_F1)),
+        findall(FP1*some(Vars,FP2),
+                trans(D,_A,_DP,FP1,Vars,FP2),
+                L),
+        disjoin(L,F2).
+step(terminated,terminate,terminated,true,[],true).
+step(failed,fail,failed,true,[],true).
+
+/**
   * final(+Prog,?Cond) is nondet
   *
   * The program Prog is final (may terminate) if condition Cond
