@@ -28,8 +28,10 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- dynamic cached_label/5.
 :- dynamic cg_max_iteration/3.
 
+% TODO: is there a better way to do this?
 % options
 use_sink_states(false).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% To Do List
