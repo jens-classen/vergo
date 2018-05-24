@@ -19,6 +19,12 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
 
  **/
 
+/**
+ * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
+ *
+ * There is a transition from program Prog1 to program Prog2
+ * via (possibly non-ground) action Act under condition Cond.
+ **/
 trans(A,A,[],F) :-
         prim_action(A),
         poss(A,F).
@@ -80,16 +86,25 @@ progdef(loop(D),
 progdef(Name,Def) :-
         program(Name,Def).
 
+/**
+ * step(+Prog1,?Act,?Prog2,?Cond1) is nondet
+ *
+ * This predictate is a meta-relation over trans/6 that integrates
+ * "sink" states for program termination and failure, thus
+ * extending finite execution paths to infinite ones. This is
+ * mainly used for verification.
+ **/
 step(D,A,DP,F) :-
         trans(D,A,DP,F).
 step(D,terminate,terminated,F) :-
         final(D,F).
 step(D,fail,failed,(-F1)*(-F2)) :-
+        D \= terminated,
         final(D,F1),
         findall(FP,trans(D,_A,_DP,FP),L),
         disjoin(L,F2).
 step(D,fail,failed,-F2) :-
-        not(D=terminated),
+        D \= terminated,
         not(final(D,_F1)),
         findall(FP,trans(D,_A,_DP,FP),L),
         disjoin(L,F2).
