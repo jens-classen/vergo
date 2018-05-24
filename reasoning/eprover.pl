@@ -112,9 +112,18 @@ temp_file(File) :-
 
 writeToFile(ListOfAxioms, Conjecture, FileName) :-
         open(FileName, write, Stream),
+        writeTimeStamp(Stream),
         writeAxioms(Stream, ListOfAxioms, 0),
         writeConjecture(Stream, Conjecture, conjecture),
 	close(Stream).
+
+writeTimeStamp(Stream) :-
+        local_time_and_date_as_string(TimeS),
+        atom_string(TimeA,TimeS),
+        write(Stream, '% Automatically generated TPTP problem file\n'),
+        write(Stream, '% '),
+        write(Stream, TimeA),
+        write(Stream, '\n\n').
 
 /* writeAxioms(+Stream, +ListOfAxioms, +N)
    Writes ListOfAxioms to Stream in TPTP syntax, naming
