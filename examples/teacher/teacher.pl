@@ -34,6 +34,7 @@ query(10,some(X,teach(X,'#sam') * -know(teach(X,'#sam'))),unknown).
 query(11,some(Y,know(all(X,teach(X,Y) => know(teach(X,Y))))),true).
 query(12,some(Y,-(Y ='#sam') * -kwhether(all(X,teach(X,Y)=>know(teach(X,Y))))),false).
 query(13,some(Y,know(some(X,teach(X,Y) * some(Z,-(Y=Z)*know(teach(X,Z)))))),true).
+query(14,know(some(Y,all(X,teach(X,Y) => know(teach(X,Y))))),true). % from Exercise 8
 
 def(kwhether(F),know(F)+know(-F)).
 
