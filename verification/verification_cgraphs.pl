@@ -31,7 +31,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 % TODO: is there a better way to do this?
 % options
 use_sink_states(false).
-
+use_path_labels(false).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% To Do List
@@ -261,7 +261,7 @@ path_label(P,N,Result) :-
         cg_label(P,path,I,N,Result).
 
 path_label(P,N,Result) :-
-        use_sink_states(false), !,
+        use_path_labels(true), !,
         report_message(['--------------------------------------']),
         report_message(['Computing PATH labels first...']),
         check_iterate(P,path,0,K),
@@ -269,7 +269,7 @@ path_label(P,N,Result) :-
         report_message(['Done computing PATH labels.']),
         report_message(['--------------------------------------']).
 path_label(_Program,_Node,true) :-
-        use_sink_states(true), !.
+        use_path_labels(false), !.
 
 check_label(_P,path,-1,_N,false).
 
