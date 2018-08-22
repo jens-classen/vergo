@@ -23,4 +23,4 @@ program(main,
 % this should succeed!
 test :-
         construct_characteristic_graph(main),
-        cg_edge(main,1,action(Y),1,true,[Y],predicate(Y)).
+        cg_edge(main,1,action(Y),1,predicate(Y),[Y],true).
