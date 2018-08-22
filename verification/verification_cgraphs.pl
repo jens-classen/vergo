@@ -491,9 +491,9 @@ cg_print_edge_cond(Cond) :- !,
         write(Cond).
 cg_print_edge_vars([]) :- !.
 cg_print_edge_vars(Vars) :-
-        write('pick '),
+        write(': pick '),
         write(Vars),
-        write(': ').
+        write(' : ').
 
 % draw characteristic graph using dot
 cg_draw_graph(ProgramName) :-
