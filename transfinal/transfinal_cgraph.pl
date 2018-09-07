@@ -61,6 +61,9 @@ trans([D1|D2],A,DP,F1,Vars,F2) :-
         trans(D1,A,D1P,F1,Vars,F2),
         flatten([D1P|D2],DP).
 trans([D1|D2],A,DP,F2,Vars,F1*F2P) :-
+        flatten(D2,[D3|_]),
+        (not(D3 = star(_)); % star case handled below
+         var(D3)),
         final(D1,F1),
         trans(D2,A,DP,F2,Vars,F2P).
 trans(nondet(D1,D2),A,DP,F1,Vars,F2) :-
@@ -78,11 +81,11 @@ trans(conc(D1,D2),A,conc(D1,D2P),F1,Vars,F2) :-
         trans(D2,A,D2P,F1,Vars,F2).
 trans(star(D),A,DP,true,Vars,F2) :-
         trans(D,A,G,true,Vars,F2),
-        flatten([G|star(D)],DP).
-trans([D1|star(D)],A,DP,F*F1,Vars,F2) :-
+        flatten([G,star(D)],DP).
+trans([D1,star(D)],A,DP,F*F1,Vars,F2) :-
         final(D1,F),
         trans(D,A,G,F1,Vars,F2),
-        flatten([G|star(D)],DP).
+        flatten([G,star(D)],DP).
 trans(D,A,DP,F1,Vars,F2) :-
         progdef(D,M),
         trans(M,A,DP,F1,Vars,F2).

@@ -482,18 +482,12 @@ cg_print_edge(ID,Action,ID2,Cond1,Vars,Cond2) :- !,
         write(']--> '),
         write(ID2),
         write('\n\t'),
-        cg_print_edge_cond(Cond1),
-        cg_print_edge_vars(Vars),
-        cg_print_edge_cond(Cond2),
-        write('\n').
-cg_print_edge_cond(true) :- !.
-cg_print_edge_cond(Cond) :- !,
-        write(Cond).
-cg_print_edge_vars([]) :- !.
-cg_print_edge_vars(Vars) :-
-        write(': pick '),
+        write(Cond1),
+        write(' : '),
         write(Vars),
-        write(' : ').
+        write(' : '),
+        write(Cond2),
+        write('\n').
 
 % draw characteristic graph using dot
 cg_draw_graph(ProgramName) :-
