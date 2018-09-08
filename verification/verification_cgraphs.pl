@@ -375,15 +375,12 @@ construct_characteristic_graph(ProgramName) :-
         
         % create initial node
         assert(cg_number_of_nodes(ProgramName,0)),
-        cg_get_node_id(ProgramName,SimplifiedProgram,0),
-        cg_draw_graph(ProgramName), !,
+        cg_get_node_id(ProgramName,SimplifiedProgram,0), !,
         
         iterate_cg_construction(ProgramName).
         
 iterate_cg_construction(ProgramName) :-
-        cg_construction_step(ProgramName), 
-        !,
-        cg_draw_graph(ProgramName),
+        cg_construction_step(ProgramName), !,
         iterate_cg_construction(ProgramName).
 iterate_cg_construction(ProgramName) :-
         cg_print_graph(ProgramName), !.
