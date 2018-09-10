@@ -1,6 +1,6 @@
 /**
  
-verify_cgraphs_fol
+verification_cgraphs
 
 This file implements a verification algorithm for Golog programs based
 on the methods described in
