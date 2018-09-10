@@ -57,6 +57,7 @@ trans([D1|D2],G,A,DP) :-
         flatten([D1P|D2],DP).
 trans([D1|D2],[test(F1)|G],A,DP) :-
         final(D1,F1),
+        F1 \= false, % filter out false early
         trans(D2,G,A,DP).
 trans(nondet(D1,D2),G,A,DP) :-
         trans(D1,G,A,DP);
