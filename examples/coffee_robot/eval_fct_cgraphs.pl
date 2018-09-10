@@ -61,7 +61,7 @@ experiment(QueueSize,FileName,TimeOutC,TimeOutP) :-
 number_of_nodes(Nodes) :-
         cg_number_of_nodes(main,Nodes).
 number_of_edges(Edges) :-
-        count(cg_edge(main,_,_,_,_,_,_), Edges).
+        count(cg_edge(main,_,_,_,_), Edges).
 
 def(isFirst(Q,P),N,F) :-
         generate_queue_term_vars(QTerm,N,Vars),

@@ -48,7 +48,7 @@ experiment(Rooms,Dishes,InitialTheory,FileName,TimeOutC,TimeOutP) :-
 number_of_nodes(Nodes) :-
         cg_number_of_nodes(main,Nodes).
 number_of_edges(Edges) :-
-        count(cg_edge(main,_,_,_,_,_,_), Edges).
+        count(cg_edge(main,_,_,_,_), Edges).
 
 /**
  * assert_domain_atoms(+Domain,+Prefix,+N) is det
