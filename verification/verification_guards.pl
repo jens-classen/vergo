@@ -62,6 +62,7 @@ use_path_labels(false).
 verify(Program,Property) :- !,
         report_message(['Verifying property \'', Property,
                         '\' for program \'', Program, '\'...']),
+        property(PropertyName,Program,Property),
         check(Program,Property,Result),
         entails_initially(Result,TruthValue),
         report_message(['Verified: \n',
@@ -72,68 +73,58 @@ verify(Program,Property) :- !,
 /**
   * check(+Program,+Property,-Result)
   **/
-check(Program,Property,Result) :-
-        property(Property,Program,somepath(next(Phi))), !,
+check(Program,somepath(next(Phi)),Result) :- !,
         report_message(['Checking \'', somepath(next(Phi)),
                         '\' on program \'', Program, '\'...']),
         check_ex(Program,Phi,Result).
         
-check(Program,Property,Result) :-
-        property(Property,Program,somepath(always(Phi))), !,
+check(Program,somepath(always(Phi)),Result) :- !,
         report_message(['Checking \'', somepath(always(Phi)),
                         '\' on program \'', Program, '\'...']),
         check_eg(Program,Phi,Result).
 
-check(Program,Property,Result) :-
-        property(Property,Program,somepath(until(Phi1,Phi2))), !,
+check(Program,somepath(until(Phi1,Phi2)),Result) :- !,
         report_message(['Checking \'', somepath(until(Phi1,Phi2)),
                         '\' on program \'', Program, '\'...']),
         check_eu(Program,Phi1,Phi2,Result).
 
-check(Program,Property,Result) :-
-        property(Property,Program,somepath(eventually(Phi))), !,
+check(Program,somepath(eventually(Phi)),Result) :- !,
         report_message(['Checking \'', somepath(eventually(Phi)),
                         '\' on program \'', Program, '\'...']),
         check_eu(Program,true,Phi,Result).
         
-check(Program,Property,Result) :-
-        property(Property,Program,allpaths(next(Phi))), !,
+check(Program,allpaths(next(Phi)),Result) :- !,
         report_message(['Checking \'', allpaths(next(Phi)),
                         '\' on program \'', Program, '\'...']),
         check_ex(Program,-Phi,R),
         simplify_fml(-R,Result).
         
-check(Program,Property,Result) :-
-        property(Property,Program,allpaths(always(Phi))), !,
+check(Program,allpaths(always(Phi)),Result) :- !,
         report_message(['Checking \'', allpaths(always(Phi)),
                         '\' on program \'', Program, '\'...']),
         check_eu(Program,true,-Phi,R),
         simplify_fml(-R,Result).
 
-check(Program,Property,Result) :-
-        property(Property,Program,allpaths(until(Phi1,Phi2))), !,
+check(Program,allpaths(until(Phi1,Phi2)),Result) :- !,
         report_message(['Checking \'', allpaths(until(Phi1,Phi2)),
                         '\' on program \'', Program, '\'...']),
         check_eu(Program,-Phi2,(-Phi1)*(-Phi2),R1),
         check_eg(Program,-Phi2,R2),
         simplify_fml((-R1)*(-R2),Result).
 
-check(Program,Property,Result) :-
-        property(Property,Program,allpaths(eventually(Phi))), !,
+check(Program,allpaths(eventually(Phi)),Result) :- !,
         report_message(['Checking \'', allpaths(eventually(Phi)),
                         '\' on program \'', Program, '\'...']),
         check_eg(Program,-Phi,R),
         simplify_fml(-R,Result).
 
-check(Program,Property,Result) :-
-        property(Property,Program,postcond(Phi)), !,
+check(Program,postcond(Phi),Result) :- !,
         report_message(['Checking \'', postcond(Phi),
                         '\' on program \'', Program, '\'...']),
         check_post(Program,Phi,R),
         simplify_fml(R,Result).
 
-check(Program,Property,Result) :-
-        property(Property,Program,unipostcond(Phi)), !,
+check(Program,unipostcond(Phi),Result) :- !,
         report_message(['Checking \'', unipostcond(Phi),
                         '\' on program \'', Program, '\'...']),
         check_post(Program,-Phi,R),
