@@ -30,8 +30,9 @@ employed that uses "guards" on edges, i.e. sequences of test
 :- dynamic cg_node/4.
 :- dynamic cg_edge/5.
 :- dynamic cg_number_of_nodes/2.
-:- dynamic cached_label/5.
-:- dynamic cg_max_iteration/3.
+:- dynamic labelset_maxid/1.
+:- dynamic label/4.
+:- dynamic labelset/3.
 
 % TODO: is there a better way to do this?
 % options
@@ -63,7 +64,8 @@ verify(Program,PropertyName) :- !,
         report_message(['Verifying property \'', PropertyName,
                         '\' for program \'', Program, '\'...']),
         property(PropertyName,Program,Property),
-        check(Program,Property,Result),
+        check_ctl(Program,Property,LabelSet),
+        labelset_initial(Program,LabelSet,Result),
         entails_initially(Result,TruthValue),
         report_message(['Verified: \n',
                         '\t Property   : ', Property, '\n',
@@ -71,287 +73,265 @@ verify(Program,PropertyName) :- !,
                         '\t Truth Value: ', TruthValue, '\n']).        
 
 /**
-  * check(+Program,+Property,-Result)
+  * check_ctl(+Program,+Property,-LabelSetID)
+  *
+  * Performs the verification procedure for CTL on Program
+  * (whose characteristic graph must have been constructed)
+  * and Property. Result is a numerical index that, together with
+  * Program, identifies a label set.
   **/
-check(Program,somepath(next(Phi)),Result) :- !,
-        report_message(['Checking \'', somepath(next(Phi)),
-                        '\' on program \'', Program, '\'...']),
-        check_ex(Program,Phi,Result).
-        
-check(Program,somepath(always(Phi)),Result) :- !,
-        report_message(['Checking \'', somepath(always(Phi)),
-                        '\' on program \'', Program, '\'...']),
-        check_eg(Program,Phi,Result).
+check_ctl(Program,Psi,LabelSet) :-
+        fluent_formula(Psi), !,
+        labelset_create(Program,Psi,LabelSet).
 
-check(Program,somepath(until(Phi1,Phi2)),Result) :- !,
-        report_message(['Checking \'', somepath(until(Phi1,Phi2)),
-                        '\' on program \'', Program, '\'...']),
-        check_eu(Program,Phi1,Phi2,Result).
+check_ctl(Program,-Phi,LabelSet) :- !,
+        check_ctl(Program,Phi,LabelSet1),
+        labelset_negate(Program,LabelSet1,LabelSet).
 
-check(Program,somepath(eventually(Phi)),Result) :- !,
-        report_message(['Checking \'', somepath(eventually(Phi)),
-                        '\' on program \'', Program, '\'...']),
-        check_eu(Program,true,Phi,Result).
-        
-check(Program,allpaths(next(Phi)),Result) :- !,
-        report_message(['Checking \'', allpaths(next(Phi)),
-                        '\' on program \'', Program, '\'...']),
-        check_ex(Program,-Phi,R),
-        simplify_fml(-R,Result).
-        
-check(Program,allpaths(always(Phi)),Result) :- !,
-        report_message(['Checking \'', allpaths(always(Phi)),
-                        '\' on program \'', Program, '\'...']),
-        check_eu(Program,true,-Phi,R),
-        simplify_fml(-R,Result).
+check_ctl(Program,Phi1*Phi2,LabelSet) :- !,
+        check_ctl(Program,Phi1,LabelSet1),
+        check_ctl(Program,Phi2,LabelSet2),
+        labelset_conjoin(Program,LabelSet1,LabelSet2,LabelSet).
 
-check(Program,allpaths(until(Phi1,Phi2)),Result) :- !,
-        report_message(['Checking \'', allpaths(until(Phi1,Phi2)),
-                        '\' on program \'', Program, '\'...']),
-        check_eu(Program,-Phi2,(-Phi1)*(-Phi2),R1),
-        check_eg(Program,-Phi2,R2),
-        simplify_fml((-R1)*(-R2),Result).
+check_ctl(Program,Phi1+Phi2,LabelSet) :- !,
+        check_ctl(Program,Phi1,LabelSet1),
+        check_ctl(Program,Phi2,LabelSet2),
+        labelset_disjoin(Program,LabelSet1,LabelSet2,LabelSet).
 
-check(Program,allpaths(eventually(Phi)),Result) :- !,
-        report_message(['Checking \'', allpaths(eventually(Phi)),
-                        '\' on program \'', Program, '\'...']),
-        check_eg(Program,-Phi,R),
-        simplify_fml(-R,Result).
+check_ctl(Program,Phi1=>Phi2,LabelSet) :- !,
+        check_ctl(Program,(-Phi1)+Phi2,LabelSet).
 
-check(Program,postcond(Phi),Result) :- !,
-        report_message(['Checking \'', postcond(Phi),
-                        '\' on program \'', Program, '\'...']),
-        check_post(Program,Phi,R),
-        simplify_fml(R,Result).
+check_ctl(Program,Phi2<=Phi1,LabelSet) :- !,
+        check_ctl(Program,(-Phi1)+Phi2,LabelSet).
 
-check(Program,unipostcond(Phi),Result) :- !,
-        report_message(['Checking \'', unipostcond(Phi),
-                        '\' on program \'', Program, '\'...']),
-        check_post(Program,-Phi,R),
-        simplify_fml(-R,Result).
+check_ctl(Program,Phi1<=>Phi2,LabelSet) :- !,
+        check_ctl(Program,(Phi1=>Phi2)*(Phi2=>Phi1),LabelSet).
+
+check_ctl(Program,somepath(next(Phi)),LabelSet) :- !,
+        check_ctl(Program,Phi,LabelSet1),
+        labelset_preimage(Program,LabelSet1,LabelSet).
+
+check_ctl(Program,somepath(always(Phi)),LabelSet) :- !,
+        check_ctl(Program,Phi,LabelSet1),
+        check_eg(Program,LabelSet1,LabelSet).
+
+check_ctl(Program,somepath(until(Phi1,Phi2)),LabelSet) :- !,
+        check_ctl(Program,Phi1,LabelSet1),
+        check_ctl(Program,Phi2,LabelSet2),
+        check_eu(Program,LabelSet1,LabelSet2,LabelSet).
+
+check_ctl(Program,somepath(eventually(Phi)),LabelSet) :- !,
+        check_ctl(Program,somepath(until(true,Phi)),LabelSet).
+
+check_ctl(Program,allpaths(next(Phi)),LabelSet) :- !,
+        check_ctl(Program,-somepath(next(-Phi)),LabelSet).
+
+check_ctl(Program,allpaths(always(Phi)),LabelSet) :- !,
+        check_ctl(Program,-somepath(until(true,-Phi)),LabelSet).
+
+check_ctl(Program,allpaths(eventually(Phi)),LabelSet) :- !,
+        check_ctl(Program,allpaths(until(true,Phi)),LabelSet).
+
+check_ctl(Program,allpaths(until(Phi1,Phi2)),LabelSet) :- !,
+        check_ctl(Program,
+                  -somepath(until(-Phi2,(-Phi1)*(-Phi2))),
+                  LabelSet1),
+        check_ctl(Program,
+                  -somepath(always(-Phi2)),
+                  LabelSet2),
+        labelset_conjoin(Program,LabelSet1,LabelSet2,LabelSet).
+
+% check(Program,postcond(Phi),Result) :- !,
+%         report_message(['Checking \'', postcond(Phi),
+%                         '\' on program \'', Program, '\'...']),
+%         check_post(Program,Phi,R),
+%         simplify_fml(R,Result).
+
+% check(Program,unipostcond(Phi),Result) :- !,
+%         report_message(['Checking \'', unipostcond(Phi),
+%                         '\' on program \'', Program, '\'...']),
+%         check_post(Program,-Phi,R),
+%         simplify_fml(-R,Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% checkEX
+% Label operations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/**
-  * check_ex(+Program,+Property,-Result)
-  **/
-check_ex(P,Phi,Result) :-
-        report_message(['--------------------------------------']),
-        report_message(['CheckEX[',P,',',Phi,']:']),
-        cg_label(P,ex(Phi),1,0,Result).
+labelset_create(Program,Formula,LabelSet) :-
+        labelset(Program,Formula,LabelSet), !.
+labelset_create(Program,Formula,LabelSet) :- !,
+        regress(Formula,FormulaR), % b/c of defs
+        simplify_fml(FormulaR,FormulaS),
+        labelset_increment(LabelSet),
+        forall(cg_node(Program,_P,_F,NodeID),
+               make_label(Program,NodeID,FormulaS,LabelSet)),
+        assert(labelset(Program,Formula,LabelSet)).
 
-/**
-  * check_label(+Program,+Property,+Iteration,+Node,-Formula)
-  **/
-check_label(P,ex(Phi),0,N,F) :-
-        path_label(P,N,Path),
-        simplify_fml(Phi*Path,F).
+labelset_negate(Program,LabelSet1,LabelSet) :-
+        labelset(Program,-LabelSet1,LabelSet), !.
+labelset_negate(Program,LabelSet1,LabelSet) :- !,
+        labelset_increment(LabelSet),
+        forall(cg_node(Program,_P,_F,NodeID),
+               (label(Program,NodeID,Phi1,LabelSet1),
+                simplify_fml(-Phi1,Fml),
+                make_label(Program,NodeID,Fml,LabelSet))),
+        assert(labelset(Program,-LabelSet1,LabelSet)).
 
-check_label(P,ex(Phi),1,N,F) :-
-        preimage(P,ex(Phi),0,N,F).
+labelset_conjoin(Program,LabelSet1,LabelSet2,LabelSet) :-
+        labelset(Program,LabelSet1*LabelSet2,LabelSet), !.
+labelset_conjoin(Program,LabelSet1,LabelSet2,LabelSet) :- !,
+        labelset_increment(LabelSet),
+        forall(cg_node(Program,_P,_F,NodeID),
+               (label(Program,NodeID,Phi1,LabelSet1),
+                label(Program,NodeID,Phi2,LabelSet2),
+                simplify_fml(Phi1*Phi2,Fml),
+                make_label(Program,NodeID,Fml,LabelSet))),
+        assert(labelset(Program,LabelSet1*LabelSet2,LabelSet)).
 
+labelset_disjoin(Program,LabelSet1,LabelSet2,LabelSet) :-
+        labelset(Program,LabelSet1+LabelSet2,LabelSet), !.
+labelset_disjoin(Program,LabelSet1,LabelSet2,LabelSet) :- !,
+        labelset_increment(LabelSet),
+        forall(cg_node(Program,_P,_F,NodeID),
+               (label(Program,NodeID,Phi1,LabelSet1),
+                label(Program,NodeID,Phi2,LabelSet2),
+                simplify_fml(Phi1+Phi2,Fml),
+                make_label(Program,NodeID,Fml,LabelSet))),
+        assert(labelset(Program,LabelSet1+LabelSet2,LabelSet)).
+
+labelsets_not_equivalent(Program,LabelSet1,LabelSet2) :-
+        cg_node(Program,_P,_F,NodeID),
+        label(Program,NodeID,Psi1,LabelSet1),
+        label(Program,NodeID,Psi2,LabelSet2),
+        equivalent_l(Psi1,Psi2,false).
+
+labelset_initial(Program,LabelSet,Formula) :- !,
+        label(Program,0,Formula,LabelSet).
+
+labelset_preimage(Program,LabelSet1,LabelSet) :-
+        labelset(Program,pre(LabelSet1),LabelSet), !.
+labelset_preimage(Program,LabelSet1,LabelSet) :- !,
+        labelset_increment(LabelSet),
+        forall(cg_node(Program,_P,_F,NodeID),
+               (preimage(Program,NodeID,LabelSet1,Pre),
+                make_label(Program,NodeID,Pre,LabelSet))),
+        assert(labelset(Program,pre(LabelSet1),LabelSet)).
+
+preimage(Program,NodeID,LabelSet,PreimageFormula) :- !,
+        findall(Pre,
+                preimage_edge(Program,LabelSet,NodeID,Pre),
+                PreList),
+        disjoin(PreList,PreDis),
+        simplify_fml(PreDis,PreimageFormula).
+
+preimage_edge(Program,LabelSet,NodeID,Pre) :-
+        cg_edge(Program,NodeID,Guard,Action,NewNodeID),
+        label(Program,NewNodeID,LabelFml,LabelSet),
+        guardcond(Guard,after(Action,LabelFml),GuardCond),
+        regress(GuardCond,GuardCondR),
+        simplify_fml(GuardCondR,Pre).
+
+% Increments the maximal label set ID by 1 and returns the new value.
+labelset_increment(ID) :-
+        retract(labelset_maxid(OldMaxID)), !,
+        ID is OldMaxID+1,
+        assert(labelset_maxid(ID)).
+labelset_increment(0) :- !,
+        assert(labelset_maxid(0)).
+
+% Make a new label, but only if it does not yet exist.
+make_label(Program,Node,Formula,I) :-
+        label(Program,Node,Formula,I), !. % label already exists
+make_label(Program,Node,Formula,I) :- !,
+        assert(label(Program,Node,Formula,I)). % create label
+
+fluent_formula(F) :-
+        var(F); atomic(F).
+fluent_formula(L) :- 
+        L == [], !.
+fluent_formula([L|Ls]) :- !,
+        fluent_formula(L),
+        fluent_formula(Ls).
+fluent_formula(F) :- !,
+        F =.. [Op|Res],
+        Op \= allpaths,
+        Op \= somepath,
+        fluent_formula(Res).
+       
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * check_eg(+Program,+Property,-Result)
+  * check_eg(+Program,+LabetSet1,-LabelSet)
   **/
-check_eg(P,Phi,Result) :-
-        report_message(['--------------------------------------']),
-        report_message(['CheckEG[',P,',',Phi,']:']),
-        check_iterate(P,eg(Phi),0,K),
-        cg_label(P,eg(Phi),K,0,Result).
+check_eg(Program,LabelSet1,LabelSet) :- !,
+        report_procedure(Program,'CheckEG',[LabelSet1]),
+        labelset_create(Program,false,LabelSetFalse),
+        check_eg_iterate(Program,0,LabelSetFalse,LabelSet1,LabelSet).
 
-check_label(_P,eg(_Phi),-1,_N,false).
-
-check_label(_P,eg(Phi),0,_N,F) :-
-        regress(Phi,PhiR),   % b/c of defs
-        simplify_fml(PhiR,F).
-
-check_label(P,eg(Phi),I,N,F) :-
-        I > 0,
-        I1 is I-1,
-        cg_label(P,eg(Phi),I1,N,F1),
-        preimage(P,eg(Phi),I1,N,F2),        
-        simplify_fml(F1*F2,F).
+check_eg_iterate(Program,Iteration,Lold,Lcur,Lres) :-
+        labelsets_not_equivalent(Program,Lold,Lcur), !,
+        report_labels(Program,Lcur,Iteration),
+        labelset_preimage(Program,Lcur,Lpre),
+        labelset_conjoin(Program,Lcur,Lpre,Lnew),
+        Iteration1 is Iteration+1,
+        check_eg_iterate(Program,Iteration1,Lcur,Lnew,Lres).
+check_eg_iterate(_Program,_Iteration,_Lold,Lcur,Lcur) :- !,
+        report_convergence.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEU
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * check_eu(+Program,+Property,-Result)
+  * check_eu(+Program,+LabelSet1,+LabelSet2,-LabelSet)
   **/
-check_eu(P,Phi1,Phi2,Result) :-
+check_eu(Program,LabelSet1,LabelSet2,LabelSet) :- !,
+        report_procedure(Program,'CheckEU',[LabelSet1,LabelSet2]),
+        labelset_create(Program,true,LabelSetTrue),
+        check_eu_iterate(Program,0,LabelSet1,LabelSetTrue,LabelSet2,LabelSet).
+
+check_eu_iterate(Program,Iteration,L1,Lold,Lcur,Lres) :-
+        labelsets_not_equivalent(Program,Lold,Lcur), !,
+        report_labels(Program,Lcur,Iteration),
+        labelset_preimage(Program,Lcur,Lpre),
+        labelset_conjoin(Program,L1,Lpre,Ltmp),
+        labelset_disjoin(Program,Lcur,Ltmp,Lnew),
+        Iteration1 is Iteration+1,
+        check_eu_iterate(Program,Iteration1,L1,Lcur,Lnew,Lres).
+check_eu_iterate(_Program,_Iteration,_L1,_Lold,Lcur,Lcur) :- !,
+        report_convergence.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Debugging output
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+report_procedure(Program,Procedure,Inputs) :-
         report_message(['--------------------------------------']),
-        report_message(['CheckEU[',P,',',Phi1,',',Phi2,']:']),
-        check_iterate(P,eu(Phi1,Phi2),0,K),
-        cg_label(P,eu(Phi1,Phi2),K,0,Result).
+        labelsets2fmls(Program,Inputs,Fmls),
+        report_message([Procedure,'[',Program,',',Fmls,']:']).
 
-check_label(_P,eu(_Phi1,_Phi2),-1,_N,true).
-
-check_label(P,eu(_Phi1,Phi2),0,N,F) :-
-        path_label(P,N,Path),
-        regress(Phi2,Phi2R),   % b/c of defs
-        simplify_fml(Phi2R*Path,F).
-
-check_label(P,eu(Phi1,Phi2),I,N,F) :-
-        I > 0,
-        I1 is I-1,
-        cg_label(P,eu(Phi1,Phi2),I1,N,Old),
-        preimage(P,eu(Phi1,Phi2),I1,N,Pre),  
-        regress(Phi1,Phi1R),   % b/c of defs      
-        simplify_fml(Old+(Phi1R*Pre),F).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% checkPost
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-/**
-  * check_post(+Program,+Property,-Result)
-  **/
-check_post(P,Phi,Result) :-
+report_convergence :-
         report_message(['--------------------------------------']),
-        report_message(['CheckPost[',P,',',Phi,']:']),
-        check_iterate(P,post(Phi),0,K),
-        cg_label(P,post(Phi),K,0,Result).
+        report_message(['Labels have converged.\n']).
 
-check_label(_P,post(_Phi),-1,_N,true).
-
-check_label(P,post(Phi),0,N,F) :-
-        regress(Phi,PhiR),   % b/c if defs
-        simplify_fml(PhiR,PhiRS),
-        final_label(P,N,PhiRS,F).
-
-check_label(P,post(Phi),I,N,F) :-
-        I > 0,
-        I1 is I-1,
-        cg_label(P,post(Phi),I1,N,Old),
-        preimage(P,post(Phi),I1,N,Pre),        
-        simplify_fml(Old+Pre,F).
-
-final_label(P,N,A,F) :-
-        use_sink_states(false), !,
-        cg_node(P,_Program,Final,N),
-        simplify_fml(A*Final,F).
-final_label(P,N,A,A) :-
-        use_sink_states(true),
-        cg_node(P,terminated,false,N), !.
-final_label(P,N,_A,false) :-
-        use_sink_states(true),
-        cg_node(P,Program,false,N),
-        Program \= terminated, !.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Path
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-/**
-  * path_label(+Program,+Node,-Result)
-  **/
-path_label(P,N,Result) :-
-        cg_max_iteration(P,path,I), !, % use cached values
-        cg_label(P,path,I,N,Result).
-
-path_label(P,N,Result) :-
-        use_path_labels(true), !,
+report_labels(Program,LabelSet,Iteration) :-
         report_message(['--------------------------------------']),
-        report_message(['Computing PATH labels first...']),
-        check_iterate(P,path,0,K),
-        cg_label(P,path,K,N,Result),
-        report_message(['Done computing PATH labels.']),
-        report_message(['--------------------------------------']).
-path_label(_Program,_Node,true) :-
-        use_path_labels(false), !.
-
-check_label(_P,path,-1,_N,false).
-
-check_label(_P,path,0,_N,true).
-
-check_label(P,path,I,N,F) :-
-        I > 0,
-        I1 is I-1,
-        cg_label(P,path,I1,N,F1),
-        preimage(P,path,I1,N,F2),        
-        simplify_fml(F1*F2,F).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Iteration
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-check_iterate(P,Phi,I,K) :- 
-        check_not_converged(P,Phi,I), !,
-        report_labels(P,Phi,I),
-        I1 is I+1,
-        compute_labels(P,Phi,I1),
-        check_iterate(P,Phi,I1,K).
-
-check_iterate(P,Phi,I,I) :- !,
-        report_message(['--------------------------------------']),
-        report_message(['Labels have converged.\n']),
-        assert(cg_max_iteration(P,Phi,I)).
-
-check_not_converged(P,Phi,I) :-
-        I1 is I-1,
-        cg_node(P,_,_,N),
-        cg_label(P,Phi,I,N,L),
-        cg_label(P,Phi,I1,N,L1),
-        equivalent_l(L,L1,false).
-        
-% compute labels for all nodes
-compute_labels(P,Phi,I) :-
-        compute_labels2(P,Phi,I,0).
-compute_labels2(P,_Phi,_I,N) :-
-        cg_number_of_nodes(P,N), !.
-compute_labels2(P,Phi,I,N) :-
-        cg_label(P,Phi,I,N,_),
-        N1 is N+1,
-        compute_labels2(P,Phi,I,N1).
-
-report_labels(P,Phi,I) :-
-        report_message(['--------------------------------------']),
-        report_message(['Labels in iteration ', I, ':\n']),
-        report_labels(P,Phi,I,0).
-report_labels(P,Phi,I,N) :-
-        cg_node(P,_,_,N),
-        cg_label(P,Phi,I,N,L), !,
-        report_message([N, ': ',L, '\n']),
-        N1 is N+1,
-        report_labels(P,Phi,I,N1).
+        report_message(['Labels in iteration ', Iteration, ':\n']),
+        report_labels(Program,LabelSet,Iteration,0).
+report_labels(Program,LabelSet,Iteration,Node) :-
+        cg_node(Program,_,_,Node),
+        label(Program,Node,Formula,LabelSet), !,
+        report_message([Node, ': ',Formula, '\n']),
+        Node1 is Node+1,
+        report_labels(Program,LabelSet,Iteration,Node1).
 report_labels(_,_,_,_) :- !.        
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Preimage
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-preimage(P,Phi,I,N,F) :-
-        findall(Pre,                
-                preimage_edge(P,Phi,I,N,Pre),
-                PreList),
-        disjoin(PreList,PreDis),
-        simplify_fml(PreDis,F).
-
-preimage_edge(P,Phi,I,N,Pre) :-
-        cg_edge(P,N,G,A,M),
-        cg_label(P,Phi,I,M,Psi),
-        guardcond(G,after(A,Psi),GC),
-        regress(GC,R),
-        simplify_fml(R,Pre).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Label caching
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-cg_label(P,Phi,I,M,Psi) :-
-        cached_label(P,Phi,I,M,Psi), !.
-
-cg_label(P,Phi,I,M,Psi) :-
-        check_label(P,Phi,I,M,Psi),
-        %not(cached_label(P,Phi,I,M,Psi)),
-        assert(cached_label(P,Phi,I,M,Psi)).
+labelsets2fmls(_Program,[],[]).
+labelsets2fmls(Program,[L|Ls],[Fml|Fmls]) :-
+        labelset(Program,Fml,L),
+        labelsets2fmls(Program,Ls,Fmls).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
