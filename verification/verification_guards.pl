@@ -158,7 +158,8 @@ check_ctl(Program,allpaths(until(Phi1,Phi2)),LabelSet) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 labelset_create(Program,Formula,LabelSet) :-
-        labelset(Program,Formula,LabelSet), !.
+        labelset(Program,Formula1,LabelSet),
+        Formula == Formula1, !. % b/c of variables
 labelset_create(Program,Formula,LabelSet) :- !,
         regress(Formula,FormulaR), % b/c of defs
         simplify_fml(FormulaR,FormulaS),
@@ -246,18 +247,39 @@ make_label(Program,Node,Formula,I) :- !,
         assert(label(Program,Node,Formula,I)). % create label
 
 fluent_formula(F) :-
-        var(F); atomic(F).
-fluent_formula(L) :- 
-        L == [], !.
-fluent_formula([L|Ls]) :- !,
-        fluent_formula(L),
-        fluent_formula(Ls).
-fluent_formula(F) :- !,
-        F =.. [Op|Res],
-        Op \= allpaths,
-        Op \= somepath,
-        fluent_formula(Res).
-       
+        F = true;
+        F = false;
+        isfluent(F);
+        isrigid(F);
+        F = poss(_);
+        F = exo(_);
+        F = sf(_);
+        F = (_ = _).
+fluent_formula(F) :-
+        def(F,D), !,
+        fluent_formula(D).
+fluent_formula(-F) :- !,
+        fluent_formula(F).
+fluent_formula(F1+F2) :- !,
+        fluent_formula(F1),
+        fluent_formula(F2).
+fluent_formula(F1*F2) :- !,
+        fluent_formula(F1),
+        fluent_formula(F2).
+fluent_formula(F1=>F2) :- !,
+        fluent_formula(F1),
+        fluent_formula(F2).
+fluent_formula(F1<=F2) :- !,
+        fluent_formula(F1),
+        fluent_formula(F2).
+fluent_formula(F1<=>F2) :- !,
+        fluent_formula(F1),
+        fluent_formula(F2).
+fluent_formula(some(_,F)) :- !,
+        fluent_formula(F).
+fluent_formula(all(_,F)) :- !,
+        fluent_formula(F).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
