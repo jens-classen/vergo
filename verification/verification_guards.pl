@@ -59,8 +59,8 @@ use_path_labels(false).
 /**
   * verify(+Program,+Property)
   **/
-verify(Program,Property) :- !,
-        report_message(['Verifying property \'', Property,
+verify(Program,PropertyName) :- !,
+        report_message(['Verifying property \'', PropertyName,
                         '\' for program \'', Program, '\'...']),
         property(PropertyName,Program,Property),
         check(Program,Property,Result),
