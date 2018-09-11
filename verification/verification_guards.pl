@@ -37,19 +37,18 @@ employed that uses "guards" on edges, i.e. sequences of test
 % TODO: is there a better way to do this?
 % options
 use_sink_states(false).
-use_path_labels(false).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% To Do List
 %% ----------
-%% - todo: property(propX,somepath(main,always(F)))
+%% - todo: sink states / path labels?
+%% - todo: characteristic graphs: subprograms as identifiers?
+%% - todo: characteristic graphs: termconds outside of nodes
 %% - todo: remove defs without call to regress
 %% - todo: pretty print formulas/programs (also using defs)
-%% - todo: full check method
 %% - todo: work directly on BDDs
 %% - todo: CTL*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
