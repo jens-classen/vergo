@@ -64,6 +64,11 @@ apply_una(some([A],F1),some(Vars,F4)) :- % (*)
         action_equality_conjunct(A,Act,F1,F2,Vars), !,
         subv(A,Act,F2,F3),
         apply_una(F3,F4).
+% ![A]:(![X]:(-(A=f(X)))|F) --> ![X]:F with A replaced by f(X)
+apply_una(all([A],F1),all(Vars,F4)) :- % (**)
+        action_inequality_disjunct(A,Act,F1,F2,Vars), !,
+        subv(A,Act,F2,F3),
+        apply_una(F3,F4).
 % simplification using standard names
 apply_una(some([X],-(Y=Z)),true) :-
         X==Y,
@@ -99,6 +104,7 @@ make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :- !,
 
 unique_name(X) :-
         prim_action(X);
+        X == fail; X == terminate;
         X =.. [F|_], is_stdname(F).
 
 /**
@@ -129,7 +135,44 @@ action_equality_conjunct(A,Act,(X=Y),(X=Y),[]) :-
         Act=X, !.
 action_equality_conjunct(A,Act,some(Vars,F),F,Vars) :- !,
         action_equality_conjunct(A,Act,F,F,[]).
+action_equality_conjunct(A,Act,-all(Vars,F),-F,Vars) :- !,
+        action_inequality_disjunct(A,Act,F,F,[]). % sign change (!)
 action_equality_conjunct(X,Y,Fml1*Fml2,Fml1P*Fml2,Vars) :-
         action_equality_conjunct(X,Y,Fml1,Fml1P,Vars), !.
 action_equality_conjunct(X,Y,Fml1*Fml2,Fml1*Fml2P,Vars) :-
         action_equality_conjunct(X,Y,Fml2,Fml2P,Vars), !.
+
+/**
+  * action_inequality_disjunct(-A,-Act,+Fml1,-Fml2,-Vars) is nondet
+  *
+  * If A is a universally quantified variable representing an
+  * action, this predicate looks for a disjunct in formula Fml1 
+  * of the form all(Vars,(-(A=Act))+F) (modulo ordering) that will be
+  * replaced by F in the process. Act and Vars will be returned such
+  * that A can be substituted by Act and all([A],...) by 
+  * all(Vars,...) in the process in rule (**) of apply_una above.
+  *
+  * @arg A    a (logical) variable, representing an action
+  * @arg Act  a (non-variable) action term
+  * @arg Fml1 a formula
+  * @arg Fml2 resulting formula
+  * @arg Vars quantified variables
+  */
+action_inequality_disjunct(A,Act,-(X=Y),-(X=Y),[]) :-
+        A==X,
+        nonvar(Y),
+        unique_name(Y),
+        Act=Y, !.
+action_inequality_disjunct(A,Act,-(X=Y),-(X=Y),[]) :-
+        A==Y,
+        nonvar(X),
+        unique_name(X),
+        Act=X, !.
+action_inequality_disjunct(A,Act,all(Vars,F),F,Vars) :- !,
+        action_inequality_disjunct(A,Act,F,F,[]).
+action_inequality_disjunct(A,Act,-some(Vars,F),-F,Vars) :- !,
+        action_equality_conjunct(A,Act,F,F,[]). % sign change (!)
+action_inequality_disjunct(X,Y,Fml1+Fml2,Fml1P+Fml2,Vars) :-
+        action_inequality_disjunct(X,Y,Fml1,Fml1P,Vars), !.
+action_inequality_disjunct(X,Y,Fml1+Fml2,Fml1+Fml2P,Vars) :-
+        action_inequality_disjunct(X,Y,Fml2,Fml2P,Vars), !.
