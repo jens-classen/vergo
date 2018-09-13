@@ -52,6 +52,7 @@ def(dequeue(Qold,P,Qnew),
 exo(requestCoffee(_),true).
 
 include_preconditions. % everything is precondition-extended
+% use_sink_states.     % do not use sink states for termination+failure
 
 program(coffee,
         loop(if(-empty(queue),
