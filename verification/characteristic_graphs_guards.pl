@@ -11,7 +11,16 @@ operators.
 
  **/
 
+:- use_module('../lib/utils').
+:- use_module('../lib/env').
+:- use_module('../reasoning/fobdd').
+:- use_module('../reasoning/fol').
+
 :- multifile use_sink_states/0.
+
+:- dynamic cg_node/4.
+:- dynamic cg_edge/5.
+:- dynamic cg_number_of_nodes/2.
 
 construct_characteristic_graph(ProgramName) :-
         
@@ -25,7 +34,7 @@ construct_characteristic_graph(ProgramName) :-
         simplify_program(Program,SimplifiedProgram),
         
         % create initial node
-        assert(cig_number_of_nodes(ProgramName,0)),
+        assert(cg_number_of_nodes(ProgramName,0)),
         cg_get_node_id(ProgramName,SimplifiedProgram,0), !,
         
         iterate_cg_construction(ProgramName).
@@ -77,9 +86,9 @@ simplify_guard([pick(V),test(F)|G],R) :- %push picks inwards when possible
 simplify_guard([test(F1),test(F2)|G],R) :- !,
         simplify_guard([test(F1*F2)|G],R).
 simplify_guard([test(F)|_],[test(false)]) :-
-        simplify_fml(F,false), !.
+        simplify_condition(F,false), !.
 simplify_guard([test(F)|G],[test(FS)|R]) :- !,
-        simplify_fml(F,FS),
+        simplify_condition(F,FS),
         simplify_guard(G,R).
 simplify_guard([pick(V)|G],[pick(V)|R]) :- !,
         simplify_guard(G,R).
@@ -91,7 +100,7 @@ cg_get_node_id(ProgramName,Program,ID) :-
         NextID is ID+1,
         assert(cg_number_of_nodes(ProgramName,NextID)),
         is_final(Program,Final),
-        simplify_fml(Final,FinalS),
+        simplify_condition(Final,FinalS),
         assert(cg_node(ProgramName,Program,FinalS,ID)).
 
 % print description of characteristic graph to console
@@ -190,3 +199,13 @@ cgraph_file(File,ProgramName) :-
         string_concat('/', ProgramNameS, S),
         string_concat(S, '_cgraph.dot', FileName),
         string_concat(TempDir, FileName, File).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Formula Representation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% simple simplifications should be enough here
+simplify_condition(F,R) :- !,
+        simplify(F,R).
