@@ -37,6 +37,8 @@ CEUR-WS.org, 2015.
 :- use_module('../reasoning/dl', [consistent/1 as dl_consistent,
                                   inconsistent/1 as dl_inconsistent]).
 
+:- ['characteristic_graphs_guards'].
+
 :- discontiguous(stdnames_axioms/1).
 :- discontiguous(is_entailed/2).
 :- discontiguous(is_inconsistent/1).
@@ -59,11 +61,10 @@ CEUR-WS.org, 2015.
    map_number_of_states/1,
    abstract_state/4,
    abstract_trans/6,
-   cg_number_of_nodes/1,
-   cg_node/2,
-   cg_edge/4,
    program_to_verify/1,
    property_subformula/1.
+
+% use_sink_states.
 
 compute_abstraction(ProgramName) :-
         
@@ -206,7 +207,8 @@ can_expand(Formulas,Literals,NodeID,Action,RegressedCondition,
            NewNodeID) :- 
         
         % there is a possible outgoing transition...
-        cg_edge(NodeID,Action,Condition,NewNodeID),
+        cg_edge(_Program,NodeID,Guard,Action,NewNodeID),
+        guardcond(Guard,Condition),
 
         % whose regressed condition is entailed...
         regression(Condition,Literals,RegressedCondition),
@@ -221,7 +223,8 @@ can_split_transition(Formulas,Literals,NodeID,Action,
                      RegressedCondition) :-
 
         % there is a possible outgoing transition...
-        cg_edge(NodeID,Action,Condition,_NewNodeID),
+        cg_edge(_Program,NodeID,Guard,Action,_NewNodeID),
+        guardcond(Guard,Condition),
         
         % whose (negated) regressed condition is not yet entailed
         % by the type formulas
@@ -386,102 +389,6 @@ write_edges(_Stream).
 trans_file(File) :-
         temp_dir(TempDir),
         string_concat(TempDir, '/trans.dot', File).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Characteristic Graphs
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-construct_characteristic_graph(ProgramName) :-
-        
-        % eliminate previous instances
-        retractall(cg_node(_,_)),
-        retractall(cg_edge(_,_,_,_)),
-        retractall(cg_number_of_nodes(_)),
-        
-        % find the program with the given name
-        program(ProgramName,Program),
-        simplify_program(Program,SimplifiedProgram),
-        
-        % create initial node
-        assert(cg_number_of_nodes(0)),
-        cg_get_node_id(SimplifiedProgram,0),
-        cg_draw_graph,
-        
-        iterate_cg_construction.
-        
-iterate_cg_construction :-
-        cg_construction_step, 
-        !,
-        cg_draw_graph,
-        iterate_cg_construction.
-iterate_cg_construction.
-
-cg_construction_step :-
-        
-        % there is some node
-        cg_node(Program,ID),
-        
-        % whose program has a possible transition
-        step(Program,Action,NewProgram,Condition),
-        simplify(Condition,SimplifiedCondition),
-        simplify_program(NewProgram,NewSimplifiedProgram),
-        cg_get_node_id(NewSimplifiedProgram,NewID),
-        
-        % that is not yet in the graph
-        not(cg_edge(ID,Action,SimplifiedCondition,NewID)),
-        
-        % then
-        !,
-                
-        % create a new edge.
-        assert(cg_edge(ID,Action,SimplifiedCondition,NewID)).
-
-cg_get_node_id(Program,ID) :-
-        cg_node(Program,ID), !.
-cg_get_node_id(Program,ID) :-
-        retract(cg_number_of_nodes(ID)),
-        NextID is ID+1,
-        assert(cg_number_of_nodes(NextID)),
-        assert(cg_node(Program,ID)).
-
-% draw characteristic graph using dot
-cg_draw_graph :-
-        cgraph_file(CGraphFile),
-        open(CGraphFile, write, Stream),
-        write(Stream, 'digraph G {\n'),
-        cg_write_nodes(Stream),
-        cg_write_edges(Stream),
-        write(Stream, '}\n'),
-        close(Stream).
-
-cg_write_nodes(Stream) :-
-        cg_node(_Program,ID),
-        write(Stream, '\t'),
-        write(Stream, ID),
-        write(Stream, ';\n'),
-        fail.
-cg_write_nodes(_Stream).
-
-cg_write_edges(Stream) :-
-        cg_edge(ID,Action,_Condition,NewID),
-        write(Stream, '\t'),
-        write(Stream, ID),
-        write(Stream, ' -> '),
-        write(Stream, NewID),
-        write(Stream, ' [label=\"'),
-        write(Stream, Action),
-        % write(Stream, ' / '),
-        % write(Stream, Condition),
-        write(Stream, '\"];\n'),
-        fail.
-cg_write_edges(_Stream).
-
-cgraph_file(File) :-
-        temp_dir(TempDir),
-        string_concat(TempDir, '/cgraph.dot', File).
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -662,8 +569,13 @@ apply_pos_effects([Lit|Literals],Effects,[Lit|NewEffects]) :-
         apply_pos_effects(Literals,Effects,NewEffects).
 apply_pos_effects([],Effects,Effects).
 
+% regression(F,E,R) :-
+%         regression_cached(F,E,R).
 regression(F,E,R) :-
-        regression_cached(F,E,R), !.
+        regression_cached(FC,EC,RC),
+        F =@= FC,
+        E =@= EC,
+        R =@= RC, !.
 regression(F,E,R) :- !,
         regress(F,E,R1),
         simplify(R1,R),
