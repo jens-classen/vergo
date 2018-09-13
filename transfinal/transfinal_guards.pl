@@ -88,7 +88,7 @@ step(D,[test(F)],fail,failed) :-
         final(D,TermCond),
         findall(-GuardCond,
                 (trans(D,G,_A,_DP),
-                 guardcond(G,true,GuardCond)),
+                 guardcond(G,GuardCond)),
                 NegGuardConds),
         conjoin([-TermCond|NegGuardConds],F).
 step(D,[test(F)],fail,failed) :-
@@ -97,7 +97,7 @@ step(D,[test(F)],fail,failed) :-
         not(final(D,_)),
         findall(-GuardCond,
                 (trans(D,G,_A,_DP),
-                 guardcond(G,true,GuardCond)),
+                 guardcond(G,GuardCond)),
                 NegGuardConds),
         conjoin(NegGuardConds,F).
 step(terminated,[],terminate,terminated).
@@ -137,16 +137,26 @@ final(D,F) :-
         final(M,F).
 
 /**
+  * guardcond(+Guard,-Result) is det
+  *
+  * Result is the "guard condition" of Guard applied to "true",
+  * i.e. true preceded by existential quantifiers (=picks) and
+  * subformulas corresponding to test conditions.
+  **/
+guardcond(G,R) :-
+        guardcond(G,true,R).
+
+/**
   * guardcond(+Guard,+InputFormula,-Result) is det
   *
   * Result is the "guard condition" of Guard applied to InputFormula,
   * i.e. InputFormula preceded by existential quantifiers (=picks) and
   * subformulas corresponding to test conditions.
   **/
-guardcond([],I,I).
-guardcond([test(F)|G],I,F*R) :-
+guardcond([],I,I) :- !.
+guardcond([test(F)|G],I,F*R) :- !,
         guardcond(G,I,R).
-guardcond([pick(Var)|G],I,some(Var,R)) :-
+guardcond([pick(Var)|G],I,some(Var,R)) :- !,i
         guardcond(G,I,R).
 
 is_action(A) :- 
