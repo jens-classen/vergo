@@ -4,6 +4,7 @@
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
+:- discontiguous rel_fluent/1.
 :- discontiguous def/2.
 
 initially(empty).
@@ -53,6 +54,7 @@ def(dequeue(Xo,Yo,P,X,Y),
 exo(requestCoffee(_),true).
 
 include_preconditions. % everything is precondition-extended
+% use_sink_states.     % do not use sink states for termination+failure
 
 program(coffee,
         loop(if(-empty,
