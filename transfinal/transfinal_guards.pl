@@ -16,21 +16,6 @@ arbitrarily alternate between pick quantifiers and condition formulas.
 :- multifile include_preconditions/0.
 
 /**
- * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
- *
- * There is a transition from program Prog1 to program Prog2
- * via ground action Act if condition Cond holds in the situation
- * before executing Act.
- *
- * TODO: we want to *determine* the ground action
- *
- **/
-trans(Prog1,Act,Prog2,Cond) :-
-        ground(Act),
-        trans(Prog1,Guard,Act,Prog2),
-        guardcond(Guard,true,Cond), !.
-
-/**
  * trans(+Prog1,?Guard,?Action,?Prog2) is nondet
  *
  * There is a transition from program Prog1 to program Prog2 via 
