@@ -16,6 +16,8 @@ operators.
 :- use_module('../reasoning/fobdd').
 :- use_module('../reasoning/fol').
 
+:- ['../transfinal/transfinal_guards'].
+
 :- multifile use_sink_states/0.
 
 :- dynamic cg_node/4.
