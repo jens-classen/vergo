@@ -24,9 +24,6 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).
 
-:- dynamic cg_node/4.
-:- dynamic cg_edge/7.
-:- dynamic cg_number_of_nodes/2.
 :- dynamic cached_label/5.
 :- dynamic cg_max_iteration/3.
 
