@@ -16,6 +16,10 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- multifile use_sink_states/0.
 
+:- dynamic cg_node/4.
+:- dynamic cg_edge/7.
+:- dynamic cg_number_of_nodes/2.
+
 construct_characteristic_graph(ProgramName) :-
         
         % eliminate previous instances

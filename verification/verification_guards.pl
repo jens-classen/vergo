@@ -29,9 +29,6 @@ employed that uses "guards" on edges, i.e. sequences of test
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).
 
-:- dynamic cg_node/4.
-:- dynamic cg_edge/5.
-:- dynamic cg_number_of_nodes/2.
 :- dynamic labelset_maxid/1.
 :- dynamic label/4.
 :- dynamic labelset/3.
