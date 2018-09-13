@@ -156,7 +156,7 @@ guardcond(G,R) :-
 guardcond([],I,I) :- !.
 guardcond([test(F)|G],I,F*R) :- !,
         guardcond(G,I,R).
-guardcond([pick(Var)|G],I,some(Var,R)) :- !,i
+guardcond([pick(Var)|G],I,some(Var,R)) :- !,
         guardcond(G,I,R).
 
 is_action(A) :- 
