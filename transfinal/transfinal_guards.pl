@@ -13,6 +13,8 @@ arbitrarily alternate between pick quantifiers and condition formulas.
 
  **/
 
+:- multifile include_preconditions/0.
+
 /**
  * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
  *
