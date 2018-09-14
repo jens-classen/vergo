@@ -33,6 +33,8 @@ employed that uses "guards" on edges, i.e. sequences of test
 :- dynamic label/4.
 :- dynamic labelset/3.
 
+:- multifile use_path_labels/0.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% To Do List
 %% ----------
@@ -106,7 +108,7 @@ check_ctl(Program,Phi1<=>Phi2,LabelSet) :- !,
 
 check_ctl(Program,somepath(next(Phi)),LabelSet) :- !,
         check_ctl(Program,Phi,LabelSet1),
-        labelset_preimage(Program,LabelSet1,LabelSet).
+        check_ex(Program,LabelSet1,LabelSet).
 
 check_ctl(Program,somepath(always(Phi)),LabelSet) :- !,
         check_ctl(Program,Phi,LabelSet1),
@@ -282,6 +284,23 @@ fluent_formula(all(_,F)) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
+  * check_ex(+Program,+LabetSet1,-LabelSet)
+  **/
+check_ex(Program,LabelSet1,LabelSet) :-
+        not(use_path_labels), !,
+        labelset_preimage(Program,LabelSet1,LabelSet).
+
+check_ex(Program,LabelSet1,LabelSet) :-
+        use_path_labels, !,
+        check_path(Program,PathLabels),
+        labelset_conjoin(LabelSet1,PathLabels,LabelSet2),
+        labelset_preimage(Program,LabelSet2,LabelSet).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% checkEG
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/**
   * check_eg(+Program,+LabetSet1,-LabelSet)
   **/
 check_eg(Program,LabelSet1,LabelSet) :- !,
@@ -306,10 +325,19 @@ check_eg_iterate(_Program,_Iteration,_Lold,Lcur,Lcur) :- !,
 /**
   * check_eu(+Program,+LabelSet1,+LabelSet2,-LabelSet)
   **/
-check_eu(Program,LabelSet1,LabelSet2,LabelSet) :- !,
+check_eu(Program,LabelSet1,LabelSet2,LabelSet) :-
+        not(use_path_labels), !,
         report_procedure(Program,'CheckEU',[LabelSet1,LabelSet2]),
         labelset_create(Program,true,LabelSetTrue),
         check_eu_iterate(Program,0,LabelSet1,LabelSetTrue,LabelSet2,LabelSet).
+
+check_eu(Program,LabelSet1,LabelSet2,LabelSet) :-
+        use_path_labels, !,
+        report_procedure(Program,'CheckEU',[LabelSet1,LabelSet2]),
+        labelset_create(Program,true,LabelSetTrue),
+        check_path(Program,PathLabels),
+        labelset_conjoin(Program,LabelSet2,PathLabels,LabelSet2P),
+        check_eu_iterate(Program,0,LabelSet1,LabelSetTrue,LabelSet2P,LabelSet).
 
 check_eu_iterate(Program,Iteration,L1,Lold,Lcur,Lres) :-
         labelsets_not_equivalent(Program,Lold,Lcur), !,
@@ -321,6 +349,13 @@ check_eu_iterate(Program,Iteration,L1,Lold,Lcur,Lres) :-
         check_eu_iterate(Program,Iteration1,L1,Lcur,Lnew,Lres).
 check_eu_iterate(_Program,_Iteration,_L1,_Lold,Lcur,Lcur) :- !,
         report_convergence.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Existence of path
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+check_path(Program,LabelSet) :- !,
+        check_ctl(Program,somepath(always(true)),LabelSet).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Debugging output

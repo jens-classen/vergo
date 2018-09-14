@@ -55,6 +55,7 @@ exo(requestCoffee(_),true).
 
 include_preconditions. % everything is precondition-extended
 % use_sink_states.     % do not use sink states for termination+failure
+% use_path_labels.     % assume a path always exists
 
 program(coffee,
         loop(if(-empty,
