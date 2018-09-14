@@ -26,5 +26,5 @@
 %% Verification Algorithm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%:- ['../../verification/verification_cgraphs'].
+%:- ['../../verification/fixpoint_ctl'].
 :- ['../../../verification/abstraction_local-effect'].
