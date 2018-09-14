@@ -1,6 +1,6 @@
 /**
  
-verification_guards
+fixpoint_ctl
 
 This file implements a verification algorithm for Golog programs based
 on the methods described in
