@@ -107,5 +107,5 @@ adl_holds(F) :-
 %         % generate all combinations / truth assignment
 %         % generate all instantiated SSAs
 %         % unify each with initial theory
-%         % apply regression from verification_abstraction to each
+%         % apply regression from verification/abstraction_local-effect to each
 %         % disjoin them all = result

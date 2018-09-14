@@ -20,4 +20,4 @@
 %% Verification Algorithm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- ['../../verification/verification_abstraction_dl'].
+:- ['../../verification/abstraction_local-effect'].

@@ -27,4 +27,4 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %:- ['../../verification/verification_cgraphs'].
-:- ['../../../verification/verification_abstraction'].
+:- ['../../../verification/abstraction_local-effect'].
