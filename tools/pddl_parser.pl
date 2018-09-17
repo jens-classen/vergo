@@ -1274,7 +1274,7 @@ type_declaration([either(ETypes,SubtypesList)|Defs], Axioms) :- !,
             type_declaration(NewDefs,Axioms).
 type_declaration([TypeDef|Defs], [Axiom|Axioms]) :-
             TypeDef =.. [Type,SubtypesList], !,
-            Axiom_Header =.. [Type, X],
+            Axiom_Header = domain(Type,X),
             process_subtypeslist(SubtypesList,X,AxiomBody),
             Axiom = (Axiom_Header :- AxiomBody),
             type_declaration(Defs,Axioms).
@@ -1288,9 +1288,9 @@ flatten_typelist(ETs,[S|SL],[F|Fs]) :-
 flatten_typelist(_,[],[]).
 
 process_subtypeslist([SubType],X,T) :- !,
-        T =..[SubType,X].
+        T = domain(SubType,X).
 process_subtypeslist([SubType|SubTypes],X, (T ; Ts)) :-
-        T =..[SubType,X],
+        T = domain(SubType,X),
         process_subtypeslist(SubTypes,X,Ts).
 
 type_restrictions([V],[T],R) :- 
