@@ -1256,7 +1256,7 @@ type_restrictions_conjunction([V|Vs],[T|Ts],and(TR,TRs)) :- TR =..[T,V],
 % Convert the list of types with associated constants into Prolog clauses.
 constants_declaration([ConstantsDef|Defs], [Axiom|Axioms]) :-
         ConstantsDef =.. [Type, ConstantsList],
-        Axiom_Header =.. [Type, X],
+        Axiom_Header = domain(Type,X),
         Axiom = (Axiom_Header :- member(X,ConstantsList)),
         constants_declaration(Defs,Axioms).
 constants_declaration([],[]).
