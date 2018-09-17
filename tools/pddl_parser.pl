@@ -74,6 +74,7 @@
 
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
+:- use_module('../reasoning/fol').
 
 :- dynamic requirement/1.
 :- dynamic predicate_type_restriction/2.
@@ -1177,17 +1178,17 @@ substitute_pddl_vars(X,[Var|Vars],[PVar|PVars],R) :- !,
 convert_precondition_formula(and([]),true).
 convert_precondition_formula(and([F]), FC) :-
         convert_precondition_formula(F,FC).
-convert_precondition_formula(and([F|FL]),and(F,AF)) :-
+convert_precondition_formula(and([F|FL]),F*AF) :-
         convert_precondition_formula(and(FL),AF).
 convert_precondition_formula(or([]),false).
 convert_precondition_formula(or([F]), FC) :- 
         convert_precondition_formula(F,FC).
-convert_precondition_formula(or([F|FL]),or(F,AF)) :- 
+convert_precondition_formula(or([F|FL]),F+AF) :-
         convert_precondition_formula(or(FL),AF).
-convert_precondition_formula(impl(F1,F2),impl(CF1,CF2)) :- 
+convert_precondition_formula(impl(F1,F2),CF1=>CF2) :-
         convert_precondition_formula(F1,CF1),
         convert_precondition_formula(F2,CF2).
-convert_precondition_formula(neg(F),neg(NF)) :-
+convert_precondition_formula(neg(F),-NF) :-
         convert_precondition_formula(F,NF).
 convert_precondition_formula(all([],[],F),CF) :-
         convert_precondition_formula(F,CF).
