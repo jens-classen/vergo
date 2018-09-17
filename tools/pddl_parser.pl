@@ -69,15 +69,13 @@
 :- module(pddl_parser, [parse_pddl_domain_string/2,
                         parse_pddl_problem_string/2,
                         parse_pddl_domain_file/2,
-                        parse_pddl_problem_file/2,
-                        predicate_type_restriction/2]).
+                        parse_pddl_problem_file/2]).
 
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
 
 :- dynamic requirement/1.
-:- dynamic predicate_type_restriction/2.
 
 %:- mode parse_pddl_domain_string(+,-).
 parse_pddl_domain_string(String,Axioms) :-
@@ -98,6 +96,7 @@ parse_pddl_domain_file(InFile,OutFile) :-
                          InFile),
         open(OutFile, write, Stream2),
         write_domain_header(Stream2, Domain),
+        write_directives(Stream2),
         write_rules(Stream2, Type_Axioms, "Typing Axioms"),
         write_rules(Stream2, Constant_Axioms, "Constant Definitions"),
         write_rules(Stream2, Predicate_Axioms, "Predicate Definitions"),
@@ -120,7 +119,20 @@ parse_pddl_problem_file(InFile,OutFile) :-
         write_rules(Stream2, InitAxioms, "Initial Values"),
         write_rules(Stream2, GoalAxioms, "Goal"),
         close(Stream2).
-        
+
+write_directives(Stream) :-
+        forall(member(X,["domain/2",
+                         "rel_fluent/1",
+                         "prim_action/1",
+                         "poss/2",
+                         "causes_true/3",
+                         "causes_false/3",
+                         "fluent_parameter_types/2",
+                         "action_parameter_types/2"]),
+               (write(Stream, ":- discontiguous "),
+                write(Stream, X),
+                write(Stream, ".\n"))).
+
 write_rules(Stream, Axioms, Header) :-
         write(Stream,
               "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"),
@@ -352,8 +364,7 @@ pddl_predicate_defs(Axioms) --> ascii("("), pddl_white_star,
 				pddl_white_plus,
 				pddl_atomic_formula_skeleton_plus(FluentAxioms,TypingAxioms),
 				pddl_white_star, ascii(")"), !,
-                                {remember_predicate_type_restrictions(FluentAxioms),
-                                 append(FluentAxioms,TypingAxioms,Axioms)},
+                                {append(FluentAxioms,TypingAxioms,Axioms)},
 				{announce_suc("predicates")}.
 
 pddl_atomic_formula_skeleton_plus([Axiom1],[Axiom2]) --> pddl_atomic_formula_skeleton(Axiom1,Axiom2).
@@ -365,9 +376,9 @@ pddl_atomic_formula_skeleton(Axiom1,Axiom2) --> ascii("("), pddl_white_star,
                                  pddl_predicate(PName), pddl_white_plus,
 				 pddl_typed_list_variable(Variables,Types),
                                  {pddl_vars_to_prolog_vars(Variables,PVariables),
-                                  Head =.. [PName|PVariables],
-				  type_restrictions(PVariables,Types,Body),
-                                  Axiom1 = (rel_fluent(Head) :- Body),
+                                  anonymize_variables(PVariables,AVariables),
+                                  Head =.. [PName|AVariables],
+                                  Axiom1 = (rel_fluent(Head)),
                                   Axiom2 = (fluent_parameter_types(PName,Types))},
 				 pddl_white_star, ascii(")").
 
@@ -1211,31 +1222,17 @@ convert_effect_formula(AT,Vs,Ts,and([E|Es]),ACEs) :-
         convert_effect_formula(AT,Vs,Ts,and(Es),CEs),
         append(CE,CEs,ACEs).
 convert_effect_formula(AT,_Vs,_Ts,add(A),CE) :-
-        %predicate_type_restriction(A1,RF),
-        %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
-        %             CE=[(causes_true(AT,A,and(TR,RF)))];
-        %             CE=[(causes_true(AT,A,RF))]).
         CE=[(causes_true(AT,A,true))].
 convert_effect_formula(AT,_Vs,_Ts,del(D),CE) :-
-         %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
-         %            CE=[(causes_false(AT,D,TR))];
-         %            CE=[(causes_false(AT,D,true))]).
         CE=[(causes_false(AT,D,true))].
 convert_effect_formula(AT,Vs,Ts,forall(QVs,VTs,F),CEs) :-
         append(QVs,Vs,VL), append(VTs,Ts,TL),
         convert_effect_formula(AT,VL,TL,F,CEs).
 convert_effect_formula(AT,_Vs,_Ts,when(PF,add(A)),CE) :-
-        %predicate_type_restriction(A1,RF),
         convert_precondition_formula(PF,CPF),
-        %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
-        %             CE=[(causes_true(AT,A,and(RF, and(TR,CPF))))];
-        %             CE=[(causes_true(AT,A,CPF))]).
         CE=[(causes_true(AT,A,CPF))].
 convert_effect_formula(AT,_Vs,_Ts,when(PF,del(D)),CE) :-
         convert_precondition_formula(PF,CPF),
-        %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
-        %             CE=[(causes_false(AT,D,and(TR,CPF)))];
-        %             CE=[(causes_false(AT,D,CPF))]).
         CE=[(causes_false(AT,D,CPF))].
 convert_effect_formula(_AT,_Vs,_Ts,when(_PF,and([])),[]).
 convert_effect_formula(AT,Vs,Ts,when(PF,and([AD|ADs])),CEs) :-
@@ -1296,25 +1293,6 @@ type_restrictions_disjunctive(V,[T|Ts],(R;Rs)) :-
         R =.. [T,V], %domain(T,V)
         type_restrictions_disjunctive(V,Ts,Rs).
 
-% After the (PDDL) predicate declaration has been parsed, this
-% predicate is called to memorize the typing constraints for
-% the predicates' arguments. Those are needed when constructing
-% actions' effect axioms (a fluent should only become true when the
-% instantiations of its parameters are type-consistent).
-remember_predicate_type_restrictions(Axioms) :-
-        retractall(predicate_type_restriction(_,_)),
-        remember_predicate_type_restrictions2(Axioms).
-remember_predicate_type_restrictions2([(Head :- Body)|Axioms]) :-
-        Head=rel_fluent(R),
-        axiom_body_to_formula(Body,Formula),
-        assert(predicate_type_restriction(R,Formula)),
-        remember_predicate_type_restrictions2(Axioms).
-remember_predicate_type_restrictions2([]).
-
-axiom_body_to_formula((X1,Y1),and(X2,Y2)) :- !, 
-        axiom_body_to_formula(X1,X2),
-        axiom_body_to_formula(Y1,Y2).
-axiom_body_to_formula((X1;Y1),or(X2,Y2)) :- !, 
-        axiom_body_to_formula(X1,X2),
-        axiom_body_to_formula(Y1,Y2).
-axiom_body_to_formula(X,X).
+anonymize_variables([],[]).
+anonymize_variables([_Var|Vars],[_|Xs]) :-
+        anonymize_variables(Vars,Xs).
