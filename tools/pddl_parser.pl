@@ -725,10 +725,10 @@ pddl_c_effect_star(_,_,_,[]) --> [].
 pddl_c_effect_star(S,V,T,[E|EL]) --> pddl_c_effect(S,V,T,E),
 	pddl_white_star, pddl_c_effect_star(S,V,T,EL).
 
-pddl_p_effect(S,V,T,del(E)) --> ascii("("), pddl_white_star, ascii("not"),
+pddl_p_effect(_,V,T,del(E)) --> ascii("("), pddl_white_star, ascii("not"),
 	          pddl_white_star, pddl_atomic_formula_term(V,T,E),
 		  pddl_white_star, ascii(")").
-pddl_p_effect(S,V,T,add(E)) --> pddl_atomic_formula_term(V,T,E).
+pddl_p_effect(_,V,T,add(E)) --> pddl_atomic_formula_term(V,T,E).
 pddl_p_effect(_,_,_,_) --> ascii("("), pddl_white_star, pddl_assign_op,
 	          {must_support(fluents), cannot_compile(fluents)},
 		  pddl_white_plus, pddl_f_head, pddl_white_plus, pddl_f_exp,
@@ -1163,8 +1163,8 @@ construct_action_axioms(Axioms,Symbol,Variables,Types,Preconds,Effects) :-
 % Given a list of PDDL variables of the form '?variablename',
 % constructs a list of the same length with fresh Prolog variables.
 pddl_vars_to_prolog_vars([],[]) :- !.
-pddl_vars_to_prolog_vars([Var|Vars],[PVar|PVars]) :- !,
-        copy_term(X,PVar),
+pddl_vars_to_prolog_vars([_Var|Vars],[PVar|PVars]) :- !,
+        copy_term(_X,PVar),
         pddl_vars_to_prolog_vars(Vars,PVars).
 
 % Substitue all PDDL variables by the corresponding Prolog variables.
@@ -1211,18 +1211,18 @@ convert_precondition_formula(X,X). % atom
 convert_effect_formula(AT,E,LCE) :- convert_effect_formula(AT,[],[],E,LCE).
                                    % additional params = quantified variables
                                    % and their types
-convert_effect_formula(AT,Vs,Ts,and([]),[]).
+convert_effect_formula(_AT,_Vs,_Ts,and([]),[]).
 convert_effect_formula(AT,Vs,Ts,and([E|Es]),ACEs) :-
         convert_effect_formula(AT,Vs,Ts,E,CE),
         convert_effect_formula(AT,Vs,Ts,and(Es),CEs),
         append(CE,CEs,ACEs).
-convert_effect_formula(AT,Vs,Ts,add(A),CE) :-
+convert_effect_formula(AT,_Vs,_Ts,add(A),CE) :-
         %predicate_type_restriction(A1,RF),
         %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
         %             CE=[(causes_true(AT,A,and(TR,RF)))];
         %             CE=[(causes_true(AT,A,RF))]).
         CE=[(causes_true(AT,A,true))].
-convert_effect_formula(AT,Vs,Ts,del(D),CE) :-
+convert_effect_formula(AT,_Vs,_Ts,del(D),CE) :-
          %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
          %            CE=[(causes_false(AT,D,TR))];
          %            CE=[(causes_false(AT,D,true))]).
@@ -1230,20 +1230,20 @@ convert_effect_formula(AT,Vs,Ts,del(D),CE) :-
 convert_effect_formula(AT,Vs,Ts,forall(QVs,VTs,F),CEs) :-
         append(QVs,Vs,VL), append(VTs,Ts,TL),
         convert_effect_formula(AT,VL,TL,F,CEs).
-convert_effect_formula(AT,Vs,Ts,when(PF,add(A)),CE) :-
+convert_effect_formula(AT,_Vs,_Ts,when(PF,add(A)),CE) :-
         %predicate_type_restriction(A1,RF),
         convert_precondition_formula(PF,CPF),
         %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
         %             CE=[(causes_true(AT,A,and(RF, and(TR,CPF))))];
         %             CE=[(causes_true(AT,A,CPF))]).
         CE=[(causes_true(AT,A,CPF))].
-convert_effect_formula(AT,Vs,Ts,when(PF,del(D)),CE) :-
+convert_effect_formula(AT,_Vs,_Ts,when(PF,del(D)),CE) :-
         convert_precondition_formula(PF,CPF),
         %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
         %             CE=[(causes_false(AT,D,and(TR,CPF)))];
         %             CE=[(causes_false(AT,D,CPF))]).
         CE=[(causes_false(AT,D,CPF))].
-convert_effect_formula(AT,Vs,Ts,when(PF,and([])),[]).
+convert_effect_formula(_AT,_Vs,_Ts,when(_PF,and([])),[]).
 convert_effect_formula(AT,Vs,Ts,when(PF,and([AD|ADs])),CEs) :-
         convert_effect_formula(AT,Vs,Ts,when(PF,AD),CE1),
         convert_effect_formula(AT,Vs,Ts,when(PF,and(ADs)),CE2),
