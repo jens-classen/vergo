@@ -1214,8 +1214,7 @@ convert_effect_formula(AT,Vs,Ts,and([E|Es]),ACEs) :-
         convert_effect_formula(AT,Vs,Ts,E,CE),
         convert_effect_formula(AT,Vs,Ts,and(Es),CEs),
         append(CE,CEs,ACEs).
-convert_effect_formula(AT,Vs,Ts,add(A),CE) :- 
-        remove_quotations(A,A1),
+convert_effect_formula(AT,Vs,Ts,add(A),CE) :-
         %predicate_type_restriction(A1,RF),
         %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
         %             CE=[(causes_true(AT,A,and(TR,RF)))];
@@ -1230,7 +1229,6 @@ convert_effect_formula(AT,Vs,Ts,forall(QVs,VTs,F),CEs) :-
         append(QVs,Vs,VL), append(VTs,Ts,TL),
         convert_effect_formula(AT,VL,TL,F,CEs).
 convert_effect_formula(AT,Vs,Ts,when(PF,add(A)),CE) :-
-        remove_quotations(A,A1),
         %predicate_type_restriction(A1,RF),
         convert_precondition_formula(PF,CPF),
         %(Vs \= [] -> type_restrictions_conjunction(Vs,Ts,TR),
@@ -1324,8 +1322,7 @@ remember_predicate_type_restrictions(Axioms) :-
 remember_predicate_type_restrictions2([(Head :- Body)|Axioms]) :-
         Head=rel_fluent(R),
         axiom_body_to_formula(Body,Formula),
-        remove_quotations(R,R1),
-        assert(predicate_type_restriction(R1,Formula)),
+        assert(predicate_type_restriction(R,Formula)),
         remember_predicate_type_restrictions2(Axioms).
 remember_predicate_type_restrictions2([]).
 
@@ -1335,15 +1332,4 @@ axiom_body_to_formula((X1,Y1),and(X2,Y2)) :- !,
 axiom_body_to_formula((X1;Y1),or(X2,Y2)) :- !, 
         axiom_body_to_formula(X1,X2),
         axiom_body_to_formula(Y1,Y2).
-axiom_body_to_formula(X1,X2) :- remove_quotations(X1,X2).
-
-% This is used to make strings representing variables (like >>"S"<<)
-% into variables (like >>S<<). Representing variables by strings in
-% the translated domain axiomatization helps to keep the naming from
-% the original PDDL description; only when building the typing
-% restrictions into actions' effects, the strings have to be converted
-% into "real" variables.
-remove_quotations(X1,X2) :- 
-        term_string(X1,S1), string_codes(S1,L1),
-        subtract(L1,[34],L2), string_codes(S2,L2),
-        term_string(X2,S2).
+axiom_body_to_formula(X,X).
