@@ -1155,11 +1155,10 @@ list_same_length(_,[],[]).
 construct_action_axioms(Axioms,Symbol,Variables,Types,Preconds,Effects) :-
         pddl_vars_to_prolog_vars(Variables,PVariables),
         Action_Term =.. [Symbol | PVariables],
-        type_restrictions(PVariables,Types,Restrictions),
         convert_precondition_formula(Preconds,CPreconds),
         convert_effect_formula(Action_Term,Effects,LCEffects),
         substitute_pddl_vars((CPreconds,LCEffects),Variables,PVariables,(CVPreconds,LCVEffects)),
-	Axioms = [(prim_action(Action_Term) :- Restrictions),
+	Axioms = [(prim_action(Action_Term)),
                   (action_parameter_types(Symbol,Types)),
                   (poss(Action_Term,CVPreconds))|
                   LCVEffects].
@@ -1239,10 +1238,6 @@ convert_effect_formula(AT,Vs,Ts,when(PF,and([AD|ADs])),CEs) :-
         convert_effect_formula(AT,Vs,Ts,when(PF,and(ADs)),CE2),
         append(CE1,CE2,CEs).
 
-type_restrictions_conjunction([V],[T],TR) :- TR =.. [T,V].
-type_restrictions_conjunction([V|Vs],[T|Ts],and(TR,TRs)) :- TR =..[T,V],
-        type_restrictions_conjunction(Vs,Ts,TRs).
-
 % Convert the list of types with associated constants into Prolog clauses.
 constants_declaration([ConstantsDef|Defs], [Axiom|Axioms]) :-
         ConstantsDef =.. [Type, ConstantsList],
@@ -1277,17 +1272,3 @@ process_subtypeslist([SubType],X,T) :- !,
 process_subtypeslist([SubType|SubTypes],X, (T ; Ts)) :-
         T = domain(SubType,X),
         process_subtypeslist(SubTypes,X,Ts).
-
-type_restrictions([V],[T],R) :- 
-        (T = either(ETypes) -> 
-            type_restrictions_disjunctive(V,ETypes,R);
-            R=..[T,V]). %domain(T,V)
-type_restrictions([V|Vs],[T|Ts],(R1,Rs)) :- type_restrictions(Vs,Ts,Rs), 
-        (T = either(ETypes) -> 
-            type_restrictions_disjunctive(V,ETypes,R1);
-            R1=..[T,V]). %domain(T,V)
-
-type_restrictions_disjunctive(V,[T],R) :- R =.. [T,V]. %domain(T,V)
-type_restrictions_disjunctive(V,[T|Ts],(R;Rs)) :-
-        R =.. [T,V], %domain(T,V)
-        type_restrictions_disjunctive(V,Ts,Rs).
