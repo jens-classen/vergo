@@ -1266,21 +1266,10 @@ subtypes_declaration([_|Defs],Axioms) :-
         subtypes_declaration(Defs,Axioms).
 subtypes_declaration([],[]).
 
-% Convert the list of types (possibly containing composed types and
-% supertypes) into Prolog clauses.
-type_declaration([either(ETypes,SubtypesList)|Defs], Axioms) :- !,
-            flatten_typelist(ETypes,SubtypesList,FlatList),
-            append(FlatList,Defs,NewDefs),
-            type_declaration(NewDefs,Axioms).
-type_declaration([TypeDef|Defs], [Axiom|Axioms]) :-
-            TypeDef =.. [Type,SubtypesList], !,
-            Axiom_Header = domain(Type,X),
-            process_subtypeslist(SubtypesList,X,AxiomBody),
-            Axiom = (Axiom_Header :- AxiomBody),
-            type_declaration(Defs,Axioms).
-type_declaration([_|Defs], Axioms) :-
-            type_declaration(Defs,Axioms).
-type_declaration([],[]).
+type_declaration(_Types,[Axiom]) :- !,
+        Axiom = (domain(Domain,X) :- subtypes(Domain,Subtypes),
+                                     member(Subtype,Subtypes),
+                                     domain(Subtype,X)).
 
 flatten_typelist(ETs,[S|SL],[F|Fs]) :-
         F =..[S,ETs],
