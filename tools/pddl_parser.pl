@@ -63,6 +63,9 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% TODO: handle identifiers consisting of capital letters correctly
+% TODO: include discontiguous directives
+
 :- module(pddl_parser, [parse_pddl_domain_string/2,
                         parse_pddl_problem_string/2,
                         parse_pddl_domain_file/2,
@@ -128,9 +131,23 @@ write_rules(Stream, Axioms, Header) :-
               "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n"),
         write_rules2(Stream, Axioms).
 
-write_rules2(Stream, [Axiom|Axioms]) :- write(Stream, Axiom),
-        write(Stream, ".\n"), write_rules2(Stream,Axioms).
+write_rules2(Stream, [Axiom|Axioms]) :-
+        write_axiom_readable(Stream,Axiom),
+        %write_axiom(Stream,Axiom),
+        write_rules2(Stream,Axioms).
 write_rules2(Stream, []) :- write(Stream, "\n\n").
+
+write_axiom(Stream, Axiom) :-
+        write_term(Stream, Axiom, [quoted(true),fullstop(true),nl(true)]).
+
+write_axiom_readable(Stream, Axiom) :-
+        \+ \+ (numbervars(Axiom,0,_),
+               write_term(Stream, Axiom, [numbervars(true),
+                                          quoted(true),
+                                          fullstop(true),
+                                          nl(true)
+                                         ])
+              ).
 
 write_domain_header(Stream, [domain(DomainName)]) :-
         write(Stream,
@@ -388,8 +405,10 @@ pddl_variable_plus([Var]) --> pddl_variable(Var).
 pddl_variable_plus([Var|Vars]) --> pddl_variable(Var), pddl_white_plus,
                        pddl_variable_plus(Vars).
 
-pddl_variable(Var) --> ascii("?"), pddl_name_atom(Name),
-        {make_prolog_variable(Name,Var)}.
+pddl_variable(Var) -->
+        ascii("?"),
+        pddl_name_atom(Name),
+        {atom_concat('?',Name,Var)}.
 
 % Functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1128,14 +1147,29 @@ list_same_length(_,[],[]).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 construct_action_axioms(Axioms,Symbol,Variables,Types,Preconds,Effects) :-
-        Action_Term =.. [Symbol | Variables],
-        type_restrictions(Variables,Types,Restrictions),
+        pddl_vars_to_prolog_vars(Variables,PVariables),
+        Action_Term =.. [Symbol | PVariables],
+        type_restrictions(PVariables,Types,Restrictions),
         convert_precondition_formula(Preconds,CPreconds),
         convert_effect_formula(Action_Term,Effects,LCEffects),
+        substitute_pddl_vars((CPreconds,LCEffects),Variables,PVariables,(CVPreconds,LCVEffects)),
 	Axioms = [(prim_action(Action_Term) :- Restrictions),
                   (action_parameter_types(Symbol,Types)),
-                  (poss(Action_Term,CPreconds))|
-                  LCEffects].
+                  (poss(Action_Term,CVPreconds))|
+                  LCVEffects].
+
+% Given a list of PDDL variables of the form '?variablename',
+% constructs a list of the same length with fresh Prolog variables.
+pddl_vars_to_prolog_vars([],[]) :- !.
+pddl_vars_to_prolog_vars([Var|Vars],[PVar|PVars]) :- !,
+        copy_term(X,PVar),
+        pddl_vars_to_prolog_vars(Vars,PVars).
+
+% Substitue all PDDL variables by the corresponding Prolog variables.
+substitute_pddl_vars(X,[],[],X) :- !.
+substitute_pddl_vars(X,[Var|Vars],[PVar|PVars],R) :- !,
+        subv(Var,PVar,X,Y),
+        substitute_pddl_vars(Y,Vars,PVars,R).
 
 % Convert (pseudo-) precondition (obtained from parsing) into one that
 % IndiGolog accepts; basically, multi-ary "and"s, "or"s etc. are
@@ -1264,15 +1298,6 @@ process_subtypeslist([SubType],X,T) :- !,
 process_subtypeslist([SubType|SubTypes],X, (T ; Ts)) :-
         T =..[SubType,X],
         process_subtypeslist(SubTypes,X,Ts).
-        
-%% make_prolog_variable(Name,Var) :- getval(variables,Variables),
-%%         (hash_get(Variables, Name, Var) -> true;
-%%          hash_set(Variables, Name, Var)).
-
-% Make a (string containing a) Prolog variable from a PDDL
-% variable, i.e. convert the first character into a capital letter.
-make_prolog_variable(Name,UpperNameS) :- term_string(Name, NameS),
-        first_char_to_upper(NameS,UpperNameS).
 
 type_restrictions([V],[T],R) :- 
         (T = either(ETypes) -> 
