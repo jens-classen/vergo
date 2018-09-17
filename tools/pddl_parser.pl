@@ -368,9 +368,10 @@ pddl_atomic_formula_skeleton_plus([Axiom1|Axioms1],[Axiom2|Axioms2]) --> pddl_at
 pddl_atomic_formula_skeleton(Axiom1,Axiom2) --> ascii("("), pddl_white_star,
                                  pddl_predicate(PName), pddl_white_plus,
 				 pddl_typed_list_variable(Variables,Types),
-				 {Head =.. [PName|Variables],
-				  type_restrictions(Variables,Types,Body),
-				  Axiom1 = (rel_fluent(Head) :- Body),
+                                 {pddl_vars_to_prolog_vars(Variables,PVariables),
+                                  Head =.. [PName|PVariables],
+				  type_restrictions(PVariables,Types,Body),
+                                  Axiom1 = (rel_fluent(Head) :- Body),
                                   Axiom2 = (fluent_parameter_types(PName,Types))},
 				 pddl_white_star, ascii(")").
 
