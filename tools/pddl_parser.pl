@@ -88,7 +88,7 @@ parse_pddl_problem_string(String,Axioms) :-
 
 %:- mode parse_pddl_domain_file(+,+).
 parse_pddl_domain_file(InFile,OutFile) :-
-        phrase_from_file(pddl_domain(axioms(Domain_Axioms,
+        phrase_from_file(pddl_domain(axioms(Domain,
                                             Type_Axioms,
                                             Constant_Axioms,
                                             Predicate_Axioms,
@@ -97,8 +97,7 @@ parse_pddl_domain_file(InFile,OutFile) :-
                                             Structure_Axioms)),
                          InFile),
         open(OutFile, write, Stream2),
-        write_domain_header(Stream2, Domain_Axioms),
-        write_rules(Stream2, Domain_Axioms, "Domain Definition"),
+        write_domain_header(Stream2, Domain),
         write_rules(Stream2, Type_Axioms, "Typing Axioms"),
         write_rules(Stream2, Constant_Axioms, "Constant Definitions"),
         write_rules(Stream2, Predicate_Axioms, "Predicate Definitions"),
@@ -109,16 +108,14 @@ parse_pddl_domain_file(InFile,OutFile) :-
 
 %:- mode parse_pddl_problem_file(+,+).
 parse_pddl_problem_file(InFile,OutFile) :-
-        phrase_from_file(axioms(ProblemNameAxiom,
-                                DomainNameAxiom,
+        phrase_from_file(axioms(Problem,
+                                Domain,
                                 ObjectAxioms,
                                 InitAxioms,
                                 GoalAxioms),
                          InFile),
         open(OutFile, write, Stream2),
-        write_problem_header(Stream2, ProblemNameAxiom,DomainNameAxiom),
-        write_rules(Stream2, ProblemNameAxiom, "Problem Name"),
-        write_rules(Stream2, DomainNameAxiom, "Domain Name"),
+        write_problem_header(Stream2, Problem, Domain),
         write_rules(Stream2, ObjectAxioms, "Objects"),
         write_rules(Stream2, InitAxioms, "Initial Values"),
         write_rules(Stream2, GoalAxioms, "Goal"),
@@ -150,7 +147,7 @@ write_axiom_readable(Stream, Axiom) :-
                                          ])
               ).
 
-write_domain_header(Stream, [domain(DomainName)]) :-
+write_domain_header(Stream, DomainName) :-
         write(Stream,
               "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"),
         write(Stream,
@@ -160,7 +157,7 @@ write_domain_header(Stream, [domain(DomainName)]) :-
         write(Stream,
               "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n\n").
 
-write_problem_header(Stream, [problem(Problem)], [domain(Domain)]) :-
+write_problem_header(Stream, Problem, Domain) :-
         write(Stream,
               "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"),
         write(Stream,
@@ -195,14 +192,14 @@ parse_string(String,PDDL) :-
 % PDDL Domains
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_domain(axioms(Domain_Axioms,Type_Axioms,Constant_Axioms,Predicate_Axioms,
+pddl_domain(axioms(Domain,Type_Axioms,Constant_Axioms,Predicate_Axioms,
                    Function_Axioms,Constraint_Axioms,Structure_Axioms)) 
                     --> pddl_white_star, ascii("("), pddl_white_star,
                         ascii("define"), pddl_white_star, ascii("("),
 			pddl_white_star, ascii("domain"), !, 
 			{announce_pro("PDDL domain description")},
 			pddl_white_plus,
-			pddl_domain_name(Domain_Axioms), pddl_white_star,
+			pddl_domain_name(Domain), pddl_white_star,
 			ascii(")"), pddl_white_star,
 			([]; pddl_requirements, pddl_white_star),
 			([],{Type_Axioms=[]}; 
@@ -220,8 +217,7 @@ pddl_domain(axioms(Domain_Axioms,Type_Axioms,Constant_Axioms,Predicate_Axioms,
 			ascii(")"), pddl_white_star, !,
 			{announce_suc("PDDL domain description")}.
 
-pddl_domain_name([Axiom]) --> pddl_name_atom(Name), 
-                            {Axiom =.. [domain,Name]}.
+pddl_domain_name(Name) --> pddl_name_atom(Name).
  
 % Requirements %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -944,15 +940,15 @@ pddl_derived_def([]) --> ascii("("), pddl_white_star, ascii(":derived"), !,
 % PDDL Problems
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_problem(axioms(ProblemNameAxiom,DomainNameAxiom,ObjectAxioms,InitAxioms,GoalAxioms)) --> 
+pddl_problem(axioms(Problem,Domain,ObjectAxioms,InitAxioms,GoalAxioms)) --> 
         pddl_white_star, ascii("("), pddl_white_star,
         ascii("define"), pddl_white_star, ascii("("),
         pddl_white_star, ascii("problem"),
-        pddl_white_star, pddl_problem_name(ProblemNameAxiom),
+        pddl_white_star, pddl_problem_name(Problem),
         pddl_white_star, ascii(")"), pddl_white_star,
         ascii("("), pddl_white_star,
         ascii(":domain"), pddl_white_star,
-        pddl_problem_domain(DomainNameAxiom), pddl_white_star,
+        pddl_problem_domain(Domain), pddl_white_star,
         ascii(")"), pddl_white_star,
         ([]; pddl_problem_requirements, pddl_white_star),
         ([]; pddl_object_declarations(ObjectAxioms), pddl_white_star),
@@ -963,11 +959,9 @@ pddl_problem(axioms(ProblemNameAxiom,DomainNameAxiom,ObjectAxioms,InitAxioms,Goa
         ([]; pddl_length_spec, pddl_white_star),
         ascii(")"), pddl_white_star.
 
-pddl_problem_name([Axiom]) --> pddl_name_atom(Name), 
-        {Axiom =.. [problem,Name]}.
+pddl_problem_name(Name) --> pddl_name_atom(Name).
 
-pddl_problem_domain([Axiom]) -->  pddl_name_atom(Name), 
-        {Axiom =.. [domain,Name]}. % maybe put a test here?
+pddl_problem_domain(Name) -->  pddl_name_atom(Name). % maybe put a test here?
 
 pddl_problem_requirements --> pddl_requirements.
 
