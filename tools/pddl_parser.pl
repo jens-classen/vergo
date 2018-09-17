@@ -376,8 +376,7 @@ pddl_atomic_formula_skeleton(Axiom1,Axiom2) --> ascii("("), pddl_white_star,
                                  pddl_predicate(PName), pddl_white_plus,
 				 pddl_typed_list_variable(Variables,Types),
                                  {pddl_vars_to_prolog_vars(Variables,PVariables),
-                                  anonymize_variables(PVariables,AVariables),
-                                  Head =.. [PName|AVariables],
+                                  Head =.. [PName|PVariables],
                                   Axiom1 = (rel_fluent(Head)),
                                   Axiom2 = (fluent_parameter_types(PName,Types))},
 				 pddl_white_star, ascii(")").
@@ -1292,7 +1291,3 @@ type_restrictions_disjunctive(V,[T],R) :- R =.. [T,V]. %domain(T,V)
 type_restrictions_disjunctive(V,[T|Ts],(R;Rs)) :-
         R =.. [T,V], %domain(T,V)
         type_restrictions_disjunctive(V,Ts,Rs).
-
-anonymize_variables([],[]).
-anonymize_variables([_Var|Vars],[_|Xs]) :-
-        anonymize_variables(Vars,Xs).
