@@ -80,10 +80,13 @@
 
 %:- mode parse_pddl_domain_string(+,-).
 parse_pddl_domain_string(String,Axioms) :-
-	parse_string(String, pddl_domain(Axioms)).
+        string_codes(String,Codes),
+        phrase(pddl_domain(Axioms),Codes).
+
 %:- mode parse_pddl_problem_string(+,-).
 parse_pddl_problem_string(String,Axioms) :-
-	parse_string(String, pddl_problem(Axioms)).
+        string_codes(String,Codes),
+        phrase(pddl_problem(Axioms),Codes).
 
 %:- mode parse_pddl_domain_file(+,+).
 parse_pddl_domain_file(InFile,OutFile) :-
