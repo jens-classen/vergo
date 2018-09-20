@@ -275,7 +275,10 @@ pddl_requirement -->
         ascii(":conditional-effects"),
         {assert(requirement(conditional-effects))};
         ascii(":fluents"),
-        {assert(requirement(fluents))};
+        {assert(requirement(numeric-fluents)),
+         assert(requirement(object-fluents))};
+        ascii(":numeric-fluents"),
+        {assert(requirement(numeric-fluents))};
         ascii(":adl"),
         {assert(requirement(strips)),
          assert(requirement(typing)),
@@ -287,6 +290,10 @@ pddl_requirement -->
          assert(requirement(conditional-effects))};
         ascii(":durative-actions"),
         {assert(requirement(durative-actions))};
+        ascii(":duration-inequalities"),
+        {assert(requirement(duration-inequalities))};
+        ascii(":continuous-effects"),
+        {assert(requirement(continuous-effects))};
         ascii(":derived-predicates"),
         {assert(requirement(derived-predicates))};
         ascii(":timed-initial-literals"),
@@ -295,10 +302,8 @@ pddl_requirement -->
         {assert(requirement(preferences))};
         ascii(":constraints"),
         {assert(requirement(constraints))};
-        ascii(":duration-inequalities"),
-        {assert(requirement(duration-inequalities))};
-        ascii(":continuous-effects"),
-        {assert(requirement(continuous-effects))}.
+        ascii(":action-costs"),
+        {assert(requirement(action-costs))}.
 
 must_support(R) :-
         requirement(R), !.
@@ -334,17 +339,11 @@ pddl_type_definitions(Axioms) -->
 
 pddl_typed_list_name(Types) -->
        pddl_name_star(Types).
-pddl_typed_list_name([Type]) -->
-        pddl_name_plus(Names), ws,
-        ascii("-"), ws,
-        pddl_type(Type_name),
-        {Type_name = either(ENames) ->
-            Type =.. [either, ENames, Names];
-            Type =.. [Type_name, Names]}.
 pddl_typed_list_name([Type|Types]) -->
-        pddl_name_plus(Names), ws,
-        ascii("-"), ws,
+        pddl_name_plus(Names), wp,
+        ascii("-"), wp, %note: spaces before and after "-"!
         pddl_type(Type_name), wp,
+        {must_support(typing)},
         {Type_name = either(ENames) ->
             Type =.. [either, ENames, Names];
             Type =.. [Type_name, Names]},
@@ -360,16 +359,18 @@ pddl_name_plus([Name|Names]) -->
         pddl_name_atom(Name), wp,
         pddl_name_star(Names).
 
-pddl_type(Name) -->
-        pddl_primitive_type(Name).
 pddl_type(either(Names)) -->
         ascii("("), ws,
         ascii("either"), wp,
         pddl_primitive_type_plus(Names), ws,
         ascii(")").
+pddl_type(Name) -->
+        pddl_primitive_type(Name).
 
 pddl_primitive_type(Name) -->
         pddl_name_atom(Name).
+pddl_primitive_type(object) -->
+        ascii("object").
 
 pddl_primitive_type_plus([Name]) -->
         pddl_primitive_type(Name).
@@ -424,19 +425,11 @@ pddl_predicate(Name) -->
 pddl_typed_list_variable(Variables,Types) -->
         pddl_variable_star(Variables),
         {list_same_length(object,Variables,Types)}.
-
 pddl_typed_list_variable(Variables,Types) -->
+        pddl_variable_plus(CVariables), wp,
+        ascii("-"), wp, %note: spaces before and after "-"!
+        pddl_type(Type_Name), ws,
         {must_support(typing)},
-        pddl_variable_plus(Variables), ws,
-        ascii("-"), ws,
-        pddl_type(Type_Name),
-        {list_same_length(Type_Name,Variables,Types)}.
-			     
-pddl_typed_list_variable(Variables,Types) -->
-        {must_support(typing)},
-        pddl_variable_plus(CVariables), ws,
-        ascii("-"), ws,
-        pddl_type(Type_Name), wp,
         {append(CVariables,RVariables,Variables),
          list_same_length(Type_Name,CVariables,CTypes),
          append(CTypes,RTypes,Types)},
@@ -470,26 +463,22 @@ pddl_functions_defs([]) -->
         {announce_suc("functions")}.
 
 pddl_function_typed_list_atomic_function_skeleton -->
-	pddl_atomic_function_skeleton_star.
-pddl_function_typed_list_atomic_function_skeleton -->
-	{must_support(typing)},
 	pddl_atomic_function_skeleton_plus, ws,
         ascii("-"), ws,
         pddl_function_type, wp,
         pddl_function_typed_list_atomic_function_skeleton.
+pddl_function_typed_list_atomic_function_skeleton --> [].
 pddl_function_typed_list_atomic_function_skeleton -->
-	{must_support(typing)},
-	pddl_atomic_function_skeleton_plus, ws,
-        ascii("-"), ws,
-        pddl_function_type.
+	{must_support(numeric-fluents)},
+        pddl_atomic_function_skeleton_plus. % default type: number
 
-% BNF says number, but should be normal type.
 pddl_function_type -->
-        pddl_type(_). %number.???
-
-pddl_atomic_function_skeleton_star --> [].
-pddl_atomic_function_skeleton_star -->
-        pddl_atomic_function_skeleton_plus.
+        ascii("number"), !,
+        {must_support(numeric-fluents)}.
+pddl_function_type -->
+        pddl_type(_), !,
+        {must_support(typing)},
+        {must_support(object-fluents)}.
 
 pddl_atomic_function_skeleton_plus -->
         pddl_atomic_function_skeleton.
@@ -520,8 +509,9 @@ pddl_constraints([]) -->
 
 pddl_con_gd -->
         ascii("("), ws,
-        ascii("and"),
-        pddl_con_gd_star.
+        ascii("and"), wp,
+        pddl_con_gd_star, ws,
+        ascii(")").
 pddl_con_gd -->
         ascii("("), ws,
         ascii("forall"), ws,
@@ -529,11 +519,6 @@ pddl_con_gd -->
         pddl_typed_list_variable(_,_), ws,
         ascii(")"), ws,
         pddl_con_gd, ws,
-        ascii(")").
-pddl_con_gd -->
-        ascii("("), ws,
-        ascii("at end"), wp,
-        pddl_gd(_,_,_,_), ws,
         ascii(")").
 pddl_con_gd -->
         ascii("("), ws,
@@ -760,7 +745,7 @@ pddl_gd(S,V,T,all(V1,T1,G)) -->
         ascii(")").
 pddl_gd(_,_,_,_) -->
         pddl_f_comp,
-        {must_support(fluents),
+        {must_support(numeric-fluents),
          cannot_compile(fluents)}.
 
 pddl_gd_star(_,_,_,[]) --> [].
@@ -790,8 +775,6 @@ pddl_atomic_formula_term(V,T,G) -->
         ascii(")"),
         {G=..[Name|Terms]}.
 
-% begin: this is not in the BNF, but should be
-
 pddl_atomic_formula_term(V,T,(T1 = T2)) -->
         ascii("("), ws,
         ascii("="), wp,
@@ -799,8 +782,6 @@ pddl_atomic_formula_term(V,T,(T1 = T2)) -->
         pddl_term(V,T,T1), wp,
         pddl_term(V,T,T2), ws,
         ascii(")").
-
-% end: this is not in BNF, but should be
 
 pddl_term_star(_,_,[]) --> [].
 pddl_term_star(V,T,[Term]) -->
@@ -814,24 +795,53 @@ pddl_term(_,_,Constant) -->
 pddl_term(V,_,Variable) -->
         pddl_variable(Variable),
         {member(Variable,V)}.
+pddl_term(V,T,FTerm) -->
+        pddl_function_term(V,T,FTerm),
+        {must_support(object-fluents)}.
+
+pddl_function_term(V,T,FTerm) -->
+        ascii("("), ws,
+        pddl_function_symbol(Symbol), wp,
+        pddl_term_star(V,T,Terms), ws,
+        ascii(")"),
+        {FTerm =.. [Symbol|Terms]},
+        {must_support(object-fluents)}.
 
 pddl_f_exp(_,_,N) -->
-        pddl_number(N).
+        pddl_number(N),
+        {must_support(numeric-fluents)}.
 pddl_f_exp(V,T,Exp) -->
         ascii("("), ws,
         pddl_binary_op(Op), ws,
         pddl_f_exp(V,T,Exp1), wp,
         pddl_f_exp(V,T,Exp2), ws,
         ascii(")"),
-        {Exp =.. [Op,Exp1,Exp2]}.
+        {Exp =.. [Op,Exp1,Exp2]},
+        {must_support(numeric-fluents)}.
+pddl_f_exp(V,T,Exp) -->
+        ascii("("), ws,
+        pddl_multi_op(Op), ws,
+        pddl_f_exp(V,T,Exp1), wp,
+        pddl_f_exp_plus(V,T,Exps2), ws,
+        ascii(")"),
+        {apply_multi_op(Op,[Exp1|Exps2],Exp)},
+        {must_support(numeric-fluents)}.
 pddl_f_exp(V,T,Exp) -->
         ascii("("), ws,
         ascii("-"), ws,
         pddl_f_exp(V,T,Exp1), ws,
         ascii(")"),
-        {Exp =.. ['-',Exp1]}.
+        {Exp =.. ['-',Exp1]},
+        {must_support(numeric-fluents)}.
 pddl_f_exp(V,T,Head) -->
-        pddl_f_head(V,T,Head).
+        pddl_f_head(V,T,Head),
+        {must_support(numeric-fluents)}.
+
+pddl_f_exp_plus(V,T,Exp) -->
+        pddl_f_exp(V,T,Exp).
+pddl_f_exp_plus(V,T,[Exp|Exps]) -->
+        pddl_f_exp(V,T,Exp), wp,
+        pddl_f_exp_plus(V,T,Exps).
 
 pddl_f_head(V,T,Head) -->
         ascii("("), ws,
@@ -858,7 +868,8 @@ pddl_binary_comp -->
         ascii(">");
         ascii("<");
         ascii("=");
-        ascii(">=").
+        ascii(">=");
+        ascii("<=").
 
 pddl_effect(S,V,T,and(EL)) -->
         ascii("("), ws,
@@ -905,9 +916,26 @@ pddl_p_effect(_,V,T,add(E)) -->
 pddl_p_effect(_,_,_,_) -->
         ascii("("), ws,
         pddl_assign_op, wp,
-        {must_support(fluents), cannot_compile(fluents)},
+        {must_support(numeric-fluents),
+         cannot_compile(numeric-fluents)},
         pddl_f_head(_,_,_), wp,
         pddl_f_exp(_,_,_), ws,
+        ascii(")").
+pddl_p_effect(_,_,_,_) -->
+        ascii("("), ws,
+        ascii("assign"), wp,
+        {must_support(object-fluents),
+         cannot_compile(object-fluents)},
+        pddl_function_term(_,_,_), wp,
+        pddl_term(_,_,_), ws,
+        ascii(")").
+pddl_p_effect(_,_,_,_) -->
+        ascii("("), ws,
+        ascii("assign"), wp,
+        {must_support(object-fluents),
+         cannot_compile(object-fluents)},
+        pddl_function_term(_,_,_), wp,
+        ascii("undefined"), ws,
         ascii(")").
 
 pddl_p_effect_star(_,_,_,[]) --> [].
@@ -1074,7 +1102,7 @@ pddl_d_value(_,_,Number) -->
         pddl_number(Number).
 pddl_d_value(V,T,Exp) -->
         pddl_f_exp(V,T,Exp),
-        {must_support(fluents)}.
+        {must_support(numeric-fluents)}.
 
 pddl_da_effect(Symbol,Variables,Types,and(Effects)) -->
         ascii("("), ws,
@@ -1100,14 +1128,6 @@ pddl_da_effect(Symbol,Variables,Types,when(G,E)) -->
         pddl_da_gd(Symbol,Variables,Types,G), ws,
         pddl_timed_effect(Symbol,Variables,Types,E), ws,
         ascii(")").
-pddl_da_effect(_Symbol,Variables,Types,
-               pddl_assign(Op,Head,Exp)) -->
-        ascii("("), ws,
-        pddl_assign_op(Op), wp,
-        {must_support(fluents)},
-        pddl_f_head(Variables,Types,Head), wp,
-        pddl_f_exp_da(Variables,Types,Exp), ws,
-        ascii(")").
 
 pddl_da_effect_star(_Symbol,_Variables,_Types,[]) --> [].
 pddl_da_effect_star(Symbol,Variables,Types,[Effect|Effects]) -->
@@ -1119,7 +1139,7 @@ pddl_timed_effect(Symbol,Variables,Types,
         ascii("("), ws,
         ascii("at"), wp,
         pddl_time_specifier(TimeSpecifier), ws,
-        pddl_a_effect(Symbol,Variables,Types,Effects), ws,
+        pddl_cond_effect(Symbol,Variables,Types,Effects), ws,
         ascii(")").
 pddl_timed_effect(_Symbol,Variables,Types,
                   pddl_at(TimeSpecifier,Effects)) -->
@@ -1127,20 +1147,17 @@ pddl_timed_effect(_Symbol,Variables,Types,
         ascii("at"), wp,
         pddl_time_specifier(TimeSpecifier), ws,
         pddl_f_assign_da(Variables,Types,Effects), ws,
-        ascii(")").
+        ascii(")"),
+        {must_support(numeric-fluents)}.
 pddl_timed_effect(_Symbol,Variables,Types,
                   pddl_assign(Op,Head,Exp)) -->
         ascii("("), ws,
         pddl_assign_op_t(Op), wp,
         {must_support(continuous-effects)},
+        {must_support(numeric-fluents)},
         pddl_f_head(Variables,Types,Head), wp,
-        % BNF of PDDL 3   (Geriving&Long 2005):
-        % pddl_f_assign_da(Variables,Types,...), ws,
-        % BNF of PDDL 2.1 (For&Long 2003):
         pddl_f_exp_t(Variables,Types,Exp), ws,
         ascii(")").
-
-% Begin: This is missing in PDDL 3 BNF, took it from Fox&Long 2003
 
 pddl_assign_op_t(increase) -->
         ascii("increase").
@@ -1162,15 +1179,6 @@ pddl_f_exp_t(V,T,'pddl_#t' * Exp) -->
 pddl_f_exp_t(_,_,'pddl_#t') -->
         ascii("#t").
 
-% End.
-
-% Begin: The following is also missing; it is my guess.
-
-pddl_a_effect(Symbol,Variables,Types,Effects) -->
-        pddl_effect(Symbol,Variables,Types,Effects).
-
-% End.
-
 pddl_f_assign_da(V,T,pddl_f_assign_da(Op,Head,Exp)) -->
         ascii("("), ws,
         pddl_assign_op(Op), wp,
@@ -1186,6 +1194,13 @@ pddl_f_exp_da(V,T,Exp) -->
         ascii(")"),
         {Exp =.. [Op,Exp1,Exp2]}.
 pddl_f_exp_da(V,T,Exp) -->
+        ascii("("),
+        pddl_multi_op(Op), ws,
+        pddl_f_exp_da(V,T,Exp1), wp,
+        pddl_f_exp_da_plus(V,T,Exps2), ws,
+        ascii(")"),
+        {apply_multi_op(Op,[Exp1|Exps2],Exp)}.
+pddl_f_exp_da(V,T,Exp) -->
         ascii("("), ws,
         ascii("-"), ws,
         pddl_f_exp_da(V,T,Exp1), ws,
@@ -1199,26 +1214,14 @@ pddl_f_exp_da(V,T,Exp) -->
 
 % Derived Predicates%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% This is what is required by the BNF...
-% pddl_derived_def -->
-%         ascii("("), ws,
-%         ascii(":derived"), wp,
-%         pddl_typed_list_variable(_,_), wp,
-%         pddl_gd, ws,
-%         ascii(")").
-
-% ...but I think this was meant:
 pddl_derived_def([]) -->
         ascii("("), ws,
         ascii(":derived"), wp, !,
         {must_support(derived-predicates),
          cannot_compile(derived-predicates)},
-        pddl_atomic_formula_term(_,_,_), wp,
+        pddl_atomic_formula_skeleton(_,_), wp,
         pddl_gd(_,_,_,_), ws,
         ascii(")").
-
-% i.e. atomic formula instead of typed variable list.
-% Cp. also Edelkamp & Hoffmann 2004, p. 4
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PDDL Problems
@@ -1281,20 +1284,37 @@ pddl_init_el(initially(Atom,true)) -->
         pddl_literal_name(Atom).
 pddl_init_el([]) -->
         ascii("("), ws,
-        ascii("="), ws,
-        {must_support(fluents),
-         cannot_compile(fluents)},
-        pddl_f_head(_,_,_), wp,
-        pddl_number(_), ws,
-        ascii(")").
-pddl_init_el([]) -->
-        ascii("("), ws,
         ascii("at"), wp,
         {must_support(timed-initial-literals),
          cannot_compile(timed-initial-literals)},
         pddl_number(_), ws,
         pddl_literal_name(_), ws,
         ascii(")").
+pddl_init_el([]) -->
+        ascii("("), ws,
+        ascii("="), ws,
+        {must_support(numeric-fluents),
+         cannot_compile(numeric-fluents)},
+        pddl_basic_function_term(_), wp,
+        pddl_number(_), ws,
+        ascii(")").
+pddl_init_el([]) -->
+        ascii("("), ws,
+        ascii("="), ws,
+        {must_support(object-fluents),
+         cannot_compile(object-fluents)},
+        pddl_basic_function_term(_), wp,
+        pddl_name_atom(_), ws,
+        ascii(")").
+
+pddl_basic_function_term(Symbol) -->
+        pddl_function_symbol(Symbol).
+pddl_basic_function_term(Term) -->
+        ascii("("), ws,
+        pddl_function_symbol(Symbol), wp,
+        pddl_name_star(Names), ws,
+        ascii(")"),
+        {Term =..[Symbol|Names]}.
 
 pddl_literal_name(Axiom) -->
         pddl_atomic_formula_name(Axiom).
@@ -1310,6 +1330,13 @@ pddl_atomic_formula_name(Atom) -->
         pddl_name_star(Names), ws,
         ascii(")"),
         {Atom =.. [PName|Names]}.
+pddl_atomic_formula_name((N1 = N2)) -->
+        ascii("("), ws,
+        ascii("="), wp,
+        {must_support(equality)},
+        pddl_name_atom(N1), wp,
+        pddl_term(N2), ws,
+        ascii(")").
 
 pddl_goal([goal(F)]) -->
         ascii("("), ws,
@@ -1342,7 +1369,8 @@ pddl_pref_con_gd -->
         ascii(")"), ws,
         pddl_con_gd, ws,
         ascii(")").
-pddl_pref_con_gd --> ascii("("), ws,
+pddl_pref_con_gd -->
+        ascii("("), ws,
         ascii("preference"), wp,
         {must_support(preferences),
          cannot_compile(preferences)},
@@ -1360,6 +1388,7 @@ pddl_pref_con_gd_star -->
 pddl_metric_spec -->
         ascii("("), ws,
         ascii(":metric"), wp, !,
+        {must_support(numeric-fluents)},
         pddl_optimization, wp,
         pddl_metric_f_exp, ws,
         ascii(")").
@@ -1370,12 +1399,12 @@ pddl_optimization -->
 
 pddl_metric_f_exp -->
         ascii("("), ws,
-        pddl_binary_op, wp,
+        pddl_binary_op(_), wp,
         pddl_metric_f_exp, wp,
         pddl_metric_f_exp, ws,
         ascii(")").
 pddl_metric_f_exp --> ascii("("), ws,
-        pddl_multi_op, wp,
+        pddl_multi_op(_), wp,
         pddl_metric_f_exp, wp,
         pddl_metric_f_exp_plus, ws,
         ascii(")").
@@ -1396,7 +1425,8 @@ pddl_metric_f_exp -->
         ascii("total-time").
 pddl_metric_f_exp -->
         ascii("("), ws,
-        ascii("is-violated"), wp,
+        ascii("is-violated"), wp, !,
+        {must_support(preferences)},
         pddl_pref_name(_), ws,
         ascii(")").
 
@@ -1406,7 +1436,18 @@ pddl_metric_f_exp_plus -->
         pddl_metric_f_exp, wp,
         pddl_metric_f_exp_plus.
 
-pddl_length_spec --> []. % this is defined nowhere :(
+pddl_length_spec -->
+        ascii("("), ws,
+        ascii(":length"), wp,
+        ([]; ascii("("), ws,
+             ascii(":serial"), wp,
+             pddl_integer(_), ws,
+             ascii(")"), ws),
+        ([]; ascii("("), ws,
+             ascii(":parallel"), wp,
+             pddl_integer(_), ws,
+             ascii(")"), ws),
+        ascii(")"). %deprecated since PDDL 2.1
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Auxiliary stuff
@@ -1460,8 +1501,8 @@ ws --> pddl_white, !, ws.
 ws --> [].
 
 pddl_white --> [C],
-        ({C=59} /* ";" */, !,
-         all_to_end_of_line.
+        {C=59} /* ";" */, !,
+        all_to_end_of_line.
 pddl_white --> [C],
         {whitespace(C)}, !.
 whitespace(32). % " "
@@ -1527,6 +1568,11 @@ announce_fin(S,X) :-
 list_same_length(X,[_|L],[X|L1]) :-
         list_same_length(X,L,L1).
 list_same_length(_,[],[]).
+
+apply_multi_op(_Op,[E],E) :- !.
+apply_multi_op(Op,[E|Es],Exp) :- !,
+        apply_multi_op(Op,Es,Exp2),
+        Exp =.. [Op,E,Exp2].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helping predicates for generating Golog clauses 
@@ -1657,5 +1703,5 @@ process_subtypeslist([SubType|SubTypes],X, (T ; Ts)) :-
         T = domain(SubType,X),
         process_subtypeslist(SubTypes,X,Ts).
 
-construct_durative_action_axioms(Axioms,Symbol,Variables,Types,
-                                 Duration,Conds,Effects). % TODO
+construct_durative_action_axioms([],_Symbol,_Variables,_Types,
+                                 _Duration,_Conds,_Effects). % TODO
