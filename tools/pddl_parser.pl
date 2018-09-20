@@ -665,12 +665,13 @@ pddl_pre_gd_star(S,V,T,[G|GL]) -->
 
 pddl_pre_gd(S,V,T,G) -->
         pddl_pref_gd(S,V,T,G).
-pddl_pre_gd(S,V,T,and(GL)) -->
+pddl_pre_gd(S,V,T,G) -->
         ascii("("), ws,
         ascii("and"), wp,
         pddl_pre_gd_star(S,V,T,GL), ws,
+        {conjoin(GL,G)},
         ascii(")").
-pddl_pre_gd(S,V,T,forall(V1,T1,G)) -->
+pddl_pre_gd(S,V,T,all(V1,T1,G)) -->
         ascii("("), ws,
         ascii("forall"), ws,
         {must_support(universal-preconditions)},
@@ -699,24 +700,26 @@ pddl_gd(_,V,T,G) -->
 pddl_gd(_,V,T,G) -->
         pddl_literal_term(V,T,G),
         {must_support(negative-preconditions)}.
-pddl_gd(S,V,T,and(GL)) -->
+pddl_gd(S,V,T,G) -->
         ascii("("), ws,
         ascii("and"), ws,
         pddl_gd_star(S,V,T,GL), ws,
+        {conjoin(GL,G)},
         ascii(")").
-pddl_gd(S,V,T,or(GL)) -->
+pddl_gd(S,V,T,G) -->
         ascii("("), ws,
         ascii("or"), ws,
         {must_support(disjunctive-preconditions)},
         pddl_gd_star(S,V,T,GL), ws,
+        {disjoin(GL,G)},
         ascii(")").
-pddl_gd(S,V,T,neg(G)) -->
+pddl_gd(S,V,T,-G) -->
         ascii("("), ws,
         ascii("not"), ws,
         {must_support(disjunctive-preconditions)},
         pddl_gd(S,V,T,G), ws,
         ascii(")").
-pddl_gd(S,V,T,impl(G1,G2)) -->
+pddl_gd(S,V,T,G1=>G2) -->
         ascii("("), ws,
         ascii("imply"), ws,
         {must_support(disjunctive-preconditions)},
@@ -993,7 +996,7 @@ pddl_da_def_body(Symbol,Variables,Types,Duration,Conds,Effects) -->
 
 pddl_da_gd(Symbol,Variables,Types,Conds) -->
         pddl_pref_timed_gd(Symbol,Variables,Types,Conds).
-pddl_da_gd(Symbol,Variables,Types,and(Conds)) -->
+pddl_da_gd(Symbol,Variables,Types,Conds) -->
         ascii("("), ws,
         ascii("and"), ws,
         pddl_da_gd_star(Symbol,Variables,Types,Conds), ws,
@@ -1338,14 +1341,13 @@ pddl_atomic_formula_name((N1 = N2)) -->
         pddl_term(N2), ws,
         ascii(")").
 
-pddl_goal([goal(F)]) -->
+pddl_goal([goal(G)]) -->
         ascii("("), ws,
         ascii(":goal"), wp, !,
         {announce_pro("goal")},
-        pddl_pre_gd(goal,[],[],Preconds), ws,
+        pddl_pre_gd(goal,[],[],G), ws,
         ascii(")"),
-        {convert_precondition_formula(Preconds,F),
-         announce_suc("goal")}.
+        {announce_suc("goal")}.
 
 pddl_problem_constraints -->
         ascii("("), ws,
@@ -1581,9 +1583,8 @@ apply_multi_op(Op,[E|Es],Exp) :- !,
 construct_action_axioms(Axioms,Symbol,Variables,Types,Preconds,Effects) :-
         pddl_vars_to_prolog_vars(Variables,PVariables),
         Action_Term =.. [Symbol | PVariables],
-        convert_precondition_formula(Preconds,CPreconds),
         convert_effect_formula(Action_Term,Effects,LCEffects),
-        substitute_pddl_vars((CPreconds,LCEffects),
+        substitute_pddl_vars((Preconds,LCEffects),
                              Variables,PVariables,
                              (CVPreconds,LCVEffects)),
 	Axioms = [(prim_action(Action_Term)),
@@ -1604,38 +1605,6 @@ substitute_pddl_vars(X,[Var|Vars],[PVar|PVars],R) :- !,
         subv(Var,PVar,X,Y),
         substitute_pddl_vars(Y,Vars,PVars,R).
 
-% Convert (pseudo-) precondition (obtained from parsing) into one that
-% IndiGolog accepts; basically, multi-ary "and"s, "or"s etc. are
-% turned into nested formulas.
-convert_precondition_formula(and([]),true).
-convert_precondition_formula(and([F]), FC) :-
-        convert_precondition_formula(F,FC).
-convert_precondition_formula(and([F|FL]),F*AF) :-
-        convert_precondition_formula(and(FL),AF).
-convert_precondition_formula(or([]),false).
-convert_precondition_formula(or([F]), FC) :- 
-        convert_precondition_formula(F,FC).
-convert_precondition_formula(or([F|FL]),F+AF) :-
-        convert_precondition_formula(or(FL),AF).
-convert_precondition_formula(impl(F1,F2),CF1=>CF2) :-
-        convert_precondition_formula(F1,CF1),
-        convert_precondition_formula(F2,CF2).
-convert_precondition_formula(neg(F),-NF) :-
-        convert_precondition_formula(F,NF).
-convert_precondition_formula(all([],[],F),CF) :-
-        convert_precondition_formula(F,CF).
-convert_precondition_formula(all([V],[T],F),all(V,T,CF)) :-
-        convert_precondition_formula(F,CF).
-convert_precondition_formula(all([V|VL],[T|TL],F),all(V,T,CF)) :-
-        convert_precondition_formula(all(VL,TL,F),CF).
-convert_precondition_formula(some([],[],F),CF) :-
-        convert_precondition_formula(F,CF).
-convert_precondition_formula(some([V],[T],F),some(V,T,CF)) :-
-        convert_precondition_formula(F,CF).
-convert_precondition_formula(some([V|VL],[T|TL],F),some(V,T,CF)) :-
-        convert_precondition_formula(some(VL,TL,F),CF).
-convert_precondition_formula(X,X). % atom
-
 % Convert (pseudo-) effect (obtained from parsing) into one that
 % IndiGolog accepts; typing restrictions for the affected predicates
 % as well as quantified variables have to be considered-
@@ -1655,11 +1624,9 @@ convert_effect_formula(AT,Vs,Ts,forall(QVs,VTs,F),CEs) :-
         append(QVs,Vs,VL), append(VTs,Ts,TL),
         convert_effect_formula(AT,VL,TL,F,CEs).
 convert_effect_formula(AT,_Vs,_Ts,when(PF,add(A)),CE) :-
-        convert_precondition_formula(PF,CPF),
-        CE=[(causes_true(AT,A,CPF))].
+        CE=[(causes_true(AT,A,PF))].
 convert_effect_formula(AT,_Vs,_Ts,when(PF,del(D)),CE) :-
-        convert_precondition_formula(PF,CPF),
-        CE=[(causes_false(AT,D,CPF))].
+        CE=[(causes_false(AT,D,PF))].
 convert_effect_formula(_AT,_Vs,_Ts,when(_PF,and([])),[]).
 convert_effect_formula(AT,Vs,Ts,when(PF,and([AD|ADs])),CEs) :-
         convert_effect_formula(AT,Vs,Ts,when(PF,AD),CE1),
