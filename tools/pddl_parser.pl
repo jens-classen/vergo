@@ -944,23 +944,23 @@ pddl_p_effect(D,_,V,T,Assignment) -->
         pddl_f_exp(D,V,T,Exp), ws,
         ascii(")"),
         {Assignment =.. [Op,Head,Exp]}.
-pddl_p_effect(_,_,_,_,_) -->
+pddl_p_effect(D,_,V,T,assign(F,Val)) -->
         ascii("("), ws,
         ascii("assign"), wp,
         {must_support(object-fluents),
          cannot_compile(object-fluents)},
-        pddl_function_term(_,_,_), wp,
-        % TODO: check function term
-        pddl_term(_,_,_), ws,
-        % TODO: check term
+        pddl_function_term(V,T,F), wp,
+        {check_function(D,V,T,F,Type)},
+        pddl_term(V,T,Val), ws,
+        {check_term(D,V,T,Val,Type)},
         ascii(")").
-pddl_p_effect(_,_,_,_,_) -->
+pddl_p_effect(D,_,V,T,assign(F,undefined)) -->
         ascii("("), ws,
         ascii("assign"), wp,
         {must_support(object-fluents),
          cannot_compile(object-fluents)},
-        pddl_function_term(_,_,_), wp,
-        % TODO: check function term
+        pddl_function_term(V,T,F), wp,
+        {check_function(D,V,T,F,_)},
         ascii("undefined"), ws,
         ascii(")").
 
@@ -1673,13 +1673,16 @@ convert_effect_formula(AT,Vs,Ts,when(PF,and([AD|ADs])),CEs) :-
         convert_effect_formula(AT,Vs,Ts,when(PF,AD),CE1),
         convert_effect_formula(AT,Vs,Ts,when(PF,and(ADs)),CE2),
         append(CE1,CE2,CEs).
-convert_effect_formula(_AT,_Vs,_Ts,Assignment,[]) :-
-        Assignment =.. [Op|_],
-        member(Op,['assign','scale-up','scale-down','increase',
-                   'decrease']), !,
-        cannot_compile('numeric-fluents').
-
-
+convert_effect_formula(AT,_Vs,_Ts,assign(F,Val),CE) :-
+        CE=[(causes(AT,F,Val,true))].
+convert_effect_formula(AT,_Vs,_Ts,increase(F,Val),CE) :-
+        CE=[(causes(AT,F,Y,Y=(F+Val)))].
+convert_effect_formula(AT,_Vs,_Ts,decrease(F,Val),CE) :-
+        CE=[(causes(AT,F,Y,Y=(F-Val)))].
+convert_effect_formula(AT,_Vs,_Ts,'scale-up'(F,Val),CE) :-
+        CE=[(causes(AT,F,Y,Y=(F*Val)))].
+convert_effect_formula(AT,_Vs,_Ts,'scale-down'(F,Val),CE) :-
+        CE=[(causes(AT,F,Y,Y=(F/Val)))].
 
 % Convert the list of types with associated constants into Prolog
 % clauses.
