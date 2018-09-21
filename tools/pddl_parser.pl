@@ -1322,10 +1322,10 @@ pddl_init_el_star(D,[Axiom|Axioms]) -->
         pddl_init_el_star(D,Axioms).
 pddl_init_el_star(_,[]) --> [].
 
-pddl_init_el(D,initially(Atom,true)) -->
+pddl_init_el(D,initially(Atom)) -->
         pddl_literal_name(Atom),
         {check_atom(D,[],[],Atom)}.
-pddl_init_el(_,[]) -->
+pddl_init_el(_D,initially(true)) --> % TODO
         ascii("("), ws,
         ascii("at"), wp,
         {must_support(timed-initial-literals),
@@ -1334,24 +1334,23 @@ pddl_init_el(_,[]) -->
         pddl_literal_name(_), ws,
         % TODO: check literal
         ascii(")").
-pddl_init_el(_,[]) -->
+pddl_init_el(D,initially(Function = Number)) -->
         ascii("("), ws,
         ascii("="), ws,
         {must_support(numeric-fluents),
          cannot_compile(numeric-fluents)},
-        pddl_basic_function_term(_), wp,
-        % TODO: check function term
-        pddl_number(_), ws,
+        pddl_basic_function_term(Function), wp,
+        {check_fhead(D,[],[],Function)},
+        pddl_number(Number), ws,
         ascii(")").
-pddl_init_el(_,[]) -->
+pddl_init_el(D,initially(Function = Object)) -->
         ascii("("), ws,
         ascii("="), ws,
         {must_support(object-fluents),
          cannot_compile(object-fluents)},
-        pddl_basic_function_term(_), wp,
-        % TODO: check function term
-        pddl_name_atom(_), ws,
-        % TODO: check atom
+        pddl_basic_function_term(Function), wp,
+        {check_function(D,[],[],Function)},
+        pddl_name_atom(Object), ws,
         ascii(")").
 
 pddl_basic_function_term(Symbol) -->
