@@ -1687,17 +1687,6 @@ type_declaration(_Types,[Axiom]) :- !,
                                      member(Subtype,Subtypes),
                                      domain(Subtype,X)).
 
-flatten_typelist(ETs,[S|SL],[F|Fs]) :-
-        F =..[S,ETs],
-        flatten_typelist(ETs,SL,Fs).
-flatten_typelist(_,[],[]).
-
-process_subtypeslist([SubType],X,T) :- !,
-        T = domain(SubType,X).
-process_subtypeslist([SubType|SubTypes],X, (T ; Ts)) :-
-        T = domain(SubType,X),
-        process_subtypeslist(SubTypes,X,Ts).
-
 construct_durative_action_axioms([],_Symbol,_Variables,_Types,
                                  _Duration,_Conds,_Effects). % TODO
 
