@@ -111,11 +111,11 @@ parse_pddl_domain_file(InFile,OutFile) :-
 
 %:- mode parse_pddl_problem_file(+,+).
 parse_pddl_problem_file(InFile,OutFile) :-
-        phrase_from_file(axioms(Problem,
-                                Domain,
-                                ObjectAxioms,
-                                InitAxioms,
-                                GoalAxioms),
+        phrase_from_file(pddl_problem(axioms(Problem,
+                                             Domain,
+                                             ObjectAxioms,
+                                             InitAxioms,
+                                             GoalAxioms)),
                          InFile),
         open(OutFile, write, Stream2),
         write_problem_header(Stream2, Problem, Domain),
@@ -214,17 +214,18 @@ pddl_domain(axioms(Domain, Type_Axioms, Constant_Axioms,
         pddl_domain_name(Domain), ws,
         ascii(")"), ws,
         ([]; pddl_requirements, ws),
-        ([],{Type_Axioms=[]};
-         pddl_type_definitions(Type_Axioms), ws),
-        ([],{Constant_Axioms=[]};
-         pddl_constant_defs(Constant_Axioms), ws),
-        ([],{Predicate_Axioms=[]};
-         pddl_predicate_defs(Predicate_Axioms), ws),
-        ([],{Function_Axioms=[]};
-         pddl_functions_defs(Function_Axioms), ws),
+        ([],{Types=[], Type_Axioms=[]};
+         pddl_type_definitions(Types, Type_Axioms), ws),
+        ([],{Constants=[], Constant_Axioms=[]};
+         pddl_constant_defs(Constants, Constant_Axioms), ws),
+        ([],{Predicates=[], Predicate_Axioms=[]};
+         pddl_predicate_defs(Predicates, Predicate_Axioms), ws),
+        ([],{Functions=[], FTypes=[], Function_Axioms=[]};
+         pddl_functions_defs(Functions, FTypes, Function_Axioms), ws),
         ([],{Constraint_Axioms=[]};
          pddl_constraints(Constraint_Axioms), ws),
-        pddl_structure_def_star(Structure_Axioms), ws,
+        {D = dom(Types, Constants, Predicates, Functions, FTypes)},
+        pddl_structure_def_star(D, Structure_Axioms), ws,
         ascii(")"), ws, !,
         {announce_suc("PDDL domain description")}.
 
@@ -319,7 +320,7 @@ cannot_compile(F) :-
 
 % Types %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_type_definitions(Axioms) -->
+pddl_type_definitions(Types, Axioms) -->
         ascii("("), ws,
         ascii(":types"), wp, !,
         {announce_pro("types")},
@@ -374,39 +375,42 @@ pddl_primitive_type_plus([Name|Names]) -->
 
 % Constants %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_constant_defs(Axioms) -->
+pddl_constant_defs(Constants, Axioms) -->
         ascii("("), ws,
         ascii(":constants"), wp, !,
         {announce_pro("constants")},
-        pddl_typed_list_name(ConstantsDefs), ws,
+        pddl_typed_list_name(Constants), ws,
         ascii(")"), !,
-        {constants_declaration(ConstantsDefs,Axioms)},
+        {constants_declaration(Constants,Axioms)},
         {announce_suc("constants")}.
 
 % Predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_predicate_defs(Axioms) -->
+pddl_predicate_defs(Predicates, Axioms) -->
         ascii("("), ws,
         ascii(":predicates"), wp, !,
         {announce_pro("predicates")},
-        pddl_atomic_formula_skeleton_plus(FluentAxioms,
+        pddl_atomic_formula_skeleton_plus(Predicates,
+                                          FluentAxioms,
                                           TypingAxioms), ws,
         ascii(")"), !,
         {append(FluentAxioms,TypingAxioms,Axioms)},
         {announce_suc("predicates")}.
 
-pddl_atomic_formula_skeleton_plus([Axiom1],[Axiom2]) -->
-        pddl_atomic_formula_skeleton(Axiom1,Axiom2).
-pddl_atomic_formula_skeleton_plus([Axiom1|Axioms1],
+pddl_atomic_formula_skeleton_plus([Predicate],[Axiom1],[Axiom2]) -->
+        pddl_atomic_formula_skeleton(Predicate,Axiom1,Axiom2).
+pddl_atomic_formula_skeleton_plus([Predicate|Predicates],
+                                  [Axiom1|Axioms1],
                                   [Axiom2|Axioms2]) -->
-        pddl_atomic_formula_skeleton(Axiom1,Axiom2), ws,
-        pddl_atomic_formula_skeleton_plus(Axioms1,Axioms2).
+        pddl_atomic_formula_skeleton(Predicate,Axiom1,Axiom2), ws,
+        pddl_atomic_formula_skeleton_plus(Predicates,Axioms1,Axioms2).
 
-pddl_atomic_formula_skeleton(Axiom1,Axiom2) -->
+pddl_atomic_formula_skeleton(Predicate,Axiom1,Axiom2) -->
         ascii("("), ws,
         pddl_predicate(PName), wp,
         pddl_typed_list_variable(Variables,Types), ws,
-        {pddl_vars_to_prolog_vars(Variables,PVariables),
+        {Predicate = pred(PName,Variables,Types),
+         pddl_vars_to_prolog_vars(Variables,PVariables),
          Head =.. [PName|PVariables],
          Axiom1 = (rel_fluent(Head)),
          Axiom2 = (fluent_parameter_types(PName,Types))},
@@ -446,44 +450,49 @@ pddl_variable(Var) -->
 
 % Functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_functions_defs([]) -->
+pddl_functions_defs(Functions,Types,[]) -->
         ascii("("), ws,
         ascii(":functions"), wp, !,
         {announce_pro("functions")},
         {must_support(fluents),
          cannot_compile(fluents)},
-        pddl_function_typed_list_atomic_function_skeleton, ws,
+        pddl_function_typed_list_atomic_function_skeleton(Functions,Types), ws,
         ascii(")"), !,
         {announce_suc("functions")}.
 
-pddl_function_typed_list_atomic_function_skeleton -->
-	pddl_atomic_function_skeleton_plus, ws,
-        ascii("-"), ws,
-        pddl_function_type, wp,
-        pddl_function_typed_list_atomic_function_skeleton.
-pddl_function_typed_list_atomic_function_skeleton --> [].
-pddl_function_typed_list_atomic_function_skeleton -->
+pddl_function_typed_list_atomic_function_skeleton(Functions,Types) -->
 	{must_support(numeric-fluents)},
-        pddl_atomic_function_skeleton_plus. % default type: number
+        pddl_atomic_function_skeleton_plus(Functions),
+        {list_same_length(number,Functions,Types)}. % default type: number
+pddl_function_typed_list_atomic_function_skeleton([],[]) --> [].
+pddl_function_typed_list_atomic_function_skeleton(Functions,Types) -->
+	pddl_atomic_function_skeleton_plus(Functions1), ws,
+        ascii("-"), ws,
+        pddl_function_type(Type1), wp,
+        {list_same_length(Type1,Functions1,Types1)},
+        pddl_function_typed_list_atomic_function_skeleton(Functions2,Types2),
+        {append(Functions1,Functions2,Functions),
+         append(Types1,Types2,Types)}.
 
-pddl_function_type -->
+pddl_function_type(number) -->
         ascii("number"), !,
         {must_support(numeric-fluents)}.
-pddl_function_type -->
-        pddl_type(_), !,
+pddl_function_type(Type) -->
+        pddl_type(Type), !,
         {must_support(typing)},
         {must_support(object-fluents)}.
 
-pddl_atomic_function_skeleton_plus -->
-        pddl_atomic_function_skeleton.
-pddl_atomic_function_skeleton_plus -->
-        pddl_atomic_function_skeleton, ws,
-        pddl_atomic_function_skeleton_plus.
+pddl_atomic_function_skeleton_plus([Function]) -->
+        pddl_atomic_function_skeleton(Function).
+pddl_atomic_function_skeleton_plus([Function|Functions]) -->
+        pddl_atomic_function_skeleton(Function), ws,
+        pddl_atomic_function_skeleton_plus(Functions).
 
-pddl_atomic_function_skeleton -->
+pddl_atomic_function_skeleton(Function) -->
         ascii("("), ws,
-        pddl_function_symbol(_), wp,
-        pddl_typed_list_variable(_,_), ws,
+        pddl_function_symbol(Symbol), wp,
+        pddl_typed_list_variable(Types,Variables), ws,
+        {Function = func(Symbol,Types,Variables)},
         ascii(")").
 
 pddl_function_symbol(F) -->
@@ -603,20 +612,20 @@ pddl_con_gd_star -->
 
 % Structures (Actions) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_structure_def_star([]) --> [].
-pddl_structure_def_star(Axioms) -->
-        pddl_structure_def(Axioms1), ws,
-        pddl_structure_def_star(Axioms2),
+pddl_structure_def_star(_,[]) --> [].
+pddl_structure_def_star(D,Axioms) -->
+        pddl_structure_def(D,Axioms1), ws,
+        pddl_structure_def_star(D,Axioms2),
         {append(Axioms1,Axioms2,Axioms)}.
 
-pddl_structure_def(Axioms) -->
-        pddl_action_def(Axioms).
-pddl_structure_def(Axioms) -->
-        pddl_durative_action_def(Axioms).
-pddl_structure_def(Axioms) -->
-        pddl_derived_def(Axioms).
+pddl_structure_def(D,Axioms) -->
+        pddl_action_def(D,Axioms).
+pddl_structure_def(D,Axioms) -->
+        pddl_durative_action_def(D,Axioms).
+pddl_structure_def(D,Axioms) -->
+        pddl_derived_def(D,Axioms).
 
-pddl_action_def(Axioms) -->
+pddl_action_def(D,Axioms) -->
         ascii("("), ws,
         ascii(":action"), wp, !,
         {announce_pro("action")},
@@ -625,9 +634,10 @@ pddl_action_def(Axioms) -->
         ascii(":parameters"), ws,
         ascii("("), ws,
         pddl_typed_list_variable(Variables,Types), ws,
-        ascii(")"), ws, !,
+        ascii(")"), ws,
+        {check_types(D,Types)}, !,
         {announce_fin(Symbol,"parameters")},
-        pddl_action_def_body(Symbol,Variables,Types,
+        pddl_action_def_body(D,Symbol,Variables,Types,
                              Preconds,Effects), ws,
         ascii(")"), !,
         {construct_action_axioms(Axioms,Symbol,Variables,
@@ -638,89 +648,92 @@ pddl_action_def(Axioms) -->
 pddl_action_symbol(Symbol) -->
         pddl_name_atom(Symbol).
 
-pddl_action_def_body(Symbol,Variables,Types,Preconds,Effects) -->
+pddl_action_def_body(D,Symbol,Variables,Types,Preconds,Effects) -->
 	([], {Preconds=[]};
          ascii(":precondition"), !, wp,
-         pddl_emptyOr(pddl_pre_gd(Symbol,Variables,Types,Preconds),Preconds)),
+         pddl_emptyOr(pddl_pre_gd(D,Symbol,Variables,Types,Preconds),Preconds)),
 	{announce_fin(Symbol,"preconditions")},	ws,
 	([], {Effects=[]};
          ascii(":effect"), !, wp,
-         pddl_emptyOr(pddl_effect(Symbol,Variables,Types,Effects),Effects)).
+         pddl_emptyOr(pddl_effect(D,Symbol,Variables,Types,Effects),Effects)).
 
 pddl_emptyOr(_,[]) -->
         ascii("("), ws,
         ascii(")"), !.
 pddl_emptyOr(X,_) --> X.
 
-pddl_pre_gd_star(_,_,_,[]) --> [].
-pddl_pre_gd_star(S,V,T,[G|GL]) -->
-        pddl_pre_gd(S,V,T,G), ws,
-        pddl_pre_gd_star(S,V,T,GL).
+pddl_pre_gd_star(_,_,_,_,[]) --> [].
+pddl_pre_gd_star(D,S,V,T,[G|GL]) -->
+        pddl_pre_gd(D,S,V,T,G), ws,
+        pddl_pre_gd_star(D,S,V,T,GL).
 
-pddl_pre_gd(S,V,T,G) -->
-        pddl_pref_gd(S,V,T,G).
-pddl_pre_gd(S,V,T,G) -->
+pddl_pre_gd(D,S,V,T,G) -->
+        pddl_pref_gd(D,S,V,T,G).
+pddl_pre_gd(D,S,V,T,G) -->
         ascii("("), ws,
         ascii("and"), wp,
-        pddl_pre_gd_star(S,V,T,GL), ws,
-        {conjoin(GL,G)},
-        ascii(")").
-pddl_pre_gd(S,V,T,all(V1,T1,G)) -->
+        pddl_pre_gd_star(D,S,V,T,GL), ws,
+        ascii(")"),
+        {conjoin(GL,G)}.
+pddl_pre_gd(D,S,V,T,all(V1,T1,G)) -->
         ascii("("), ws,
         ascii("forall"), ws,
         {must_support(universal-preconditions)},
 	ascii("("), ws,
         pddl_typed_list_variable(V1,T1), ws,
         ascii(")"), wp,
+        {check_types(D,T1)},
         {append(V,V1,V2), append(T,T1,T2)},
-        pddl_pre_gd(S,V2,T2,G), ws,
+        pddl_pre_gd(D,S,V2,T2,G), ws,
         ascii(")").
 
-pddl_pref_gd(_,_,_,_) -->
+pddl_pref_gd(_,_,_,_,_) -->
         ascii("("), ws,
         ascii(":preference"), wp,
         {must_support(preferencenes)},
         {cannot_compile(preferences)},
         ([]; pddl_pref_name(_), wp),
         pddl_gd(_,_,_,_), ws, ascii(")").
-pddl_pref_gd(S,V,T,G) -->
-        pddl_gd(S,V,T,G).
+pddl_pref_gd(D,S,V,T,G) -->
+        pddl_gd(D,S,V,T,G).
 
 pddl_pref_name(Name) -->
         pddl_name_atom(Name).
 
-pddl_gd(_,V,T,G) -->
-        pddl_atomic_formula_term(V,T,G).
-pddl_gd(_,V,T,G) -->
+pddl_gd(D,_,V,T,G) -->
+        pddl_atomic_formula_term(V,T,G),
+        {check_atom(D,V,T,G)}.
+pddl_gd(D,_,V,T,G) -->
         pddl_literal_term(V,T,G),
-        {must_support(negative-preconditions)}.
-pddl_gd(S,V,T,G) -->
+        {must_support(negative-preconditions)},
+        {check_lit(D,V,T,G)}.
+pddl_gd(D,S,V,T,G) -->
         ascii("("), ws,
         ascii("and"), ws,
-        pddl_gd_star(S,V,T,GL), ws,
-        {conjoin(GL,G)},
-        ascii(")").
-pddl_gd(S,V,T,G) -->
+        pddl_gd_star(D,S,V,T,GL), ws,
+        ascii(")"),
+        {conjoin(GL,G)}.
+pddl_gd(D,S,V,T,G) -->
         ascii("("), ws,
         ascii("or"), ws,
         {must_support(disjunctive-preconditions)},
-        pddl_gd_star(S,V,T,GL), ws,
-        {disjoin(GL,G)},
-        ascii(")").
-pddl_gd(S,V,T,-G) -->
+        pddl_gd_star(D,S,V,T,GL), ws,
+        ascii(")"),
+        {disjoin(GL,G)}.
+pddl_gd(D,S,V,T,-G) -->
         ascii("("), ws,
         ascii("not"), ws,
         {must_support(disjunctive-preconditions)},
-        pddl_gd(S,V,T,G), ws,
+        pddl_gd(D,S,V,T,G), ws,
         ascii(")").
-pddl_gd(S,V,T,G1=>G2) -->
+pddl_gd(D,S,V,T,G1=>G2) -->
         ascii("("), ws,
         ascii("imply"), ws,
         {must_support(disjunctive-preconditions)},
-        pddl_gd(S,V,T,G1), ws,
-        pddl_gd(S,V,T,G2), ws,
+        pddl_gd(D,S,V,T,G1), ws,
+        pddl_gd(D,S,V,T,G2), ws,
         ascii(")").
-pddl_gd(S,V,T,some(V1,T1,G)) -->
+pddl_gd(D,S,V,T,some(V1,T1,G)) -->
         ascii("("), ws,
         ascii("exists"), ws,
         {must_support(existential-preconditions)},
@@ -728,9 +741,9 @@ pddl_gd(S,V,T,some(V1,T1,G)) -->
         pddl_typed_list_variable(V1,T1), ws,
         ascii(")"), ws,
         {append(V,V1,V2), append(T,T1,T2)},
-        pddl_gd(S,V2,T2,G), ws,
+        pddl_gd(D,S,V2,T2,G), ws,
         ascii(")").
-pddl_gd(S,V,T,all(V1,T1,G)) -->
+pddl_gd(D,S,V,T,all(V1,T1,G)) -->
         ascii("("), ws,
         ascii("forall"), ws,
         {must_support(universal-preconditions)},
@@ -738,17 +751,17 @@ pddl_gd(S,V,T,all(V1,T1,G)) -->
         pddl_typed_list_variable(V1,T1), ws,
         ascii(")"), ws,
         {append(V,V1,V2), append(T,T1,T2)},
-        pddl_gd(S,V2,T2,G), ws,
+        pddl_gd(D,S,V2,T2,G), ws,
         ascii(")").
-pddl_gd(_,_,_,_) -->
+pddl_gd(_,_,_,_,_) -->
         pddl_f_comp,
         {must_support(numeric-fluents),
          cannot_compile(fluents)}.
 
-pddl_gd_star(_,_,_,[]) --> [].
-pddl_gd_star(S,V,T,[G|GL]) -->
-        pddl_gd(S,V,T,G), ws,
-        pddl_gd_star(S,V,T,GL).
+pddl_gd_star(_,_,_,_,[]) --> [].
+pddl_gd_star(D,S,V,T,[G|GL]) -->
+        pddl_gd(D,S,V,T,G), ws,
+        pddl_gd_star(D,S,V,T,GL).
 
 pddl_f_comp -->
         ascii("("), ws,
@@ -759,7 +772,7 @@ pddl_f_comp -->
 
 pddl_literal_term(V,T,G) -->
         pddl_atomic_formula_term(V,T,G).
-pddl_literal_term(V,T,neg(G)) -->
+pddl_literal_term(V,T,-G) -->
         ascii("("), ws,
         ascii("not"), ws,
         pddl_atomic_formula_term(V,T,G), ws,
@@ -804,41 +817,42 @@ pddl_function_term(V,T,FTerm) -->
         {FTerm =.. [Symbol|Terms]},
         {must_support(object-fluents)}.
 
-pddl_f_exp(_,_,N) -->
+pddl_f_exp(_,_,_,N) -->
         pddl_number(N),
         {must_support(numeric-fluents)}.
-pddl_f_exp(V,T,Exp) -->
+pddl_f_exp(D,V,T,Exp) -->
         ascii("("), ws,
         pddl_binary_op(Op), ws,
-        pddl_f_exp(V,T,Exp1), wp,
-        pddl_f_exp(V,T,Exp2), ws,
+        pddl_f_exp(D,V,T,Exp1), wp,
+        pddl_f_exp(D,V,T,Exp2), ws,
         ascii(")"),
         {Exp =.. [Op,Exp1,Exp2]},
         {must_support(numeric-fluents)}.
-pddl_f_exp(V,T,Exp) -->
+pddl_f_exp(D,V,T,Exp) -->
         ascii("("), ws,
         pddl_multi_op(Op), ws,
-        pddl_f_exp(V,T,Exp1), wp,
-        pddl_f_exp_plus(V,T,Exps2), ws,
+        pddl_f_exp(D,V,T,Exp1), wp,
+        pddl_f_exp_plus(D,V,T,Exps2), ws,
         ascii(")"),
         {apply_multi_op(Op,[Exp1|Exps2],Exp)},
         {must_support(numeric-fluents)}.
-pddl_f_exp(V,T,Exp) -->
+pddl_f_exp(D,V,T,Exp) -->
         ascii("("), ws,
         ascii("-"), ws,
-        pddl_f_exp(V,T,Exp1), ws,
+        pddl_f_exp(D,V,T,Exp1), ws,
         ascii(")"),
         {Exp =.. ['-',Exp1]},
         {must_support(numeric-fluents)}.
-pddl_f_exp(V,T,Head) -->
+pddl_f_exp(D,V,T,Head) -->
         pddl_f_head(V,T,Head),
+        {check_fhead(D,V,T,Head)},
         {must_support(numeric-fluents)}.
 
-pddl_f_exp_plus(V,T,Exp) -->
-        pddl_f_exp(V,T,Exp).
-pddl_f_exp_plus(V,T,[Exp|Exps]) -->
-        pddl_f_exp(V,T,Exp), wp,
-        pddl_f_exp_plus(V,T,Exps).
+pddl_f_exp_plus(D,V,T,Exp) -->
+        pddl_f_exp(D,V,T,Exp).
+pddl_f_exp_plus(D,V,T,[Exp|Exps]) -->
+        pddl_f_exp(D,V,T,Exp), wp,
+        pddl_f_exp_plus(D,V,T,Exps).
 
 pddl_f_head(V,T,Head) -->
         ascii("("), ws,
@@ -868,15 +882,15 @@ pddl_binary_comp -->
         ascii(">=");
         ascii("<=").
 
-pddl_effect(S,V,T,and(EL)) -->
+pddl_effect(D,S,V,T,and(EL)) -->
         ascii("("), ws,
         ascii("and"), ws,
-        pddl_c_effect_star(S,V,T,EL), ws,
+        pddl_c_effect_star(D,S,V,T,EL), ws,
         ascii(")").
-pddl_effect(S,V,T,E) -->
-        pddl_c_effect(S,V,T,E).
+pddl_effect(D,S,V,T,E) -->
+        pddl_c_effect(D,S,V,T,E).
 
-pddl_c_effect(S,V,T,forall(V1,T1,E)) -->
+pddl_c_effect(D,S,V,T,forall(V1,T1,E)) -->
         ascii("("), ws,
         ascii("forall"), ws,
         {must_support(conditional-effects)},
@@ -884,69 +898,77 @@ pddl_c_effect(S,V,T,forall(V1,T1,E)) -->
         % BNF requires "pddl_typed_list_variable_star,
         % however this should be equivalent:
         pddl_typed_list_variable(V1,T1), ws,
+        {check_types(D,T1)},
         ascii(")"), ws,
         {append(V,V1,V2), append(T,T1,T2)},
-	pddl_effect(S,V2,T2,E), ws,
+	pddl_effect(D,S,V2,T2,E), ws,
         ascii(")").
-pddl_c_effect(S,V,T,when(G,E)) -->
+pddl_c_effect(D,S,V,T,when(G,E)) -->
         ascii("("), ws,
         ascii("when"), ws,
         {must_support(conditional-effects)},
-        pddl_gd(S,V,T,G), ws,
-        pddl_cond_effect(S,V,T,E), ws,
+        pddl_gd(D,S,V,T,G), ws,
+        pddl_cond_effect(D,S,V,T,E), ws,
         ascii(")").
-pddl_c_effect(S,V,T,E) -->
-        pddl_p_effect(S,V,T,E).
+pddl_c_effect(D,S,V,T,E) -->
+        pddl_p_effect(D,S,V,T,E).
 
-pddl_c_effect_star(_,_,_,[]) --> [].
-pddl_c_effect_star(S,V,T,[E|EL]) -->
-        pddl_c_effect(S,V,T,E), ws,
-        pddl_c_effect_star(S,V,T,EL).
+pddl_c_effect_star(_,_,_,_,[]) --> [].
+pddl_c_effect_star(D,S,V,T,[E|EL]) -->
+        pddl_c_effect(D,S,V,T,E), ws,
+        pddl_c_effect_star(D,S,V,T,EL).
 
-pddl_p_effect(_,V,T,del(E)) -->
+pddl_p_effect(D,_,V,T,del(E)) -->
         ascii("("), ws,
         ascii("not"), ws,
         pddl_atomic_formula_term(V,T,E), ws,
+        {check_atom(D,V,T,E)},
         ascii(")").
-pddl_p_effect(_,V,T,add(E)) -->
-        pddl_atomic_formula_term(V,T,E).
-pddl_p_effect(_,_,_,_) -->
+pddl_p_effect(D,_,V,T,add(E)) -->
+        pddl_atomic_formula_term(V,T,E),
+        {check_atom(D,V,T,E)}.
+pddl_p_effect(_,_,_,_,_) -->
         ascii("("), ws,
         pddl_assign_op, wp,
         {must_support(numeric-fluents),
          cannot_compile(numeric-fluents)},
         pddl_f_head(_,_,_), wp,
+        % TODO: check f_head
         pddl_f_exp(_,_,_), ws,
+        % TODO: check f_exp
         ascii(")").
-pddl_p_effect(_,_,_,_) -->
+pddl_p_effect(_,_,_,_,_) -->
         ascii("("), ws,
         ascii("assign"), wp,
         {must_support(object-fluents),
          cannot_compile(object-fluents)},
         pddl_function_term(_,_,_), wp,
+        % TODO: check function term
         pddl_term(_,_,_), ws,
+        % TODO: check term
         ascii(")").
-pddl_p_effect(_,_,_,_) -->
+pddl_p_effect(_,_,_,_,_) -->
         ascii("("), ws,
         ascii("assign"), wp,
         {must_support(object-fluents),
          cannot_compile(object-fluents)},
         pddl_function_term(_,_,_), wp,
+        % TODO: check function term
         ascii("undefined"), ws,
         ascii(")").
 
-pddl_p_effect_star(_,_,_,[]) --> [].
-pddl_p_effect_star(S,V,T,[E|EL]) -->
-        pddl_p_effect(S,V,T,E),	ws,
-        pddl_p_effect_star(S,V,T,EL).
+pddl_p_effect_star(_,_,_,_,[]) --> [].
+pddl_p_effect_star(D,S,V,T,[E|EL]) -->
+        pddl_p_effect(D,S,V,T,E), ws,
+        pddl_p_effect_star(D,S,V,T,EL).
 
-pddl_cond_effect(S,V,T,and(EL)) -->
+pddl_cond_effect(D,S,V,T,and(EL)) -->
         ascii("("), ws,
         ascii("and"), ws,
-        pddl_p_effect_star(S,V,T,EL), ws,
+        pddl_p_effect_star(D,S,V,T,EL), ws,
         ascii(")").
-pddl_cond_effect(S,V,T,E) -->
-        pddl_p_effect(S,V,T,E).
+pddl_cond_effect(D,S,V,T,E) -->
+        pddl_p_effect(D,S,V,T,E).
 
 pddl_assign_op -->
         ascii("assign");
@@ -957,7 +979,7 @@ pddl_assign_op -->
 
 % Durative Actions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_durative_action_def(Axioms) -->
+pddl_durative_action_def(D,Axioms) -->
         ascii("("), ws,
         ascii(":durative-action"), wp, !,
         {must_support(durative-actions)},
@@ -967,8 +989,9 @@ pddl_durative_action_def(Axioms) -->
         ascii(":parameters"), ws,
         ascii("("), ws,
         pddl_typed_list_variable(Variables,Types), ws,
+        {check_types(D,Types)},
         ascii(")"), ws,
-        pddl_da_def_body(Symbol,Variables,Types,
+        pddl_da_def_body(D,Symbol,Variables,Types,
                          Duration,Conds,Effects), ws,
         ascii(")"), !,
         {construct_durative_action_axioms(Axioms,Symbol,Variables,Types,
@@ -979,66 +1002,67 @@ pddl_durative_action_def(Axioms) -->
 pddl_da_symbol(Name) -->
         pddl_name_atom(Name).
 
-pddl_da_def_body(Symbol,Variables,Types,Duration,Conds,Effects) -->
+pddl_da_def_body(D,Symbol,Variables,Types,Duration,Conds,Effects) -->
         ascii(":duration"), ws,
-        pddl_duration_constraint(Variables,Types,Duration), ws,
+        pddl_duration_constraint(D,Variables,Types,Duration), ws,
         ascii(":condition"), ws,
-        pddl_emptyOr(pddl_da_gd(Symbol,Variables,Types,Conds),
+        pddl_emptyOr(pddl_da_gd(D,Symbol,Variables,Types,Conds),
                      Conds), ws,
         ascii(":effect"), ws,
-        pddl_emptyOr(pddl_da_effect(Symbol,Variables,Types,Effects),Effects).
+        pddl_emptyOr(pddl_da_effect(D,Symbol,Variables,Types,Effects),Effects).
 
-pddl_da_gd(Symbol,Variables,Types,Conds) -->
-        pddl_pref_timed_gd(Symbol,Variables,Types,Conds).
-pddl_da_gd(Symbol,Variables,Types,Conds) -->
+pddl_da_gd(D,Symbol,Variables,Types,Conds) -->
+        pddl_pref_timed_gd(D,Symbol,Variables,Types,Conds).
+pddl_da_gd(D,Symbol,Variables,Types,Conds) -->
         ascii("("), ws,
         ascii("and"), ws,
-        pddl_da_gd_star(Symbol,Variables,Types,Conds), ws,
+        pddl_da_gd_star(D,Symbol,Variables,Types,Conds), ws,
         ascii(")").
-pddl_da_gd(Symbol,Variables,Types,all(V,T,G)) -->
+pddl_da_gd(D,Symbol,Variables,Types,all(V,T,G)) -->
         ascii("("), ws,
         ascii("forall"), ws,
         {must_support(universal-preconditions)},
         ascii("("), ws,
         pddl_typed_list_variable(V1,T1), ws,
+        {check_types(D,T1)},
         {append(Variables,V1,V), append(Types,T1,T)},
         ascii(")"), ws,
-        pddl_da_gd(Symbol,V,T,G), ws,
+        pddl_da_gd(D,Symbol,V,T,G), ws,
         ascii(")").
 
-pddl_da_gd_star(_Symbol,_Variables,_Types,[]) --> [].
-pddl_da_gd_star(Symbol,Variables,Types,[Cond|Conds]) -->
-        pddl_da_gd(Symbol,Variables,Types,Cond), ws,
-        pddl_da_gd_star(Symbol,Variables,Types,Conds).
+pddl_da_gd_star(_D,_Symbol,_Variables,_Types,[]) --> [].
+pddl_da_gd_star(D,Symbol,Variables,Types,[Cond|Conds]) -->
+        pddl_da_gd(D,Symbol,Variables,Types,Cond), ws,
+        pddl_da_gd_star(D,Symbol,Variables,Types,Conds).
 
-pddl_pref_timed_gd(Symbol,Variables,Types,Conds) -->
-        pddl_timed_gd(Symbol,Variables,Types,Conds).
-pddl_pref_timed_gd(Symbol,Variables,Types,pddl_timed_pref(Conds)) -->
+pddl_pref_timed_gd(D,Symbol,Variables,Types,Conds) -->
+        pddl_timed_gd(D,Symbol,Variables,Types,Conds).
+pddl_pref_timed_gd(D,Symbol,Variables,Types,pddl_timed_pref(Conds)) -->
         ascii("("), ws,
         ascii("preference"), ws,
         {must_support(preferences)},
-        pddl_timed_gd(Symbol,Variables,Types,Conds), ws,
+        pddl_timed_gd(D,Symbol,Variables,Types,Conds), ws,
         ascii(")").
-pddl_pref_timed_gd(Symbol,Variables,Types,
+pddl_pref_timed_gd(D,Symbol,Variables,Types,
                    pddl_timed_pref(Name,Conds)) -->
         ascii("("), ws,
         ascii("preference"), wp,
         {must_support(preferences)},
         pddl_pref_name(Name), ws,
-        pddl_timed_gd(Symbol,Variables,Types,Conds), ws,
+        pddl_timed_gd(D,Symbol,Variables,Types,Conds), ws,
         ascii(")").
 
-pddl_timed_gd(Symbol,Variables,Types,pddl_at(TimeSpecifier,Goal)) -->
+pddl_timed_gd(D,Symbol,Variables,Types,pddl_at(TimeSpecifier,Goal)) -->
         ascii("("), ws,
         ascii("at"), wp,
         pddl_time_specifier(TimeSpecifier), ws,
-        pddl_gd(Symbol,Variables,Types,Goal), ws,
+        pddl_gd(D,Symbol,Variables,Types,Goal), ws,
         ascii(")").
-pddl_timed_gd(Symbol,Variables,Types,pddl_over(Interval,Goal)) -->
+pddl_timed_gd(D,Symbol,Variables,Types,pddl_over(Interval,Goal)) -->
         ascii("("), ws,
         ascii("over"), wp,
         pddl_interval(Interval), ws,
-        pddl_gd(Symbol,Variables,Types,Goal), ws,
+        pddl_gd(D,Symbol,Variables,Types,Goal), ws,
         ascii(")").
 
 pddl_time_specifier(start) -->
@@ -1049,42 +1073,42 @@ pddl_time_specifier(end) -->
 pddl_interval(all) -->
         ascii("all").
 
-pddl_duration_constraint(V,T,and(DurationConstraints)) -->
+pddl_duration_constraint(D,V,T,and(DurationConstraints)) -->
         ascii("("), ws,
         ascii("and"),
         {must_support(duration-inequalities)},
-        pddl_simple_duration_constraint_plus(V,T,
+        pddl_simple_duration_constraint_plus(D,V,T,
                                              DurationConstraints), ws,
         ascii(")").
-pddl_duration_constraint(_,_,true) -->
+pddl_duration_constraint(_,_,_,true) -->
         ascii("("), ws,
         ascii(")").
-pddl_duration_constraint(V,T,Duration) -->
-        pddl_simple_duration_constraint(V,T,Duration).
+pddl_duration_constraint(D,V,T,Duration) -->
+        pddl_simple_duration_constraint(D,V,T,Duration).
 
-pddl_simple_duration_constraint(Variables,Types,
+pddl_simple_duration_constraint(D,Variables,Types,
                                 pddl_d_op(Op,Value)) -->
         ascii("("), ws,
         pddl_d_op(Op), ws,
         ascii("?duration"), wp,
-        pddl_d_value(Variables,Types,Value), ws,
+        pddl_d_value(D,Variables,Types,Value), ws,
         ascii(")").
-pddl_simple_duration_constraint(Variables,Types,
+pddl_simple_duration_constraint(D,Variables,Types,
                                 pddl_at(TimeSpecifier,Constraint)) -->
         ascii("("), ws,
         ascii("at"), wp,
         pddl_time_specifier(TimeSpecifier), ws,
-        pddl_simple_duration_constraint(Variables,Types,
+        pddl_simple_duration_constraint(D,Variables,Types,
                                         Constraint), ws,
         ascii(")").
 
-pddl_simple_duration_constraint_plus(Variables,Types,[Constraint]) -->
-	pddl_simple_duration_constraint(Variables,Types,Constraint).
-pddl_simple_duration_constraint_plus(Variables,Types,
+pddl_simple_duration_constraint_plus(D,Variables,Types,[Constraint]) -->
+	pddl_simple_duration_constraint(D,Variables,Types,Constraint).
+pddl_simple_duration_constraint_plus(D,Variables,Types,
                                      [Constraint|Constraints]) -->
-	pddl_simple_duration_constraint(Variables,Types,
+	pddl_simple_duration_constraint(D,Variables,Types,
                                         Constraint), ws,
-	pddl_simple_duration_constraint_plus(Variables,Types,Constraints).
+	pddl_simple_duration_constraint_plus(D,Variables,Types,Constraints).
 
 pddl_d_op(lessthan) -->
         ascii("<="),
@@ -1095,65 +1119,67 @@ pddl_d_op(greaterthan) -->
 pddl_d_op(equals) -->
         ascii("=").
 
-pddl_d_value(_,_,Number) -->
+pddl_d_value(_,_,_,Number) -->
         pddl_number(Number).
-pddl_d_value(V,T,Exp) -->
-        pddl_f_exp(V,T,Exp),
+pddl_d_value(D,V,T,Exp) -->
+        pddl_f_exp(D,V,T,Exp),
         {must_support(numeric-fluents)}.
 
-pddl_da_effect(Symbol,Variables,Types,and(Effects)) -->
+pddl_da_effect(D,Symbol,Variables,Types,and(Effects)) -->
         ascii("("), ws,
         ascii("and"), ws,
-        pddl_da_effect_star(Symbol,Variables,Types,Effects), ws,
+        pddl_da_effect_star(D,Symbol,Variables,Types,Effects), ws,
         ascii(")").
-pddl_da_effect(Symbol,Variables,Types,Effect) -->
-        pddl_timed_effect(Symbol,Variables,Types,Effect).
-pddl_da_effect(Symbol,Variables,Types,forall(V1,T1,Effects)) -->
+pddl_da_effect(D,Symbol,Variables,Types,Effect) -->
+        pddl_timed_effect(D,Symbol,Variables,Types,Effect).
+pddl_da_effect(D,Symbol,Variables,Types,forall(V1,T1,Effects)) -->
         ascii("("), ws,
         ascii("forall"), ws,
         {must_support(conditional-effects)},
         ascii("("), ws,
         pddl_typed_list_variable(V1,T1), ws,
+        {check_types(D,T1)},
         {append(Variables,V1,V), append(Types,T1,T)},
         ascii(")"), ws,
-        pddl_da_effect(Symbol,V,T,Effects), ws,
+        pddl_da_effect(D,Symbol,V,T,Effects), ws,
         ascii(")").
-pddl_da_effect(Symbol,Variables,Types,when(G,E)) -->
+pddl_da_effect(D,Symbol,Variables,Types,when(G,E)) -->
         ascii("("), ws,
         ascii("when"), ws,
         {must_support(conditional-effects)},
-        pddl_da_gd(Symbol,Variables,Types,G), ws,
-        pddl_timed_effect(Symbol,Variables,Types,E), ws,
+        pddl_da_gd(D,Symbol,Variables,Types,G), ws,
+        pddl_timed_effect(D,Symbol,Variables,Types,E), ws,
         ascii(")").
 
-pddl_da_effect_star(_Symbol,_Variables,_Types,[]) --> [].
-pddl_da_effect_star(Symbol,Variables,Types,[Effect|Effects]) -->
-        pddl_da_effect(Symbol,Variables,Types,Effect), ws,
-        pddl_da_effect_star(Symbol,Variables,Types,Effects).
+pddl_da_effect_star(_D,_Symbol,_Variables,_Types,[]) --> [].
+pddl_da_effect_star(D,Symbol,Variables,Types,[Effect|Effects]) -->
+        pddl_da_effect(D,Symbol,Variables,Types,Effect), ws,
+        pddl_da_effect_star(D,Symbol,Variables,Types,Effects).
 
-pddl_timed_effect(Symbol,Variables,Types,
+pddl_timed_effect(D,Symbol,Variables,Types,
                   pddl_at(TimeSpecifier,Effects)) -->
         ascii("("), ws,
         ascii("at"), wp,
         pddl_time_specifier(TimeSpecifier), ws,
-        pddl_cond_effect(Symbol,Variables,Types,Effects), ws,
+        pddl_cond_effect(D,Symbol,Variables,Types,Effects), ws,
         ascii(")").
-pddl_timed_effect(_Symbol,Variables,Types,
+pddl_timed_effect(D,_Symbol,Variables,Types,
                   pddl_at(TimeSpecifier,Effects)) -->
         ascii("("), ws,
         ascii("at"), wp,
         pddl_time_specifier(TimeSpecifier), ws,
-        pddl_f_assign_da(Variables,Types,Effects), ws,
+        pddl_f_assign_da(D,Variables,Types,Effects), ws,
         ascii(")"),
         {must_support(numeric-fluents)}.
-pddl_timed_effect(_Symbol,Variables,Types,
+pddl_timed_effect(D,_Symbol,Variables,Types,
                   pddl_assign(Op,Head,Exp)) -->
         ascii("("), ws,
         pddl_assign_op_t(Op), wp,
         {must_support(continuous-effects)},
         {must_support(numeric-fluents)},
         pddl_f_head(Variables,Types,Head), wp,
-        pddl_f_exp_t(Variables,Types,Exp), ws,
+        {check_fhead(D,Variables,Types,Head)},
+        pddl_f_exp_t(D,Variables,Types,Exp), ws,
         ascii(")").
 
 pddl_assign_op_t(increase) -->
@@ -1161,63 +1187,65 @@ pddl_assign_op_t(increase) -->
 pddl_assign_op_t(increase) -->
         ascii("decrease").
 
-pddl_f_exp_t(V,T,Exp * 'pddl_#t') -->
+pddl_f_exp_t(D,V,T,Exp * 'pddl_#t') -->
         ascii("("), ws,
         ascii("*"), wp,
-        pddl_f_exp(V,T,Exp), wp,
+        pddl_f_exp(D,V,T,Exp), wp,
         ascii("#t"), ws,
         ascii(")").
-pddl_f_exp_t(V,T,'pddl_#t' * Exp) -->
+pddl_f_exp_t(D,V,T,'pddl_#t' * Exp) -->
         ascii("("), ws,
         ascii("*"), wp,
         ascii("#t"), wp,
-        pddl_f_exp(V,T,Exp), ws,
+        pddl_f_exp(D,V,T,Exp), ws,
         ascii(")").
-pddl_f_exp_t(_,_,'pddl_#t') -->
+pddl_f_exp_t(_,_,_,'pddl_#t') -->
         ascii("#t").
 
-pddl_f_assign_da(V,T,pddl_f_assign_da(Op,Head,Exp)) -->
+pddl_f_assign_da(D,V,T,pddl_f_assign_da(Op,Head,Exp)) -->
         ascii("("), ws,
         pddl_assign_op(Op), wp,
         pddl_f_head(V,T,Head), wp,
-        pddl_f_exp_da(V,T,Exp), ws,
+        {check_fhead(D,V,T,Head)},
+        pddl_f_exp_da(D,V,T,Exp), ws,
         ascii(")").
 
-pddl_f_exp_da(V,T,Exp) -->
+pddl_f_exp_da(D,V,T,Exp) -->
         ascii("("),
         pddl_binary_op(Op), ws,
-        pddl_f_exp_da(V,T,Exp1), wp,
-        pddl_f_exp_da(V,T,Exp2), ws,
+        pddl_f_exp_da(D,V,T,Exp1), wp,
+        pddl_f_exp_da(D,V,T,Exp2), ws,
         ascii(")"),
         {Exp =.. [Op,Exp1,Exp2]}.
-pddl_f_exp_da(V,T,Exp) -->
+pddl_f_exp_da(D,V,T,Exp) -->
         ascii("("),
         pddl_multi_op(Op), ws,
-        pddl_f_exp_da(V,T,Exp1), wp,
-        pddl_f_exp_da_plus(V,T,Exps2), ws,
+        pddl_f_exp_da(D,V,T,Exp1), wp,
+        pddl_f_exp_da_plus(D,V,T,Exps2), ws,
         ascii(")"),
         {apply_multi_op(Op,[Exp1|Exps2],Exp)}.
-pddl_f_exp_da(V,T,Exp) -->
+pddl_f_exp_da(D,V,T,Exp) -->
         ascii("("), ws,
         ascii("-"), ws,
-        pddl_f_exp_da(V,T,Exp1), ws,
+        pddl_f_exp_da(D,V,T,Exp1), ws,
         ascii(")"),
         {Exp =.. ['-',Exp1]}.
-pddl_f_exp_da(_,_,'pddl_duration') -->
+pddl_f_exp_da(_,_,_,'pddl_duration') -->
         ascii("?duration"),
         {must_support(duration-inequalities)}.
-pddl_f_exp_da(V,T,Exp) -->
-        pddl_f_exp(V,T,Exp).
+pddl_f_exp_da(D,V,T,Exp) -->
+        pddl_f_exp(D,V,T,Exp).
 
 % Derived Predicates%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_derived_def([]) -->
+pddl_derived_def(D,[]) -->
         ascii("("), ws,
         ascii(":derived"), wp, !,
         {must_support(derived-predicates),
          cannot_compile(derived-predicates)},
         pddl_atomic_formula_skeleton(_,_), wp,
-        pddl_gd(_,_,_,_), ws,
+        % TODO: check types of skeleton
+        pddl_gd(D,_,_,_,_), ws,
         ascii(")").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1239,8 +1267,9 @@ pddl_problem(axioms(Problem,Domain,ObjectAxioms,
         ascii(")"), ws,
         ([]; pddl_problem_requirements, ws),
         ([]; pddl_object_declarations(ObjectAxioms), ws),
-        pddl_init(InitAxioms), ws,
-        pddl_goal(GoalAxioms), ws,
+        % TODO: how to get D?
+        pddl_init(_,InitAxioms), ws,
+        pddl_goal(_,GoalAxioms), ws,
         ([]; pddl_problem_constraints, ws),
         ([]; pddl_metric_spec, ws),
         ([]; pddl_length_spec, ws),
@@ -1264,44 +1293,49 @@ pddl_object_declarations(Axioms) -->
         {constants_declaration(ObjectsDefs,Axioms)},
         {announce_suc("objects")}.
 
-pddl_init(Axioms) -->
+pddl_init(D,Axioms) -->
         ascii("("), ws,
         ascii(":init"), wp, !,
         {announce_pro("init")},
-        pddl_init_el_star(Axioms), ws,
+        pddl_init_el_star(D,Axioms), ws,
         ascii(")"),
         {announce_suc("init")}.
 
-pddl_init_el_star([Axiom|Axioms]) -->
-        pddl_init_el(Axiom), ws,
-        pddl_init_el_star(Axioms).
-pddl_init_el_star([]) --> [].
+pddl_init_el_star(D,[Axiom|Axioms]) -->
+        pddl_init_el(D,Axiom), ws,
+        pddl_init_el_star(D,Axioms).
+pddl_init_el_star(_,[]) --> [].
 
-pddl_init_el(initially(Atom,true)) -->
-        pddl_literal_name(Atom).
-pddl_init_el([]) -->
+pddl_init_el(D,initially(Atom,true)) -->
+        pddl_literal_name(Atom),
+        {check_atom(D,[],[],Atom)}.
+pddl_init_el(_,[]) -->
         ascii("("), ws,
         ascii("at"), wp,
         {must_support(timed-initial-literals),
          cannot_compile(timed-initial-literals)},
         pddl_number(_), ws,
         pddl_literal_name(_), ws,
+        % TODO: check literal
         ascii(")").
-pddl_init_el([]) -->
+pddl_init_el(_,[]) -->
         ascii("("), ws,
         ascii("="), ws,
         {must_support(numeric-fluents),
          cannot_compile(numeric-fluents)},
         pddl_basic_function_term(_), wp,
+        % TODO: check function term
         pddl_number(_), ws,
         ascii(")").
-pddl_init_el([]) -->
+pddl_init_el(_,[]) -->
         ascii("("), ws,
         ascii("="), ws,
         {must_support(object-fluents),
          cannot_compile(object-fluents)},
         pddl_basic_function_term(_), wp,
+        % TODO: check function term
         pddl_name_atom(_), ws,
+        % TODO: check atom
         ascii(")").
 
 pddl_basic_function_term(Symbol) -->
@@ -1335,11 +1369,11 @@ pddl_atomic_formula_name((N1 = N2)) -->
         pddl_term(N2), ws,
         ascii(")").
 
-pddl_goal([goal(G)]) -->
+pddl_goal(D,[goal(G)]) -->
         ascii("("), ws,
         ascii(":goal"), wp, !,
         {announce_pro("goal")},
-        pddl_pre_gd(goal,[],[],G), ws,
+        pddl_pre_gd(D,goal,[],[],G), ws,
         ascii(")"),
         {announce_suc("goal")}.
 
@@ -1666,3 +1700,85 @@ process_subtypeslist([SubType|SubTypes],X, (T ; Ts)) :-
 
 construct_durative_action_axioms([],_Symbol,_Variables,_Types,
                                  _Duration,_Conds,_Effects). % TODO
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Test predicates to check whether all symbols have been declared
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+check_types(D,CTypes) :-
+        D = dom(Types,_,_,_,_),
+        check_types2(CTypes,Types).
+check_types2([],_Types) :- !.
+check_types2([CT|CTs],Types) :-
+        check_type(CT,Types),
+        check_types2(CTs,Types).
+check_type(object,_Types) :- !.
+check_type(number,_Types) :- !.
+check_type(CT,Types) :-
+        member(CT,Types), !.
+check_type(CT,Types) :-
+        member(ST,Types),
+        ST =.. [_,Names],
+        member(CT,Names), !.
+check_type(CT,Types) :-
+        member(ET,Types),
+        ET = either(_ENames,Names),
+        member(CT,Names), !.
+
+check_atom(D,V,T,A) :-
+        D = dom(_,_,Predicates,_,_),
+        A =.. [PredSymbol|Args],
+        member(pred(PredSymbol,_ArgNames,ArgTypes),Predicates), !,
+        check_terms(D,V,T,Args,ArgTypes).
+        
+check_lit(D,V,T,-A) :- !,
+        check_atom(D,V,T,A).
+check_lit(D,V,T,A) :- !,
+        check_atom(D,V,T,A).
+
+check_terms(_,_,_,[],[]) :- !.
+check_terms(D,V,T,[Term|Terms],[TType|TTypes]) :- !,
+        check_term(D,V,T,Term,TType),
+        check_terms(D,V,T,Terms,TTypes).
+check_term(D,V,T,Term,TType) :-
+        check_constant(D,V,T,Term,TType);
+        check_variable(D,V,T,Term,TType);
+        check_function(D,V,T,Term,TType).
+
+check_constant(D,_,_,Constant,Type) :-
+        D = dom(_,Constants,_,_,_),
+        member(ConstantDef,Constants),
+        ConstantDef =.. [CType,ConstantList],
+        member(Constant,ConstantList), !,
+        check_subtype(D,Type,CType).
+check_variable(D,V,T,Variable,Type) :-
+        nth0(I,V,Variable), !,
+        nth0(I,T,VType),
+        check_subtype(D,VType,Type).
+check_function(D,V,T,Function,FType) :- !,
+        Function =.. [FName|FArgs],
+        D = dom(_,_,_,Functions,FTypes),
+        nth0(I,Functions,func(FName,_FArgNames,FArgTypes)),
+        nth0(I,FTypes,FType),
+        check_terms(D,V,T,FArgs,FArgTypes).
+
+check_fhead(D,V,T,H) :- !,
+        check_function(D,V,T,H,number).
+
+% check_subtype(D,SubType,Type)
+% checks if SubType is a subtype of Type according to D
+check_subtype(_,Type,Type) :- !.
+check_subtype(D,SubType,Type) :-
+        D = dom(Types,_,_,_,_),
+        member(STD,Types),
+        STD =.. [Type,SubTypes],
+        check_subtype_list(D,SubType,SubTypes).
+
+% check_subtype_list(D,SubType,Types)
+% checks if SubType is a subtype of one of Types according to D
+check_subtype_list(D,SubType,[Type]) :- !,
+        check_subtype(D,SubType,Type).
+check_subtype_list(D,SubType,[Type|_Types]) :-
+        check_subtype(D,SubType,Type), !.
+check_subtype_list(D,SubType,[_|Types]) :- !,
+        check_subtype_list(D,SubType,Types).
