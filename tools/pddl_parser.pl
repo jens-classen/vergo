@@ -1649,39 +1649,35 @@ substitute_pddl_vars(X,[Var|Vars],[PVar|PVars],R) :- !,
 % Convert (pseudo-) effect (obtained from parsing) into one that
 % IndiGolog accepts; typing restrictions for the affected predicates
 % as well as quantified variables have to be considered-
-convert_effect_formula(AT,E,LCE) :-
-        % additional params = quantified variables and their types
-        convert_effect_formula(AT,[],[],E,LCE).
-convert_effect_formula(_AT,_Vs,_Ts,and([]),[]).
-convert_effect_formula(AT,Vs,Ts,and([E|Es]),ACEs) :-
-        convert_effect_formula(AT,Vs,Ts,E,CE),
-        convert_effect_formula(AT,Vs,Ts,and(Es),CEs),
+convert_effect_formula(_AT,and([]),[]).
+convert_effect_formula(AT,and([E|Es]),ACEs) :-
+        convert_effect_formula(AT,E,CE),
+        convert_effect_formula(AT,and(Es),CEs),
         append(CE,CEs,ACEs).
-convert_effect_formula(AT,_Vs,_Ts,add(A),CE) :-
+convert_effect_formula(AT,add(A),CE) :-
         CE=[(causes_true(AT,A,true))].
-convert_effect_formula(AT,_Vs,_Ts,del(D),CE) :-
+convert_effect_formula(AT,del(D),CE) :-
         CE=[(causes_false(AT,D,true))].
-convert_effect_formula(AT,Vs,Ts,forall(QVs,VTs,F),CEs) :-
-        append(QVs,Vs,VL), append(VTs,Ts,TL),
-        convert_effect_formula(AT,VL,TL,F,CEs).
-convert_effect_formula(AT,_Vs,_Ts,when(PF,add(A)),CE) :-
+convert_effect_formula(AT,forall(_QVs,_VTs,F),CEs) :-
+        convert_effect_formula(AT,F,CEs).
+convert_effect_formula(AT,when(PF,add(A)),CE) :-
         CE=[(causes_true(AT,A,PF))].
-convert_effect_formula(AT,_Vs,_Ts,when(PF,del(D)),CE) :-
+convert_effect_formula(AT,when(PF,del(D)),CE) :-
         CE=[(causes_false(AT,D,PF))].
-convert_effect_formula(_AT,_Vs,_Ts,when(_PF,and([])),[]).
-convert_effect_formula(AT,Vs,Ts,when(PF,and([AD|ADs])),CEs) :-
-        convert_effect_formula(AT,Vs,Ts,when(PF,AD),CE1),
-        convert_effect_formula(AT,Vs,Ts,when(PF,and(ADs)),CE2),
+convert_effect_formula(_AT,when(_PF,and([])),[]).
+convert_effect_formula(AT,when(PF,and([AD|ADs])),CEs) :-
+        convert_effect_formula(AT,when(PF,AD),CE1),
+        convert_effect_formula(AT,when(PF,and(ADs)),CE2),
         append(CE1,CE2,CEs).
-convert_effect_formula(AT,_Vs,_Ts,assign(F,Val),CE) :-
+convert_effect_formula(AT,assign(F,Val),CE) :-
         CE=[(causes(AT,F,Val,true))].
-convert_effect_formula(AT,_Vs,_Ts,increase(F,Val),CE) :-
+convert_effect_formula(AT,increase(F,Val),CE) :-
         CE=[(causes(AT,F,Y,Y=(F+Val)))].
-convert_effect_formula(AT,_Vs,_Ts,decrease(F,Val),CE) :-
+convert_effect_formula(AT,decrease(F,Val),CE) :-
         CE=[(causes(AT,F,Y,Y=(F-Val)))].
-convert_effect_formula(AT,_Vs,_Ts,'scale-up'(F,Val),CE) :-
+convert_effect_formula(AT,'scale-up'(F,Val),CE) :-
         CE=[(causes(AT,F,Y,Y=(F*Val)))].
-convert_effect_formula(AT,_Vs,_Ts,'scale-down'(F,Val),CE) :-
+convert_effect_formula(AT,'scale-down'(F,Val),CE) :-
         CE=[(causes(AT,F,Y,Y=(F/Val)))].
 
 % Convert the list of types with associated constants into Prolog
