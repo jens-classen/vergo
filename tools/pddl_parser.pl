@@ -66,9 +66,9 @@
 % TODO: include discontiguous directives
 
 :- module(pddl_parser, [parse_pddl_domain_string/2,
-                        parse_pddl_problem_string/2,
+                        parse_pddl_problem_string/3,
                         parse_pddl_domain_file/2,
-                        parse_pddl_problem_file/2]).
+                        parse_pddl_problem_file/3]).
 
 :- use_module(library(dcg/basics)).
 
@@ -81,16 +81,18 @@
 %:- mode parse_pddl_domain_string(+,-).
 parse_pddl_domain_string(String,Axioms) :-
         string_codes(String,Codes),
-        phrase(pddl_domain(Axioms),Codes).
+        phrase(pddl_domain(_,Axioms),Codes).
 
-%:- mode parse_pddl_problem_string(+,-).
-parse_pddl_problem_string(String,Axioms) :-
-        string_codes(String,Codes),
-        phrase(pddl_problem(Axioms),Codes).
+%:- mode parse_pddl_problem_string(+,+,-).
+parse_pddl_problem_string(DomainString,ProblemString,Axioms) :-
+        string_codes(DomainString,DomainCodes),
+        string_codes(ProblemString,ProblemCodes),
+        phrase(pddl_domain(D,Axioms),DomainCodes),
+        phrase(pddl_problem(D,Axioms),ProblemCodes).
 
 %:- mode parse_pddl_domain_file(+,+).
 parse_pddl_domain_file(InFile,OutFile) :-
-        phrase_from_file(pddl_domain(axioms(Domain,
+        phrase_from_file(pddl_domain(_,axioms(Domain,
                                             Type_Axioms,
                                             Constant_Axioms,
                                             Predicate_Axioms,
@@ -109,14 +111,16 @@ parse_pddl_domain_file(InFile,OutFile) :-
         write_rules(Stream2, Structure_Axioms, "Structures (Actions)"),
         close(Stream2).
 
-%:- mode parse_pddl_problem_file(+,+).
-parse_pddl_problem_file(InFile,OutFile) :-
-        phrase_from_file(pddl_problem(axioms(Problem,
+%:- mode parse_pddl_problem_file(+,+,+).
+parse_pddl_problem_file(DomainFile,ProblemFile,OutFile) :-
+        phrase_from_file(pddl_domain(D,_DomainAxioms),
+                         DomainFile),
+        phrase_from_file(pddl_problem(D,axioms(Problem,
                                              Domain,
                                              ObjectAxioms,
                                              InitAxioms,
                                              GoalAxioms)),
-                         InFile),
+                         ProblemFile),
         open(OutFile, write, Stream2),
         write_problem_header(Stream2, Problem, Domain),
         write_rules(Stream2, ObjectAxioms, "Objects"),
@@ -202,7 +206,7 @@ debug_mode(true).
 % PDDL Domains
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_domain(axioms(Domain, Type_Axioms, Constant_Axioms,
+pddl_domain(D,axioms(Domain, Type_Axioms, Constant_Axioms,
                    Predicate_Axioms, Function_Axioms,
                    Constraint_Axioms, Structure_Axioms)) -->
         ws,
@@ -490,7 +494,7 @@ pddl_atomic_function_skeleton_plus([Function|Functions]) -->
 
 pddl_atomic_function_skeleton(Function) -->
         ascii("("), ws,
-        pddl_function_symbol(Symbol), wp,
+        pddl_function_symbol(Symbol), ws,
         pddl_typed_list_variable(Types,Variables), ws,
         {Function = func(Symbol,Types,Variables)},
         ascii(")").
@@ -753,8 +757,8 @@ pddl_gd(D,S,V,T,all(V1,T1,G)) -->
         {append(V,V1,V2), append(T,T1,T2)},
         pddl_gd(D,S,V2,T2,G), ws,
         ascii(")").
-pddl_gd(_,_,_,_,_) -->
-        pddl_f_comp,
+pddl_gd(D,_,V,T,Comp) -->
+        pddl_f_comp(D,V,T,Comp),
         {must_support(numeric-fluents),
          cannot_compile(fluents)}.
 
@@ -763,12 +767,13 @@ pddl_gd_star(D,S,V,T,[G|GL]) -->
         pddl_gd(D,S,V,T,G), ws,
         pddl_gd_star(D,S,V,T,GL).
 
-pddl_f_comp -->
+pddl_f_comp(D,V,T,Comp) -->
         ascii("("), ws,
-        pddl_binary_comp, ws,
-        pddl_f_exp(_,_,_), wp,
-        pddl_f_exp(_,_,_), ws,
-        ascii(")").
+        pddl_binary_comp(Op), ws,
+        pddl_f_exp(D,V,T,Exp1), wp,
+        pddl_f_exp(D,V,T,Exp2), ws,
+        ascii(")"),
+        {Comp =.. [Op,Exp1,Exp2]}.
 
 pddl_literal_term(V,T,G) -->
         pddl_atomic_formula_term(V,T,G).
@@ -856,7 +861,7 @@ pddl_f_exp_plus(D,V,T,[Exp|Exps]) -->
 
 pddl_f_head(V,T,Head) -->
         ascii("("), ws,
-        pddl_function_symbol(F), wp,
+        pddl_function_symbol(F), ws,
         pddl_term_star(V,T,Terms), ws,
         ascii(")"),
         {Head =.. [F|Terms]}.
@@ -875,11 +880,15 @@ pddl_multi_op('*') -->
 pddl_multi_op('+') -->
         ascii("+").
 
-pddl_binary_comp -->
-        ascii(">");
-        ascii("<");
-        ascii("=");
-        ascii(">=");
+pddl_binary_comp('>') -->
+        ascii(">").
+pddl_binary_comp('=') -->
+        ascii("=").
+pddl_binary_comp('<') -->
+        ascii("<").
+pddl_binary_comp('>=') -->
+        ascii(">=").
+pddl_binary_comp('<=') -->
         ascii("<=").
 
 pddl_effect(D,S,V,T,and(EL)) -->
@@ -927,16 +936,16 @@ pddl_p_effect(D,_,V,T,del(E)) -->
 pddl_p_effect(D,_,V,T,add(E)) -->
         pddl_atomic_formula_term(V,T,E),
         {check_atom(D,V,T,E)}.
-pddl_p_effect(_,_,_,_,_) -->
+pddl_p_effect(D,_,V,T,Assignment) -->
         ascii("("), ws,
-        pddl_assign_op, wp,
+        pddl_assign_op(Op), wp,
         {must_support(numeric-fluents),
          cannot_compile(numeric-fluents)},
-        pddl_f_head(_,_,_), wp,
-        % TODO: check f_head
-        pddl_f_exp(_,_,_), ws,
-        % TODO: check f_exp
-        ascii(")").
+        pddl_f_head(V,T,Head), wp,
+        {check_fhead(D,V,T,Head)},
+        pddl_f_exp(D,V,T,Exp), ws,
+        ascii(")"),
+        {Assignment =.. [Op,Head,Exp]}.
 pddl_p_effect(_,_,_,_,_) -->
         ascii("("), ws,
         ascii("assign"), wp,
@@ -970,11 +979,15 @@ pddl_cond_effect(D,S,V,T,and(EL)) -->
 pddl_cond_effect(D,S,V,T,E) -->
         pddl_p_effect(D,S,V,T,E).
 
-pddl_assign_op -->
-        ascii("assign");
-        ascii("scale-up");
-        ascii("scale-down");
-        ascii("increase");
+pddl_assign_op('assign') -->
+        ascii("assign").
+pddl_assign_op('scale-up') -->
+        ascii("scale-up").
+pddl_assign_op('scale-down') -->
+        ascii("scale-down").
+pddl_assign_op('increase') -->
+        ascii("increase").
+pddl_assign_op('decrease') -->
         ascii("decrease").
 
 % Durative Actions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1252,7 +1265,7 @@ pddl_derived_def(D,[]) -->
 % PDDL Problems
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pddl_problem(axioms(Problem,Domain,ObjectAxioms,
+pddl_problem(D,axioms(Problem,Domain,ObjectAxioms,
                     InitAxioms,GoalAxioms)) -->
         ws,
         ascii("("), ws,
@@ -1264,12 +1277,15 @@ pddl_problem(axioms(Problem,Domain,ObjectAxioms,
         ascii("("), ws,
         ascii(":domain"), ws,
         pddl_problem_domain(Domain), ws,
-        ascii(")"), ws,
+        ascii(")"), ws, !,
         ([]; pddl_problem_requirements, ws),
-        ([]; pddl_object_declarations(ObjectAxioms), ws),
-        % TODO: how to get D?
-        pddl_init(_,InitAxioms), ws,
-        pddl_goal(_,GoalAxioms), ws,
+        ([],{O=[], ObjectAxioms=[]};
+         pddl_object_declarations(O,ObjectAxioms), ws),
+        {D = dom(T,C,P,F,FT),
+         append(C,O,CO),
+         DP = dom(T,CO,P,F,FT)},
+        pddl_init(DP,InitAxioms), ws,
+        pddl_goal(DP,GoalAxioms), ws,
         ([]; pddl_problem_constraints, ws),
         ([]; pddl_metric_spec, ws),
         ([]; pddl_length_spec, ws),
@@ -1284,7 +1300,7 @@ pddl_problem_domain(Name) -->
 pddl_problem_requirements -->
         pddl_requirements.
 
-pddl_object_declarations(Axioms) -->
+pddl_object_declarations(ObjectsDefs,Axioms) -->
         ascii("("), ws,
         ascii(":objects"), wp, !,
         {announce_pro("objects")},
@@ -1342,7 +1358,7 @@ pddl_basic_function_term(Symbol) -->
         pddl_function_symbol(Symbol).
 pddl_basic_function_term(Term) -->
         ascii("("), ws,
-        pddl_function_symbol(Symbol), wp,
+        pddl_function_symbol(Symbol), ws,
         pddl_name_star(Names), ws,
         ascii(")"),
         {Term =..[Symbol|Names]}.
@@ -1446,7 +1462,7 @@ pddl_metric_f_exp -->
         pddl_number(_).
 pddl_metric_f_exp -->
         ascii("("), ws,
-        pddl_function_symbol(_), wp,
+        pddl_function_symbol(_), ws,
         pddl_name_star(_), ws,
         ascii(")").
 pddl_metric_f_exp -->
@@ -1660,6 +1676,13 @@ convert_effect_formula(AT,Vs,Ts,when(PF,and([AD|ADs])),CEs) :-
         convert_effect_formula(AT,Vs,Ts,when(PF,AD),CE1),
         convert_effect_formula(AT,Vs,Ts,when(PF,and(ADs)),CE2),
         append(CE1,CE2,CEs).
+convert_effect_formula(_AT,_Vs,_Ts,Assignment,[]) :-
+        Assignment =.. [Op|_],
+        member(Op,['assign','scale-up','scale-down','increase',
+                   'decrease']), !,
+        cannot_compile('numeric-fluents').
+
+
 
 % Convert the list of types with associated constants into Prolog
 % clauses.
