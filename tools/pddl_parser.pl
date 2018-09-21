@@ -904,8 +904,6 @@ pddl_c_effect(D,S,V,T,forall(V1,T1,E)) -->
         ascii("forall"), ws,
         {must_support(conditional-effects)},
         ascii("("), ws,
-        % BNF requires "pddl_typed_list_variable_star,
-        % however this should be equivalent:
         pddl_typed_list_variable(V1,T1), ws,
         {check_types(D,T1)},
         ascii(")"), ws,
