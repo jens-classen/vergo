@@ -1710,8 +1710,88 @@ type_declaration(_Types,[Axiom]) :- !,
                                      member(Subtype,Subtypes),
                                      domain(Subtype,X)).
 
-construct_durative_action_axioms([],_Symbol,_Variables,_Types,
-                                 _Duration,_Conds,_Effects). % TODO
+construct_durative_action_axioms(Axioms,Symbol,Variables,Types,
+                                 Duration,Cond,Effect) :-
+        pddl_vars_to_prolog_vars(Variables,PVariables),
+        Act = [Symbol | PVariables],
+        % TODO: handle Duration
+        convert_da_gd(Cond,StartConds,OverConds,EndConds),
+        convert_da_effect(Act,Effect,EffectAxioms),
+        substitute_pddl_vars((StartConds,OverConds,EndConds,
+                              EffectAxioms),
+                             Variables,PVariables,
+                             (StartCondsC,OverCondsC,EndCondsC,
+                              EffectAxiomsC)),
+        ActS =.. [start|Act],
+        ActE =.. [end|Act],
+        Axioms = [(prim_action(ActS)),
+                  (prim_action(ActE)),
+                  (action_parameter_types(ActS,Types)),
+                  (action_parameter_types(ActE,Types)),
+                  (poss(ActS,StartCondsC)),
+                  (poss(ActE,EndCondsC))|
+                  EffectAxiomsC].
+
+convert_da_gd(all(V,T,C),StartConds,OverConds,EndConds) :- !,
+        convert_da_gd(C,StartConds,OverConds,EndConds).
+convert_da_gd([Cond|Conds],StartConds,OverConds,EndConds) :- !,
+        convert_da_gd(Cond,StartConds1,OverConds1,EndConds1),
+        convert_da_gd(Conds,StartConds2,OverConds2,EndConds2),
+        append(StartConds1,StartConds2,StartConds),
+        append(OverConds1,OverConds2,OverConds),
+        append(EndConds1,EndConds2,EndConds).
+convert_da_gd([],[],[],[]) :- !.
+convert_da_gd(Cond,StartConds,OverConds,EndConds) :- !,
+        convert_pref_timed_gd(Cond,StartConds,OverConds,EndConds).
+
+% TODO: put warnings instead of failing
+
+convert_pref_timed_gd(pddl_timed_pref(_),_,_,_) :- !, fail. % not yet supported
+convert_pref_timed_gd(pddl_timed_pref(_,_),_,_,_) :- !, fail. % not yet supported
+convert_pref_timed_gd(C,StartConds,OverConds,EndConds) :- !,
+        convert_timed_gd(C,StartConds,OverConds,EndConds).
+                         
+convert_timed_gd(pddl_at(start,C),[C],[],[]).
+convert_timed_gd(pddl_at(end,C),[],[],[C]).
+convert_timed_gd(pddl_over(all,C),[],[C],[]) :- !, fail. % not yet supported
+
+convert_da_effect(A,and([Effect|Effects]),Axioms) :- !,
+        convert_da_effect(A,Effect,Axioms1),
+        convert_da_effect(A,and(Effects),Axioms2),
+        append(Axioms1,Axioms2,Axioms).
+convert_da_effect(_,and([]),[]).
+convert_da_effect(A,forall(V1,T1,Effect),Axioms) :- !,
+        convert_da_effect(A,Effect,Axioms).
+convert_da_effect(A,when(G,E),Axioms) :- !,
+        convert_da_gd(G,StartConds,OverConds,EndConds),
+        convert_timed_effect(A,E,StartConds,OverConds,EndConds,
+                             Axioms).
+convert_da_effect(A,Effect,Axioms) :- !,
+        convert_timed_effect(A,Effect,[],[],[],Axioms).
+
+convert_timed_effect(A,pddl_at(start,Eff),
+                     StartConds,[],[],
+                     Axioms) :- !,
+        Act =.. [start|A],
+        conjoin(StartConds,StartCond),
+        convert_effect_formula(Act,when(StartCond,Eff),Axioms).
+convert_timed_effect(A,pddl_at(end,Eff),
+                     StartConds,[],EndConds,
+                     Axioms) :- !,
+        ActS =.. [start|A],
+        ActE =.. [end|A],
+        conjoin(StartConds,StartCond),
+        conjoin(EndConds,EndCond),
+        aux_fluent(StartCond,Aux,Axioms1),
+        convert_effect_formula(ActS,when(StartCond,add(Aux)),Axioms2),
+        convert_effect_formula(ActE,when(EndCond,Eff),Axioms3),
+        append(Axioms1,Axioms2,Axioms4),
+        append(Axioms4,Axioms3,Axioms).
+convert_timed_effect(A,pddl_assign(Op,Head,Exp),_,_,_,_) :- !,
+        fail. % not yet supported
+
+% TODO: inter-temporal effects through auxiliary fluents
+aux_fluent(true,true,[]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Test predicates to check whether all symbols have been declared
