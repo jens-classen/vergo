@@ -7,37 +7,41 @@
 %
 % Exported predicates:
 %
-%      parse_pddl_domain_string(+String,-Axioms)
+%      parse_pddl_domain_string(+DomainS,-Axioms)
 %
-%         String is a string that contains a PDDL domain
-%                description according to the BNF of 
-%                PDDL 3.0 [Gerivini & Long 2005]
-%         Axioms is a list of Prolog axioms that constitute
-%                the translation of the PDDL domain into
-%                a Basic Action Theory of IndiGolog
-%                [Claßen et al. 2007]
+%         DomainS  is a string that contains a PDDL domain
+%                  description according to the BNF of 
+%                  PDDL 3.1 [Kovacs 2011].
+%         Axioms   is a list of Prolog axioms that constitute
+%                  the translation of the PDDL domain into
+%                  a Basic Action Theory of Golog
+%                  [Claßen et al. 2007].
 %
-%      parse_pddl_problem_string(+String,-Axioms)
+%      parse_pddl_problem_string(+DomainS,+ProblemS,-Axioms)
 %
-%         String is a string that contains a PDDL problem
-%                instance description according to the BNF of 
-%                PDDL 3.0 [Gerivini & Long 2005]
-%         Axioms is a list of Prolog axioms that constitute
-%                the translation of the PDDL problem into
-%                the initial theory of a Basic Action Theory of
-%                IndiGolog [Claßen et al. 2007]
+%         DomainS  is a string that contains a PDDL domain
+%                  description according to the BNF of 
+%                  PDDL 3.1 [Kovacs 2011].
+%         ProblemS is a string that contains a PDDL problem
+%                  instance description according to the BNF of 
+%                  PDDL 3.1 [Kovacss 2011].
+%         Axioms   is a list of Prolog axioms that constitute
+%                  the translation of the PDDL problem into
+%                  the initial theory of a Basic Action Theory of
+%                  Golog [Claßen et al. 2007].
 %
-%      parse_pddl_domain_file(+InFile,+OutFile)
+%      parse_pddl_domain_file(+DomainFile,+OutFile)
 %
 %         same as parse_pddl_domain_string/2, but reads the PDDL
-%         domain description from file InFile and writes the
-%         axioms into OutFile
+%         domain description from file DomainFile and writes the
+%         axioms into OutFile.
 %
-%      parse_pddl_problem_file(+InFile,OutFile)
+%      parse_pddl_problem_file(+DomainFile,+ProblemFile,+OutFile)
 %
-%         same as parse_pddl_problem_string/2, but reads the PDDL
-%         problem instance description from file InFile and 
-%         writes the axioms into file OutFile
+%         same as parse_pddl_problem_string/3, but reads the PDDL
+%         domain and problem instance descriptions from files
+%         DomainFile and ProblemFile, respectively, and writes the
+%         axioms into file OutFile.
 %
 %      Currently, the following requirement tags are supported:
 %
@@ -54,8 +58,8 @@
 %
 % References:
 %
-%      [Gerivini & Long 2005] Gerivini, A. and Long, D. 2005. BNF
-%           description of PDDL3.0.
+%      [Kovacs 2011] Kovacs, D.L. BNF Definition of PDDL3.1:
+%           completely corrected, without comments. 
 %
 %      [Claßen et al. 2007] Claßen, J.; Eyerich, P.; Lakemeyer, G.;
 %           and Nebel, B. 2007. Towards and integration of Golog 
