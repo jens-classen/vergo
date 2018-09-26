@@ -62,7 +62,7 @@
 %           completely corrected, without comments. 
 %
 %      [Claßen et al. 2007] Claßen, J.; Eyerich, P.; Lakemeyer, G.;
-%           and Nebel, B. 2007. Towards and integration of Golog 
+%           and Nebel, B. 2007. Towards an integration of Golog 
 %           and planning. In Proceedings of IJCAI-07, AAAI Press.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
