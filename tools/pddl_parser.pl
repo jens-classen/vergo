@@ -1778,7 +1778,7 @@ check_fhead(D,V,T,H) :- !,
         check_function(D,V,T,H,number).
 
 % check_subtype(D,SubType,Type)
-% checks if SubType is a subtype of Type according to D
+% succeeds if SubType is a subtype of Type according to D
 check_subtype(_,Type,Type) :- !.
 check_subtype(D,SubType,Type) :-
         D = dom(Types,_,_,_,_),
@@ -1787,7 +1787,7 @@ check_subtype(D,SubType,Type) :-
         check_subtype_list(D,SubType,SubTypes).
 
 % check_subtype_list(D,SubType,Types)
-% checks if SubType is a subtype of one of Types according to D
+% succeeds if SubType is a subtype of one of Types according to D
 check_subtype_list(D,SubType,[Type]) :- !,
         check_subtype(D,SubType,Type).
 check_subtype_list(D,SubType,[Type|_Types]) :-
