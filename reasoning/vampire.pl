@@ -85,6 +85,7 @@ vampire(ListOfAxioms,Conjecture,Result) :-
                         process(PID)]),       % need PID for exit status
         process_wait(PID, _Status), !,        % wait for completion
         read_string(Output,"","",_,String),
+        close(Output),
         get_vampire_result(String,Result).    % return value
 
 vampire(_ListOfAxioms,_Conjecture,_Result) :-

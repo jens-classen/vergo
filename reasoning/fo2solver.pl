@@ -109,6 +109,7 @@ fo2_solver(Formulas,Result) :-
                         process(PID)]),       % need PID for exit status
         process_wait(PID, _Status), !,        % wait for completion
         read_string(Output,"","",_,String),
+        close(Output),
         get_fo2_solver_result(String,Result), % return value
         working_directory(_,WorkDir).
         
