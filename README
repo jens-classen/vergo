@@ -61,7 +61,7 @@ The code is divided into the following subdirectories:
 Dependencies
 =================================================
 
-ESGolog uses SWI-Prolog (currently version 7.2.3). Furthermore, there
+ESGolog uses SWI-Prolog (currently version 7.6.4). Furthermore, there
 are the following dependencies to external tools and systems:
 
 1. The E Theorem Prover
@@ -156,3 +156,11 @@ are the following dependencies to external tools and systems:
    FO²-Solver, e.g. using
 
    $ export PATH_FO2SOLVER=~/local/FO2-Solver/
+
+7. The Vampire Theorem Prover
+
+   To use Vampire as alternative FOL theorem prover (instead of E),
+   the 'vampire' executable binary (last tested stable version: 4.2.2)
+   has to be visible in PATH. Vampire is available under
+
+   https://vprover.github.io/index.html

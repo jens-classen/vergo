@@ -56,6 +56,12 @@
                valid/1 as eprover_valid,
                equivalent/2 as eprover_equivalent]).
 
+:- use_module('../reasoning/vampire',
+              [entails/2 as vampire_entails,
+               inconsistent/1 as vampire_inconsistent,
+               consistent/1 as vampire_consistent,
+               valid/1 as vampire_valid,
+               equivalent/2 as vampire_equivalent]).
 
 :- use_module('../reasoning/fo2solver',
               [entails/2 as fo2solver_entails,
@@ -74,6 +80,7 @@
 
 % default: E prover
 reasoner(eprover).
+%reasoner(vampire).
 
 set_reasoner(X) :- 
         member(X,[eprover,fo2solver]), !,
@@ -94,6 +101,8 @@ entails(ListOfAxioms,Conjecture) :-
 
 entails(ListOfAxioms,Conjecture,eprover) :-
         eprover_entails(ListOfAxioms,Conjecture).
+entails(ListOfAxioms,Conjecture,vampire) :-
+        vampire_entails(ListOfAxioms,Conjecture).
 entails(ListOfAxioms,Conjecture,fo2solver) :-
         fo2solver_entails(ListOfAxioms,Conjecture).
 
@@ -104,6 +113,8 @@ inconsistent(ListOfFormulas) :-
 
 inconsistent(ListOfFormulas,eprover) :-
         eprover_inconsistent(ListOfFormulas).
+inconsistent(ListOfFormulas,vampire) :-
+        vampire_inconsistent(ListOfFormulas).
 inconsistent(ListOfFormulas,fo2solver) :-
         fo2solver_inconsistent(ListOfFormulas).
 
@@ -114,6 +125,8 @@ consistent(ListOfFormulas) :-
 
 consistent(ListOfFormulas,eprover) :-
         eprover_consistent(ListOfFormulas).
+consistent(ListOfFormulas,vampire) :-
+        vampire_consistent(ListOfFormulas).
 consistent(ListOfFormulas,fo2solver) :-
         fo2solver_consistent(ListOfFormulas).
 
@@ -124,6 +137,8 @@ valid(Formula) :-
 
 valid(Formula,eprover) :-
         eprover_valid(Formula).
+valid(Formula,vampire) :-
+        vampire_valid(Formula).
 valid(Formula,fo2solver) :-
         fo2solver_valid(Formula).
 
@@ -134,6 +149,8 @@ equivalent(Formula1,Formula2) :-
 
 equivalent(Formula1,Formula2,eprover) :-
         eprover_equivalent(Formula1,Formula2).
+equivalent(Formula1,Formula2,vampire) :-
+        vampire_equivalent(Formula1,Formula2).
 equivalent(Formula1,Formula2,fo2solver) :-
         fo2solver_equivalent(Formula1,Formula2).
 
