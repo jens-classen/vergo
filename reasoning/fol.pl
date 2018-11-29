@@ -81,9 +81,10 @@
 % default: E prover
 reasoner(eprover).
 %reasoner(vampire).
+%reasoner(fo2solver).
 
 set_reasoner(X) :- 
-        member(X,[eprover,fo2solver]), !,
+        member(X,[eprover,vampire,fo2solver]), !,
         retract(reasoner(_)),
         assert(reasoner(X)).
 
