@@ -15,7 +15,7 @@ On the Decidability of Verifying LTL Properties of Golog Programs.
 Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 2013.
 
 @author  Jens Claßen
-@license GPL
+@license GPLv2
 
  **/
 

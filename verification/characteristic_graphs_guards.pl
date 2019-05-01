@@ -7,7 +7,7 @@ that use "guards" on edges, i.e. sequences of test conditions and pick
 operators.
 
 @author  Jens Claßen
-@license GPL
+@license GPLv2
 
  **/
 

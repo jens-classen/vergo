@@ -19,7 +19,7 @@ are used to store nodes. Prolog's built-in term order is used for
 ordering nodes.
 
 @author  Jens Claßen
-@license GPL
+@license GPLv2
 
  **/
 

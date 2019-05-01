@@ -10,7 +10,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 2013.
 
 @author  Jens Claßen
-@license GPL
+@license GPLv2
 
  **/
 

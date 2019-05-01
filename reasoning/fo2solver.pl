@@ -15,7 +15,7 @@ The purpose of this module is to provide one of multiple alternative
 implementations of a reasoner to be used by the FOL module.
 
 @author  Jens Claßen
-@license GPL
+@license GPLv2
 
  **/
 

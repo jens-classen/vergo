@@ -9,7 +9,7 @@ uses "guards" as transition conditions, i.e. sequences that
 arbitrarily alternate between pick quantifiers and condition formulas.
 
 @author  Jens Claßen
-@license GPL
+@license GPLv2
 
  **/
 

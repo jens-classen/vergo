@@ -25,7 +25,7 @@ In Proceedings of the Twenty-Eighth International Workshop on Description Logics
 CEUR-WS.org, 2015.
 
 @author  Jens Claßen
-@license GPL
+@license GPLv2
 
  **/
 

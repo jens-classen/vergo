@@ -5,7 +5,7 @@ simple_bat
 A simple BAT, mainly for testing purposes.
 
 @author  Jens Claßen
-@license GPL
+@license GPLv2
 
 
 **/
