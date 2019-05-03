@@ -291,7 +291,7 @@ are the following dependencies to external tools and systems:
    Zarrieß: <br/>
    **Exploring the Boundaries of Decidable Verification of
    Non-Terminating Golog Programs.** <br/>
-   In *Proc. AAAI, 2014.
+   In *Proc. AAAI*, 2014.
    [[PDF]](http://www.jens-classen.net/pub/ClassenEtAl2014.pdf)
 
 4. Jens Claßen: <br/>
