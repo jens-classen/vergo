@@ -72,7 +72,7 @@ root directory of this software, e.g. via
 There currently is no elaborate documentation. Instead, we encourage
 the interested reader to study the [sources](#directories) and look at
 the provided examples. The underlying algorithms are discussed in the
-corresponding [paper](#references).
+corresponding [papers](#references).
 
 ### Verification by Fixpoint Computation
 
@@ -282,7 +282,7 @@ are the following dependencies to external tools and systems:
    [[PDF]](http://jens-classen.net/pub/Classen2018.pdf)
 
 2. Benjamin Zarrieß and Jens Claßen: <br/>
-   **Verifying CTL* Properties of Golog Programs over Local-Effect
+   **Verifying CTL\* Properties of Golog Programs over Local-Effect
    Actions.** <br/>
    In *Proc. ECAI*, 2014.
    [[PDF]](http://www.jens-classen.net/pub/ZarriessClassen2014b.pdf)
