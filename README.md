@@ -1,16 +1,119 @@
-Vergo: A Verification System for Golog Programs
-=================================================
+# Vergo: A Verification System for GOLOG Programs
 
-Getting Started
--------------------------------------------------
+Vergo is (yet) an(other) implementation of the high-level agent
+control language **GOLOG**, specifically devised as a testbed for
+various algorithms for the temporal verification of programs.
 
-It is required that the environment variable PATH_GOLOG is set to root
-directory of this software, e.g. via
+This repository is a collection of code whose development was started
+during the preparation of the doctoral thesis
+
+> Jens Claßen: <br/>
+> **Planning and Verification in the Action Language GOLOG.** <br/>
+> PhD Thesis, Department of Computer Science, RWTH Aachen University, 2013.
+> [[Fulltext](http://publications.rwth-aachen.de/record/229059/)]
+
+and was continued during the [VERITAS][1] project on Verification of
+Non-Terminating Action Programs within the research unit on [Hybrid
+Reasoning for Intelligent Systems][2] funded by the [German Science
+Foundation][3] (DFG).
+
+While other GOLOG implementations such as [Reiter's original
+prototype][4], [IndiGolog][5] or [Readylog][6] make use of Prolog's
+evaluation mechanism for reasoning, Vergo supports full first-order
+logic (FOL) by relying on an embedded theorem prover. That is to say
+Prolog is used only for the *manipulation* of formulas (for syntactic
+transformations such as regression), which are represented as terms
+with a special syntax. For example. `all(X,some(Y,P(X,Y) * -Q(Y,X)))`
+expresses that for every `X` there is some `Y` such that `P(X,Y)` and
+not `Q(Y,X)` holds. *Inference* tasks, such as deciding whether an
+initial theory entails a query formula, are then delegated to the
+theorem prover. The reason for this is that for the purpose of formal
+verification, it is necessary to adhere strictly to the formal
+definition of the underlying logic, and avoid intermingling Prolog
+evaluation with GOLOG reasoning. It also means that the full
+expressivity of FOL can be utilized to devise agent programs, which,
+as always, comes at the price of computational efficiency.
+
+As opposed to many other GOLOG systems, Vergo is not a fully-fledged
+agent framework that includes interfaces to an agent's sensors and
+actuators and takes care of the full sense-plan-act cycle. Should one
+actually decide to use it for controlling an agent, it should rather
+be thought of as a *module* to be integrated into a larger agent/robot
+framework. The interpreter runs in a single instance of Prolog and
+provides an interface for (a) telling the system updates about world
+state changes in terms of actions that have been executed and sensing
+results that were obtained, and (b) asking it queries about what is
+knowm about the world state or what the next action should be. We thus
+follow Levesque's functional view on a knowledge-based system.
+
+The code provided in this repository is in a constant state of 'work
+in progress' and comes without any warranty (see also the attached
+license). The algorithms implemented herein merely serve as proofs of
+concept and are open-sourced for the sake of academic exchange and
+reproducibility.
+
+[1]: https://www.hybrid-reasoning.org/en/projects/a1-verification-of-non-terminating-action-programs/
+[2]: https://www.hybrid-reasoning.org
+[3]: http://www.dfg.de
+[4]: http://www.cs.toronto.edu/cogrobo/kia
+[5]: https://bitbucket.org/ssardina-research/indigolog/src
+[6]: http://robocup.rwth-aachen.de/readylog
+
+## Getting Started
+
+Vergo requires a recent version of
+[SWI-Prolog](http://www.swi-prolog.org) as well as at least one FOL
+theorem prover being installed (see [dependencies](#dependencies)
+below). The environment variable PATH_GOLOG should then point to the
+root directory of this software, e.g. via
 
     $ export PATH_GOLOG=/home/user/vergo/
 
-Directories
--------------------------------------------------
+There currently is no elaborate documentation. Instead, we encourage
+the interested reader to study the [sources](#directories) and look at
+the provided examples. The underlying algorithms are discussed in the
+corresponding [paper](#references).
+
+### Verification by Fixpoint Computation
+
+To get started with verification by fixpoint computation, consider the
+`coffee_robot` domain in the `examples` directory. Look at the file
+`coffee_bat_fct.pl` and how actions, fluents, programs and temporal
+properties are defined in it. From within the directory, call
+SWI-Prolog and consult the main file:
+
+    ?- [main_fct].
+
+Next, construct the characteristic graph via
+
+    ?- construct_characteristic_graph(main).
+
+and observe the output. The actual verification for one of the
+properties is initiated e.g. through
+
+    ?- verify(main,prop4).
+
+### Verification by Abstraction
+
+This verification method additionally requires a model checker (see
+[dependencies](#dependencies) below). For the local-effect case,
+consider the `dish_robot` domain in the `examples` directory. Look at
+the file `dish_robot_bat.pl` and how actions, fluents, programs and
+temporal properties are defined in it. From within the directory, call
+SWI-Prolog and consult the main file:
+
+    ?- [main_abstraction].
+
+Next, start the construction of the abstract transition system via
+
+    ?- compute_abstraction(main)
+
+and observe the output (this may take some time). To actually verify a
+property by the model checker, call then e.g.
+
+    ?- verify(prop5).
+
+## Directories
 
 The code is divided into the following subdirectories:
 
@@ -52,28 +155,69 @@ The code is divided into the following subdirectories:
 
   Contains implementations of different verification methods.
 
-Dependencies
--------------------------------------------------
+## Dependencies
 
 Vergo uses SWI-Prolog (currently version 7.6.4). Furthermore, there
 are the following dependencies to external tools and systems:
 
-1. **The E Theorem Prover**
+1. **Theorem Prover** (required)
 
-   To use FOL theorem proving, we require that the 'eprover'
-   executable is visible in PATH. The system has been developed and
-   tested with the (currently) most recent version "2.0 Turzum". E can
-   be downloaded from
+   In order to be able to use FOL theorem proving, we require that at
+   least one theorem prover is available.
 
-   http://www.eprover.org 
+    1. E Prover
 
-   and installed manually. For some distributions such as Fedora,
-   there are also prepackaged versions. Installation on Fedora then
-   for example is via
+       By default, the system expects the 'eprover' executable is
+       visible in PATH. The system has been developed and tested with
+       the (currently) most recent version "2.0 Turzum". E can be
+       downloaded from
 
-       $ sudo yum install E.x86_64
- 
-2. **The NuSMV Model Checker**
+       http://www.eprover.org 
+
+       and installed manually. For some distributions such as Fedora,
+       there are also prepackaged versions. Installation on Fedora
+       then for example is via
+
+           $ sudo yum install E.x86_64
+
+    2. Vampire
+
+       Alternatively, Vampire can be used instead of E. This similarly
+       requires that the 'vampire' executable binary (last tested
+       stable version: 4.2.2) is visible in PATH. Vampire is available
+       under
+
+       https://vprover.github.io/index.html    
+
+       Then call
+
+           ?- fol:set_reasoner(vampire).
+
+   3. FO²-Solver
+
+      Verification based on abstraction and model checking relies on
+      deciding consistency of sets of first-order formulas. As a
+      theorem prover is not a decision procedure for this problem, one
+      variant uses Tomer Kotek's FO²-Solver
+
+      http://forsyte.at/people/kotek/fo2-solver/
+
+      (version 0.3d), which in turn requires a propositional SAT
+      solver such as Glucose
+
+      http://www.labri.fr/perso/lsimon/glucose/
+
+      or Lingeling
+
+      http://fmv.jku.at/lingeling/
+
+      as well as a Java runtime environment. The environment variable
+      PATH_FO2SOLVER has to point to the location of the installation
+      of FO²-Solver, e.g. using
+
+          $ export PATH_FO2SOLVER=~/local/FO2-Solver/
+
+2. **Model Checker**
 
    To use verification based on abstraction and model checking, we
    require that the 'nusmv' executable is visible in PATH. The system
@@ -84,6 +228,8 @@ are the following dependencies to external tools and systems:
 
    and installed manually according to the installation instructions
    given there.
+
+   So far, NuSMV is the only model checker supported.
 
 3. **Graphviz/dot**
 
@@ -96,9 +242,10 @@ are the following dependencies to external tools and systems:
 
 4. **JPL (bidirectional Prolog/Java interface)**
 
-   For some purposes, the Prolog->Java interface provided by the JPL
-   library is needed. Typically, JPL does not have to be installed
-   manually: Under Windows, it is already contained in the SWI-Prolog
+   For some purposes such as the visualization applet for the Wumpus
+   world, the Prolog->Java interface provided by the JPL library is
+   needed. Typically, JPL does not have to be installed manually:
+   Under Windows, it is already contained in the SWI-Prolog
    distribution; under some Linuxes such as Ubuntu, it can be
    installed through the package manager via
 
@@ -127,34 +274,37 @@ are the following dependencies to external tools and systems:
    and dynamically linked form. Its source code is published under the
    LGPL.
 
-6. **FO²-Solver**
+## References
 
-   Verification based on abstraction and model checking relies on
-   deciding consistency of sets of first-order formulas. As a theorem
-   prover is not a decision procedure for this problem, one variant
-   uses Tomer Kotek's FO²-Solver
+1. Jens Claßen: <br/>
+   **Symbolic Verification of Golog Programs with First-Order BDDs.** <br/>
+   In *Proc. KR*, 2018.
+   [[PDF]](http://jens-classen.net/pub/Classen2018.pdf)
 
-   http://forsyte.at/people/kotek/fo2-solver/
+2. Benjamin Zarrieß and Jens Claßen: <br/>
+   **Verifying CTL* Properties of Golog Programs over Local-Effect
+   Actions.** <br/>
+   In *Proc. ECAI*, 2014.
+   [[PDF]](http://www.jens-classen.net/pub/ZarriessClassen2014b.pdf)
 
-   (version 0.3d), which in turn requires a propositional SAT solver
-   such as Glucose
+3. Jens Claßen, Martin Liebenberg, Gerhard Lakemeyer, and Benjamin
+   Zarrieß: <br/>
+   **Exploring the Boundaries of Decidable Verification of
+   Non-Terminating Golog Programs.** <br/>
+   In *Proc. AAAI, 2014.
+   [[PDF]](http://www.jens-classen.net/pub/ClassenEtAl2014.pdf)
 
-   http://www.labri.fr/perso/lsimon/glucose/
+4. Jens Claßen: <br/>
+   **Planning and Verification in the Action Language GOLOG.** <br/>
+   PhD Thesis, RWTH Aachen University, 2013.
+   [[Fulltext](http://publications.rwth-aachen.de/record/229059/)]
+   
+5. Jens Claßen and Gerhard Lakemeyer: <br/>
+   **A Logic for Non-Terminating Golog Programs.** <br/>
+   In *Proc. KR*, 2008.
+   [[PDF]](http://jens-classen.net/pub/ClassenLakemeyer2008.pdf)
 
-   or Lingeling
-
-   http://fmv.jku.at/lingeling/
-
-   as well as a Java runtime environment. The environment variable
-   PATH_FO2SOLVER has to point to the location of the installation of
-   FO²-Solver, e.g. using
-
-       $ export PATH_FO2SOLVER=~/local/FO2-Solver/
-
-7. **The Vampire Theorem Prover**
-
-   To use Vampire as alternative FOL theorem prover (instead of E),
-   the 'vampire' executable binary (last tested stable version: 4.2.2)
-   has to be visible in PATH. Vampire is available under
-
-   https://vprover.github.io/index.html
+6. Jens Claßen and Gerhard Lakemeyer: <br/>
+   **Foundations for Knowledge-Based Programs using ES.** <br/>
+   In *Proc. KR*, 2006.
+   [[PDF]](http://jens-classen.net/pub/ClassenLakemeyer2006a.pdf)
