@@ -23,14 +23,15 @@ evaluation mechanism for reasoning, Vergo supports full first-order
 logic (FOL) by relying on an embedded theorem prover. That is to say
 Prolog is used only for the *manipulation* of formulas (for syntactic
 transformations such as regression), which are represented as terms
-with a special syntax. For example. `all(X,some(Y,P(X,Y) * -Q(Y,X)))`
-expresses that for every `X` there is some `Y` such that `P(X,Y)` and
-not `Q(Y,X)` holds. *Inference* tasks, such as deciding whether an
-initial theory entails a query formula, are then delegated to the
-theorem prover. The reason for this is that for the purpose of formal
-verification, it is necessary to adhere strictly to the formal
-definition of the underlying logic, and avoid intermingling Prolog
-evaluation with GOLOG reasoning. It also means that the full
+with a special syntax. For example. `all(X,some(Y,p(X) + q(Y) *
+-r(X,Y)))` expresses that for every `X` there is some `Y` such that
+`p(X)` or `q(Y)` and not `r(X,Y)` holds (with the usual syntactical
+preference among Boolean connectives). *Inference* tasks, such as
+deciding whether an initial theory entails a query formula, are then
+delegated to the theorem prover. The reason for this is that for the
+purpose of formal verification, it is necessary to adhere strictly to
+the formal definition of the underlying logic, and avoid intermingling
+Prolog evaluation with GOLOG reasoning. It also means that the full
 expressivity of FOL can be utilized to devise agent programs, which,
 as always, comes at the price of computational efficiency.
 
@@ -43,7 +44,7 @@ framework. The interpreter runs in a single instance of Prolog and
 provides an interface for (a) telling the system updates about world
 state changes in terms of actions that have been executed and sensing
 results that were obtained, and (b) asking it queries about what is
-knowm about the world state or what the next action should be. We thus
+known about the world state or what the next action should be. We thus
 follow Levesque's functional view on a knowledge-based system.
 
 The code provided in this repository is in a constant state of 'work
@@ -196,9 +197,10 @@ are the following dependencies to external tools and systems:
    3. FO²-Solver
 
       Verification based on abstraction and model checking relies on
-      deciding consistency of sets of first-order formulas. As a
-      theorem prover is not a decision procedure for this problem, one
-      variant uses Tomer Kotek's FO²-Solver
+      deciding consistency of sets of formulas from the two-variable
+      fragment of FOL. An FOL theorem prover is generally not a
+      decision procedure for this problem. As alternative, we can use
+      Tomer Kotek's FO²-Solver
 
       http://forsyte.at/people/kotek/fo2-solver/
 
