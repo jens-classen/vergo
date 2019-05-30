@@ -1,3 +1,45 @@
+/**
+
+kbagent_r
+
+This file presents an interface to a knowledge-based agent in a
+dynamic environment, where both projection and updates are handled
+using regression, and reasoning about knowledge is reduced to
+first-order theorem proving according to the representation theorem
+from
+
+Hector J. Levesque and Gerhard Lakemeyer: The Logic of Knowledge
+Bases. MIT Press, 2001.
+
+We thus follow Levesque's functional view on knowlede-based
+systems. Details are described in
+
+Jens Claßen and Gerhard Lakemeyer: Foundations for Knowledge-Based
+Programs using ES. In Proceedings of the 10th Conference on Principles
+of Knowledge Representation and Reasoning (KR 2006), pages 318-328,
+AAAI Press, 2006.
+
+Jens Claßen: Planning and Verification in the Agent Language Golog.
+PhD Thesis, Department of Computer Science, RWTH Aachen University,
+2013.
+
+The code herein (and the imported files) represents a complete
+re-implementation, but builds upon the lessons learnt from
+
+Marius Grysla. Implementation and Evaluation of an ES-based Golog
+System. Bachelor's Thesis, Department of Computer Science, RWTH Aachen
+University, May 2010.
+
+and an even earlier implementation of a propositional fragment due to
+Yuxiao Hu (2006). The most important improvement is the usage of a
+first-order extension of binary decision diagrams (BDDs) for keeping
+the size of regressed formulas manageable (cf. the 'fobdd' module).
+
+@author  Jens Claßen
+@license GPLv2
+
+ **/
+
 :- multifile initially/1.
 
 :- dynamic(history/1).

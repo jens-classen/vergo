@@ -1,3 +1,28 @@
+/**
+
+kbagent_p
+
+This file presents an interface to a knowledge-based agent in a
+dynamic environment, where projection is handled by regression, while
+update is done through progression, and reasoning about knowledge is
+reduced to first-order theorem proving according to the representation
+theorem from
+
+Hector J. Levesque and Gerhard Lakemeyer: The Logic of Knowledge
+Bases. MIT Press, 2001.
+
+We thus follow Levesque's functional view on knowlede-based
+systems. Details are described in
+
+Jens Claßen: Planning and Verification in the Agent Language Golog.
+PhD Thesis, Department of Computer Science, RWTH Aachen University,
+2013.
+
+@author  Jens Claßen
+@license GPLv2
+
+ **/
+
 :- multifile initially/1.
 
 :- dynamic(history/1).

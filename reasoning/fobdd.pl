@@ -4,11 +4,40 @@
 
 This module implements a representation and simplification mechanism for
 formulas of first-order logic based on (ordered) binary decision
-diagrams (BDD). The idea was sketched in
+diagrams (BDD) as described in
 
-Jens Claßen: Planning and Verification in the Agent Language Golog.
-PhD Thesis, Department of Computer Science, RWTH Aachen University,
-2013.
+Jens Claßen: Symbolic Verification of Golog Programs with First-Order
+BDDs. In Proceedings of Sixteenth International Conference on
+Principles of Knowledge Representation and Reasoning (KR 2018), pages
+524-528, AAAI Press, 2018.
+
+First-order formulas are preprocessed into an equivalent form where
+quantifiers have small scopes, and subsequently 'propositionalized' by
+regarding remaining quantified subformulas as propositional atoms. The
+result is then represented by a classical, propostional BDD (using the
+'bdd' module).
+
+The idea is based on the first-order algebraic diagrams proposed in
+
+Scott Sanner and Craig Boutilier: Practical Solution Techniques for
+First-Order MDPs. Artificial Intelligence 173(5–6), pages 748–788,
+Elsevier 2009.
+
+in particular regarding the preprocessing (preprocess/3) of first-
+order formulas, with the difference that Sanner and Boutilier suggest
+to apply preprocessing rules 'working from the innermost to the
+outermost quantifiers', while we found that the opposite worked better
+for our setting.
+
+For the purpose of making verification feasible, further techniques
+for the simplification of formulas are included here, namely a
+conversion into prime implicate representation
+(clausalform:fml2prime_implicates/2) and theorem proving to eliminate
+clauses whose de-propositionalized versions are entailed
+(simplify_deps_clauses/3).
+
+@author  Jens Claßen
+@license GPLv2
 
  **/
 
