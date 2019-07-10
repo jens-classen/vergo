@@ -154,13 +154,14 @@ regress([A|S],Fluent,Result) :-
         regress(S,Formula,Result).
 regress(_S,Rigid,Rigid) :- 
         isrigid(Rigid), !.
+regress(S,after(A,Formula),Result) :-
+        not(is_list(A)), !,
+        regress([A|S],Formula,Result).
 regress(S,after([],Formula),Result) :- !,
         regress(S,Formula,Result).
 regress(S,after([A|As],Formula),Result) :- !,
         regress([A|S],after(As,Formula),Result).
-regress(S,after(A,Formula),Result) :- !, 
-        regress([A|S],Formula,Result).
-regress(S,-F,Result) :- !, 
+regress(S,-F,Result) :- !,
         regress(S,F,NResult),
         Result=(-NResult).
 regress(S,F1+F2,Result) :- !, 
