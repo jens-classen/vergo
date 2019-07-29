@@ -1,14 +1,20 @@
-:- use_module('regression').
+:- module(progression, [progress/1,
+                        progress/2]).
 
+:- use_module('regression').
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/l').
 :- use_module('../reasoning/una').
 
+:- multifile user:progression_style/1.
+:- multifile user:causes_true/3.
+:- multifile user:causes_false/3.
+
 :- discontiguous progress/2.
 
 progress(Action) :-
-        progression_style(Style),
+        user:progression_style(Style),
         progress(Action,Style).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -17,18 +23,18 @@ progress(Action) :-
 
 progress(Action,strips(closed)) :-
         ground(Action), !,
-        findall(Fluent,causes_false(Action,Fluent,true),Dels),
-        findall(Fluent,causes_true(Action,Fluent,true),Adds),
+        findall(Fluent,user:causes_false(Action,Fluent,true),Dels),
+        findall(Fluent,user:causes_true(Action,Fluent,true),Adds),
         del_facts_closed(Dels),
         add_facts_closed(Adds).
 
 del_facts_closed([Fact|Facts]) :- 
-        retractall(initially(Fact)),
+        retractall(user:initially(Fact)),
         del_facts_closed(Facts).
 del_facts_closed([]).
 
 add_facts_closed([Fact|Facts]) :- 
-        assert(initially(Fact)),
+        assert(user:initially(Fact)),
         add_facts_closed(Facts).
 add_facts_closed([]).
 
@@ -38,20 +44,20 @@ add_facts_closed([]).
 
 progress(Action,strips(open)) :-
         ground(Action), !,
-        findall(Fluent,causes_false(Action,Fluent,true),Dels),
-        findall(Fluent,causes_true(Action,Fluent,true),Adds),
+        findall(Fluent,user:causes_false(Action,Fluent,true),Dels),
+        findall(Fluent,user:causes_true(Action,Fluent,true),Adds),
         del_facts_open(Dels),
         add_facts_open(Adds).
 
 del_facts_open([Fact|Facts]) :- 
-        retractall(initially(Fact)),
-        assert(initially(-Fact)),
+        retractall(user:initially(Fact)),
+        assert(user:initially(-Fact)),
         del_facts_open(Facts).
 del_facts_open([]).
 
 add_facts_open([Fact|Facts]) :-
-        retractall(initially(-Fact)),
-        assert(initially(Fact)),
+        retractall(user:initially(-Fact)),
+        assert(user:initially(Fact)),
         add_facts_open(Facts).
 add_facts_open([]).
 
@@ -64,16 +70,16 @@ add_facts_open([]).
 
 progress(Action,adl) :-
         ground(Action), !,
-        findall(Fluent,(causes_false(Action,Fluent,Cond),
+        findall(Fluent,(user:causes_false(Action,Fluent,Cond),
                         adl_holds(Cond)),Dels),
-        findall(Fluent,(causes_true(Action,Fluent,Cond),
+        findall(Fluent,(user:causes_true(Action,Fluent,Cond),
                         adl_holds(Cond)),Adds),
         del_facts_closed(Dels),
         add_facts_closed(Adds).
 
 adl_holds(Atom) :-
         cwa(Atom),
-        initially(Atom).
+        user:initially(Atom).
 adl_holds(true).
 adl_holds(false) :-
         fail.
@@ -96,7 +102,7 @@ adl_holds(some(_V,F)) :-
 adl_holds(all(V,F)) :-
         not(adl_holds(some(V,-F))).
 adl_holds(F) :-
-        def(F,FD),
+        user:def(F,FD),
         adl_holds(FD).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,8 +112,8 @@ adl_holds(F) :-
 % progress(Action,local_effect) :-
 %         ground(Action), !,
 %         findall(Fluent,
-%                 (causes_false(Action,Fluent,_Cond1);
-%                  causes_true(Action,Fluent,_Cond2)),
+%                 (user:causes_false(Action,Fluent,_Cond1);
+%                  user:causes_true(Action,Fluent,_Cond2)),
 %                 CharacteristicSet).
 %         % generate all combinations / truth assignment
 %         % generate all instantiated SSAs
