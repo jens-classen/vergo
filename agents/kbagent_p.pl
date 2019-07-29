@@ -29,9 +29,9 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- dynamic(program/1).
 :- dynamic(initially/1).
 
-:- ['../projection/reduction'].
 :- ['../reasoning/cwa'].
 
+:- use_module('../projection/reduction').
 :- use_module('../projection/regression').
 :- use_module('../projection/progression').
 :- use_module('../reasoning/l_kb').

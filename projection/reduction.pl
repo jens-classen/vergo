@@ -1,9 +1,12 @@
+:- module(reduction, [reduce/2,
+                      resolve/3]).
+
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/l').
 :- use_module('../reasoning/l_kb').
 
-:- multifile def/2.
+:- multifile user:def/2.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Reduction
@@ -31,7 +34,7 @@ reduce(all(Vars,Fml),all(Vars,Result)) :- !,
 reduce(some(Vars,Fml),some(Vars,Result)) :- !,
         reduce(Fml,Result).
 reduce(Fml,Result) :-
-        def(Fml,Def), !,
+        user:def(Fml,Def), !,
         reduce(Def,Result).
 reduce(know(Fml),Result) :- !,
         reduce(Fml,FmlR),
