@@ -114,26 +114,61 @@ property(prop5,
 
 test(Program,Prop) :-
         construct_characteristic_graph(Program),
-        check(Program,Prop,R),
-        report_message(['Result is: ', R]),
-        check_expected_labels(Program,Prop).
+        check_ctl(Program,Prop,LabelSet), !,
+        check_expected_labels(Program,Prop,LabelSet).
 
-check_expected_labels(Prog,Phi) :-
-        expected_label(Prog,Phi,I,N,Psi1),
-        actual_label(Prog,Phi,I,N,Psi2),
-        report_equivalence(I,N,Psi1,Psi2),
-        fail.
-check_expected_labels(_,_).
+check_expected_labels(Prog,Prop,LabelSet) :-
+        expected_max_iteration(Prog,Prop,Iter), !,
+        check_expected_labels(Prog,Prop,Iter,LabelSet).
+check_expected_labels(Prog,Prop,Iter,LabelSet) :-
+        Iter == 0, !,
+        check_expected_labels_by_nodes(Prog,Prop,Iter,LabelSet).
+check_expected_labels(Prog,Prop,Iter,LabelSet) :- !,
+        Iter1 is Iter-1,
+        previous_label_set(Prog,Prop,LabelSet,PreviousLabelSet),
+        check_expected_labels(Prog,Prop,Iter1,PreviousLabelSet),
+        check_expected_labels_by_nodes(Prog,Prop,Iter,LabelSet).
 
-actual_label(Prog,Prop,I,N,Psi) :-
-        property(Prop,Prog,somepath(next(Phi))),
-        cg_label(Prog,ex(Phi),I,N,Psi).
-actual_label(Prog,Prop,I,N,Psi) :-
-        property(Prop,Prog,somepath(always(Phi))),
-        cg_label(Prog,eg(Phi),I,N,Psi).
-actual_label(Prog,Prop,I,N,Psi) :-
-        property(Prop,Prog,somepath(until(Phi1,Phi2))),
-        cg_label(Prog,eu(Phi1,Phi2),I,N,Psi).
+check_expected_labels_by_nodes(Prog,Prop,Iter,LabelSet) :-
+        cg_number_of_nodes(Prog,N), !,
+        check_expected_labels_by_nodes(Prog,Prop,0,N,Iter,LabelSet).
+check_expected_labels_by_nodes(_Prog,_Prop,N,N,_Iter,_LabelSet) :- !.
+check_expected_labels_by_nodes(Prog,Prop,J,N,Iter,LabelSet) :- !,
+        expected_label(Prog,Prop,Iter,J,Psi1),
+        label(Prog,J,Psi2,LabelSet),
+        report_equivalence(Iter,J,Psi1,Psi2),
+        J1 is J+1,
+        check_expected_labels_by_nodes(Prog,Prop,J1,N,Iter,LabelSet).
+
+previous_label_set(Prog,Prop,Labels,Previous) :-
+        property(Prop,Prog,somepath(always(_Phi))), !,
+        labelset(Prog,Previous*_,Labels).
+previous_label_set(Prog,Prop,Labels,Previous) :-
+        property(Prop,Prog,somepath(until(_Phi1,_Phi2))), !,
+        labelset(Prog,Previous+_,Labels).
+
+% test(Program,Prop) :-
+%         construct_characteristic_graph(Program),
+%         check(Program,Prop,R),
+%         report_message(['Result is: ', R]),
+%         check_expected_labels(Program,Prop).
+
+% check_expected_labels(Prog,Phi) :-
+%         expected_label(Prog,Phi,I,N,Psi1),
+%         actual_label(Prog,Phi,I,N,Psi2),
+%         report_equivalence(I,N,Psi1,Psi2),
+%         fail.
+% check_expected_labels(_,_).
+
+% actual_label(Prog,Prop,I,N,Psi) :-
+%         property(Prop,Prog,somepath(next(Phi))),
+%         cg_label(Prog,ex(Phi),I,N,Psi).
+% actual_label(Prog,Prop,I,N,Psi) :-
+%         property(Prop,Prog,somepath(always(Phi))),
+%         cg_label(Prog,eg(Phi),I,N,Psi).
+% actual_label(Prog,Prop,I,N,Psi) :-
+%         property(Prop,Prog,somepath(until(Phi1,Phi2))),
+%         cg_label(Prog,eu(Phi1,Phi2),I,N,Psi).
 
 report_equivalence(I,N,Psi1,Psi2) :-
         regress(Psi1,Psi3), % to macro-expand defined formulas
@@ -176,3 +211,6 @@ expected_label(main,prop4,5,2,phi*empty(queue)*holdingCoffee).
 %expected_label(main,prop4,6,0,phi*empty(queue)).
 %expected_label(main,prop4,6,1,phi*empty(queue)*(-holdingCoffee)).
 %expected_label(main,prop4,6,2,phi*empty(queue)*holdingCoffee).
+
+expected_max_iteration(main,prop4,5).
+%expected_max_iteration(main,prop4,6).
