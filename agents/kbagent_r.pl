@@ -46,10 +46,10 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 :- dynamic(program/1).
 :- dynamic(initially/1).
 
-:- ['../projection/regression'].
 :- ['../projection/reduction'].
 :- ['../reasoning/cwa'].
 
+:- use_module('../projection/regression').
 :- use_module('../reasoning/l_kb').
 :- use_module('../reasoning/fobdd').
 :- use_module('../reasoning/una').

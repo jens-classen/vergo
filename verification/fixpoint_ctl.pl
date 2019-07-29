@@ -20,9 +20,12 @@ employed that uses "guards" on edges, i.e. sequences of test
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
-:- use_module('../reasoning/l_kb').
+:- use_module('../projection/regression').
 :- use_module('../reasoning/fobdd').
 :- use_module('../reasoning/fol').
+:- use_module('../reasoning/l').
+:- use_module('../reasoning/l_kb').
+:- use_module('../reasoning/una').
 
 :- ['characteristic_graphs_guards'].
 
