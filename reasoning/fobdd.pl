@@ -43,6 +43,7 @@ clauses whose de-propositionalized versions are entailed
 
 :- module(fobdd, [minimize/2]).
 
+:- use_module('../lib/utils').
 :- use_module('../reasoning/una').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/bdd').

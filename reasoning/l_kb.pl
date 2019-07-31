@@ -3,6 +3,7 @@
                  print_kb/0]).
 
 :- use_module('l').
+:- use_module('../lib/utils').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check formula against initial theory

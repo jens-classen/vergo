@@ -70,6 +70,8 @@
                valid/1 as fo2solver_valid,
                equivalent/2 as fo2solver_equivalent]).
 
+:- use_module('../lib/utils').
+
 :- discontiguous(simplify/2).
 
 :- dynamic(reasoner/1).
