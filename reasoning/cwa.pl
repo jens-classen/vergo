@@ -1,13 +1,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Closed-World Assumption
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- module(cwa, [apply_cwa/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
 :- use_module('../reasoning/l').
 
-% not a module, otherwise cannot "see" cwa clauses
-:- multifile cwa/1.
+:- multifile user:cwa/1.
 
 % replace atoms for which CWA holds by their truth value
 % note: not in regression operator because may not be in
@@ -20,18 +20,18 @@ apply_cwa(sf(A),sf(A)) :- !.
 apply_cwa(F,true) :- 
         ground(F),
         (isfluent(F);isrigid(F)),
-        cwa(F),
+        user:cwa(F),
         initially(F), !.
 apply_cwa(F,false) :- 
         ground(F),
         (isfluent(F);isrigid(F)),
-        cwa(F),
+        user:cwa(F),
         not(initially(F)), !.
 % maybe too expensive...
 apply_cwa(F,R) :- 
         not(ground(F)),
         (isfluent(F);isrigid(F)),
-        cwa(F), !,
+        user:cwa(F), !,
         term_variables(F,Vars),
         findall((Vars,Unifier),
                 (initially(FI),
