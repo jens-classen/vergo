@@ -29,9 +29,6 @@ employed that uses "guards" on edges, i.e. sequences of test
 
 :- ['characteristic_graphs_guards'].
 
-:- discontiguous(check_label/5).
-:- discontiguous(check/3).
-
 :- dynamic labelset_maxid/1.
 :- dynamic label/4.
 :- dynamic labelset/3.
