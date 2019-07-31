@@ -9,7 +9,6 @@
 
 :- use_module('../lib/utils').
 :- use_module('../reasoning/fol').
-:- use_module('../reasoning/l').
 :- use_module('../reasoning/una').
 
 :- multifile user:prim_action/1.
