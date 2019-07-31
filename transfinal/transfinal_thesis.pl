@@ -1,6 +1,6 @@
 /**
  
-transfinal_cgraph
+transfinal_thesis
 
 This file provides predicates for defining a transition semantics for
 Golog programs that also serves as a set of rules for constructing the
