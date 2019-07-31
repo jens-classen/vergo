@@ -97,22 +97,97 @@ property(prop5,
          postcond(full(queue))).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Testing
-% -------
-% Reconstruction of full Example 5.35 from Appendix B.2 of
+% Testing: Intermediate label formulas for Examples 5.35 and 5.38 from
 % 
 % Jens Claßen: Planning and Verification in the Agent Language Golog.
 % PhD Thesis, Department of Computer Science, RWTH Aachen University,
 % 2013.
-%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+:- discontiguous expected_label/5.
+:- discontiguous expected_max_iteration/3.
+
+% Example 5.35 (prop4)
 % It turned out that there is an error in the thesis for label (*)
 % below, and hence label (**) is also wrong as a consequence. The end
 % result (and all other label formulas) are correct though, with the
 % only difference being that the method converges one iteration
 % earlier.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-test(Program,Prop) :-
+def(phi,-some(X, occ(selectRequest(X)))).
+
+expected_label(main,prop4,0,0,phi).
+expected_label(main,prop4,0,1,phi).
+expected_label(main,prop4,0,2,phi).
+
+expected_label(main,prop4,1,0,phi*lastFree(queue)).
+expected_label(main,prop4,1,1,phi*(lastFree(queue)+(-holdingCoffee))).
+expected_label(main,prop4,1,2,phi*(lastFree(queue)+holdingCoffee)).
+
+expected_label(main,prop4,2,0,phi*empty(queue)).
+expected_label(main,prop4,2,1,phi*(empty(queue)+(-holdingCoffee))).
+expected_label(main,prop4,2,2,phi*lastFree(queue)*(empty(queue)+holdingCoffee)).
+
+expected_label(main,prop4,3,0,phi*empty(queue)).
+expected_label(main,prop4,3,1,phi*lastFree(queue)*(-holdingCoffee)).
+%expected_label(main,prop4,3,2,phi*lastFree(queue)*holdingCoffee).    % (*)
+expected_label(main,prop4,3,2,phi*empty(queue)*holdingCoffee).
+
+expected_label(main,prop4,4,0,phi*empty(queue)).
+%expected_label(main,prop4,4,1,phi*lastFree(queue)*(-holdingCoffee)). % (**)
+expected_label(main,prop4,4,1,phi*empty(queue)*(-holdingCoffee)).
+expected_label(main,prop4,4,2,phi*empty(queue)*holdingCoffee).
+
+expected_label(main,prop4,5,0,phi*empty(queue)).
+expected_label(main,prop4,5,1,phi*empty(queue)*(-holdingCoffee)).
+expected_label(main,prop4,5,2,phi*empty(queue)*holdingCoffee).
+
+%expected_label(main,prop4,6,0,phi*empty(queue)).
+%expected_label(main,prop4,6,1,phi*empty(queue)*(-holdingCoffee)).
+%expected_label(main,prop4,6,2,phi*empty(queue)*holdingCoffee).
+
+expected_max_iteration(main,prop4,5).
+%expected_max_iteration(main,prop4,6).
+
+% Example 5.38 (prop2) 
+
+% Again, the labels the method produces differs from the ones stated
+% in the thesis due to the fact that in the latter, it is implicitly
+% assumed (as a provable state constraint) that the 'queue' fluent
+% always has a term as its value that represents a queue (here:
+% #q(...,...)).
+
+expected_label(main,prop2,0,0,holdingCoffee).
+%expected_label(main,prop2,0,1,false).
+expected_label(main,prop2,0,1,holdingCoffee).
+expected_label(main,prop2,0,2,holdingCoffee).
+
+expected_label(main,prop2,1,0,holdingCoffee).
+expected_label(main,prop2,1,1,empty(queue)+holdingCoffee).
+%expected_label(main,prop2,1,1,empty(queue)*(-holdingCoffee)).
+expected_label(main,prop2,1,2,holdingCoffee).
+%expected_label(main,prop2,1,2,holdingCoffee+empty(queue)).
+
+expected_label(main,prop2,2,0,holdingCoffee).
+expected_label(main,prop2,2,1,empty(queue)+holdingCoffee).
+%expected_label(main,prop2,2,1,empty(queue)*(-holdingCoffee)).
+expected_label(main,prop2,2,2,holdingCoffee).
+%expected_label(main,prop2,2,2,holdingCoffee+empty(queue)).
+
+expected_max_iteration(main,prop2,2).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Test of new fixpoint verification method
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- begin_tests(fixpoint_ctl).
+
+test(checkeu) :-
+        test_prog_prop(main,prop2).
+
+test(checkeg) :-
+        test_prog_prop(main,prop4).
+
+test_prog_prop(Program,Prop) :-
         construct_characteristic_graph(Program),
         check_ctl(Program,Prop,LabelSet), !,
         check_expected_labels(Program,Prop,LabelSet).
@@ -147,6 +222,22 @@ previous_label_set(Prog,Prop,Labels,Previous) :-
         property(Prop,Prog,somepath(until(_Phi1,_Phi2))), !,
         labelset(Prog,Previous+_,Labels).
 
+report_equivalence(I,N,Psi1,Psi2) :-
+        regress(Psi1,Psi3), % to macro-expand defined formulas
+        equivalent(Psi3,Psi2), !,
+        report_message(['Label for node ', N, ' in iteration ', I,
+                        ' is as expected.']).
+report_equivalence(I,N,Psi1,_Psi2) :- !,
+        report_message(['Unexpected label for node ', N, ' in iteration ', I,
+                        ': ', Psi1]).
+
+:- end_tests(fixpoint_ctl).
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Test of old fixpoint verification method
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% :- begin_tests(fixpoint_ctl_thesis).
+
 % test(Program,Prop) :-
 %         construct_characteristic_graph(Program),
 %         check(Program,Prop,R),
@@ -170,47 +261,4 @@ previous_label_set(Prog,Prop,Labels,Previous) :-
 %         property(Prop,Prog,somepath(until(Phi1,Phi2))),
 %         cg_label(Prog,eu(Phi1,Phi2),I,N,Psi).
 
-report_equivalence(I,N,Psi1,Psi2) :-
-        regress(Psi1,Psi3), % to macro-expand defined formulas
-        equivalent(Psi3,Psi2), !,
-        report_message(['Label for node ', N, ' in iteration ', I,
-                        ' is as expected.']).
-report_equivalence(I,N,Psi1,_Psi2) :-
-        report_message(['Unexpected label for node ', N, ' in iteration ', I,
-                        ': ', Psi1]).
-
-def(phi,-some(X, occ(selectRequest(X)))).
-
-% labels for somepath(always(-some(P,occ(selectRequest(P)))))
-expected_label(main,prop4,0,0,phi).
-expected_label(main,prop4,0,1,phi).
-expected_label(main,prop4,0,2,phi).
-
-expected_label(main,prop4,1,0,phi*lastFree(queue)).
-expected_label(main,prop4,1,1,phi*(lastFree(queue)+(-holdingCoffee))).
-expected_label(main,prop4,1,2,phi*(lastFree(queue)+holdingCoffee)).
-
-expected_label(main,prop4,2,0,phi*empty(queue)).
-expected_label(main,prop4,2,1,phi*(empty(queue)+(-holdingCoffee))).
-expected_label(main,prop4,2,2,phi*lastFree(queue)*(empty(queue)+holdingCoffee)).
-
-expected_label(main,prop4,3,0,phi*empty(queue)).
-expected_label(main,prop4,3,1,phi*lastFree(queue)*(-holdingCoffee)).
-%expected_label(main,prop4,3,2,phi*lastFree(queue)*holdingCoffee).    % (*)
-expected_label(main,prop4,3,2,phi*empty(queue)*holdingCoffee).
-
-expected_label(main,prop4,4,0,phi*empty(queue)).
-%expected_label(main,prop4,4,1,phi*lastFree(queue)*(-holdingCoffee)). % (**)
-expected_label(main,prop4,4,1,phi*empty(queue)*(-holdingCoffee)).
-expected_label(main,prop4,4,2,phi*empty(queue)*holdingCoffee).
-
-expected_label(main,prop4,5,0,phi*empty(queue)).
-expected_label(main,prop4,5,1,phi*empty(queue)*(-holdingCoffee)).
-expected_label(main,prop4,5,2,phi*empty(queue)*holdingCoffee).
-
-%expected_label(main,prop4,6,0,phi*empty(queue)).
-%expected_label(main,prop4,6,1,phi*empty(queue)*(-holdingCoffee)).
-%expected_label(main,prop4,6,2,phi*empty(queue)*holdingCoffee).
-
-expected_max_iteration(main,prop4,5).
-%expected_max_iteration(main,prop4,6).
+% :- end_tests(fixpoint_ctl_thesis).
