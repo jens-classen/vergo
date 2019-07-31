@@ -166,33 +166,33 @@ are the following dependencies to external tools and systems:
    In order to be able to use FOL theorem proving, we require that at
    least one theorem prover is available.
 
-    1. E Prover
+   1. E Prover
 
-       By default, the system expects the 'eprover' executable is
-       visible in PATH. The system has been developed and tested with
-       the (currently) most recent version "2.0 Turzum". E can be
-       downloaded from
+      By default, the system expects the 'eprover' executable is
+      visible in PATH. The system has been developed and tested with
+      the (currently) most recent version "2.0 Turzum". E can be
+      downloaded from
 
-       http://www.eprover.org 
+      http://www.eprover.org 
 
-       and installed manually. For some distributions such as Fedora,
-       there are also prepackaged versions. Installation on Fedora
-       then for example is via
+      and installed manually. For some distributions such as Fedora,
+      there are also prepackaged versions. Installation on Fedora
+      then for example is via
 
-           $ sudo yum install E.x86_64
+          $ sudo yum install E.x86_64
 
-    2. Vampire
+   2. Vampire
 
-       Alternatively, Vampire can be used instead of E. This similarly
-       requires that the 'vampire' executable binary (last tested
-       stable version: 4.2.2) is visible in PATH. Vampire is available
-       under
+      Alternatively, Vampire can be used instead of E. This similarly
+      requires that the 'vampire' executable binary (last tested
+      stable version: 4.2.2) is visible in PATH. Vampire is available
+      under
 
-       https://vprover.github.io/index.html    
+      https://vprover.github.io/index.html    
 
-       Then call
+      Then call
 
-           ?- fol:set_reasoner(vampire).
+          ?- fol:set_reasoner(vampire).
 
    3. FO²-Solver
 
