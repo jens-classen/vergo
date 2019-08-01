@@ -219,6 +219,10 @@ are the following dependencies to external tools and systems:
 
           $ export PATH_FO2SOLVER=~/local/FO2-Solver/
 
+      Then call
+
+          ?- fol:set_reasoner(fo2solver).
+
 2. **Model Checker**
 
    To use verification based on abstraction and model checking, we
