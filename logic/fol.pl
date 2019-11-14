@@ -49,21 +49,21 @@
 % :- op( 400, xfx, =).    % equality
 % :- op( 299, fx, $).     % for $true/$false
 
-:- use_module('../logic/eprover',
+:- use_module('../reasoners/eprover',
               [entails/2 as eprover_entails,
                inconsistent/1 as eprover_inconsistent,
                consistent/1 as eprover_consistent,
                valid/1 as eprover_valid,
                equivalent/2 as eprover_equivalent]).
 
-:- use_module('../logic/vampire',
+:- use_module('../reasoners/vampire',
               [entails/2 as vampire_entails,
                inconsistent/1 as vampire_inconsistent,
                consistent/1 as vampire_consistent,
                valid/1 as vampire_valid,
                equivalent/2 as vampire_equivalent]).
 
-:- use_module('../logic/fo2solver',
+:- use_module('../reasoners/fo2solver',
               [entails/2 as fo2solver_entails,
                inconsistent/1 as fo2solver_inconsistent,
                consistent/1 as fo2solver_consistent,

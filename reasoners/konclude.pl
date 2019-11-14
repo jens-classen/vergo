@@ -1,10 +1,10 @@
-:- module(dl, [entails/2,
-               inconsistent/1,
-               consistent/1,
-               simplify/2,
-               op(1130, xfy, <=>),
-               op(1110, xfy, <=),
-               op(1110, xfy, =>)]).
+:- module(konclude, [entails/2,
+                     inconsistent/1,
+                     consistent/1,
+                     simplify/2,
+                     op(1130, xfy, <=>),
+                     op(1110, xfy, <=),
+                     op(1110, xfy, =>)]).
 
 /* We use the following symbols for writing formulas:
 

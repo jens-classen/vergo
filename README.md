@@ -133,8 +133,13 @@ The code is divided into the following subdirectories:
 
 - logic:
 
+  Contains code for representing and manipulating formulas in
+  different base logics (propositional logic, FOL, L).
+  
+- reasoners:
+
   Contains different implementations and interfaces for backend
-  reasoners (propositional and FOL).
+  reasoners (FOL, FO^2, Description Logics).
 
 - temp:
 
