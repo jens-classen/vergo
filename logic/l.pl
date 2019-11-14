@@ -10,7 +10,7 @@
               get_ini_std_names/1,
               get_new_std_name/2]).
 
-:- use_module('../reasoning/fol').
+:- use_module('../logic/fol').
 
 % standard name: any constant (Prolog atom) starting with '#'
 % e.g. '#1', '#2', '#bob'

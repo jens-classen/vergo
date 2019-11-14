@@ -4,7 +4,7 @@
                         fml2prime_implicates/2
                         ]).
 
-:- use_module('../reasoning/fol').
+:- use_module('../logic/fol').
 :- use_module('../lib/utils').
 
 :- dynamic(clause_n/2).

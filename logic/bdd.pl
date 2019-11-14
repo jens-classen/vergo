@@ -27,7 +27,7 @@ ordering nodes.
                 minimize2dnf/2,
                 minimize2cnf/2]).
 
-:- use_module('../reasoning/fol').
+:- use_module('../logic/fol').
 :- use_module('../lib/utils').
 
 %:- use_module(library(graph_algorithms)).

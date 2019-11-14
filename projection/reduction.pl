@@ -6,9 +6,9 @@
                       resolve/3]).
 
 :- use_module('../lib/utils').
-:- use_module('../reasoning/fol').
-:- use_module('../reasoning/l').
-:- use_module('../reasoning/l_kb').
+:- use_module('../logic/fol').
+:- use_module('../logic/l').
+:- use_module('../logic/l_kb').
 
 :- multifile user:def/2.
 

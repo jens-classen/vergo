@@ -44,10 +44,10 @@ clauses whose de-propositionalized versions are entailed
 :- module(fobdd, [minimize/2]).
 
 :- use_module('../lib/utils').
-:- use_module('../reasoning/una').
-:- use_module('../reasoning/fol').
-:- use_module('../reasoning/bdd').
-:- use_module('../reasoning/clausalform').
+:- use_module('../logic/una').
+:- use_module('../logic/fol').
+:- use_module('../logic/bdd').
+:- use_module('../logic/clausalform').
 
 :- dynamic mapping/3.
 :- dynamic mappings/1.

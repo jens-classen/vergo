@@ -8,8 +8,8 @@
                        isrigid/1]).
 
 :- use_module('../lib/utils').
-:- use_module('../reasoning/fol').
-:- use_module('../reasoning/una').
+:- use_module('../logic/fol').
+:- use_module('../logic/una').
 
 :- multifile user:prim_action/1.
 :- multifile user:rel_fluent/1.

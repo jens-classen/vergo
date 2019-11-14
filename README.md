@@ -131,7 +131,7 @@ The code is divided into the following subdirectories:
 
   Code implementing regression and progression methods.
 
-- reasoning:
+- logic:
 
   Contains different implementations and interfaces for backend
   reasoners (propositional and FOL).

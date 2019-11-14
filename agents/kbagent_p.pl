@@ -32,10 +32,10 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../projection/reduction').
 :- use_module('../projection/regression').
 :- use_module('../projection/progression').
-:- use_module('../reasoning/cwa').
-:- use_module('../reasoning/l_kb').
-:- use_module('../reasoning/fobdd').
-:- use_module('../reasoning/una').
+:- use_module('../logic/cwa').
+:- use_module('../logic/l_kb').
+:- use_module('../logic/fobdd').
+:- use_module('../logic/una').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations

@@ -78,7 +78,7 @@
 
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
-:- use_module('../reasoning/fol').
+:- use_module('../logic/fol').
 
 :- dynamic requirement/1.
 

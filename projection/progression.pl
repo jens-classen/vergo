@@ -7,8 +7,8 @@
 
 :- use_module('regression').
 :- use_module('../lib/utils').
-:- use_module('../reasoning/fol').
-:- use_module('../reasoning/una').
+:- use_module('../logic/fol').
+:- use_module('../logic/una').
 
 :- multifile user:progression_style/1.
 :- multifile user:causes_true/3.

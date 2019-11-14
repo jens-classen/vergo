@@ -32,9 +32,9 @@ CEUR-WS.org, 2015.
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 
-:- use_module('../reasoning/fol').
-:- use_module('../reasoning/l').
-:- use_module('../reasoning/dl', [consistent/1 as dl_consistent,
+:- use_module('../logic/fol').
+:- use_module('../logic/l').
+:- use_module('../logic/dl', [consistent/1 as dl_consistent,
                                   inconsistent/1 as dl_inconsistent]).
 
 :- ['characteristic_graphs_guards'].

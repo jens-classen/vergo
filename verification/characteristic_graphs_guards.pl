@@ -13,8 +13,8 @@ operators.
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
-:- use_module('../reasoning/fobdd').
-:- use_module('../reasoning/fol').
+:- use_module('../logic/fobdd').
+:- use_module('../logic/fol').
 
 :- ['../transfinal/transfinal_guards'].
 

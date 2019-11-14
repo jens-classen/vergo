@@ -4,8 +4,8 @@
 :- module(cwa, [apply_cwa/2]).
 
 :- use_module('../lib/utils').
-:- use_module('../reasoning/fol').
-:- use_module('../reasoning/l').
+:- use_module('../logic/fol').
+:- use_module('../logic/l').
 
 :- multifile user:cwa/1.
 
