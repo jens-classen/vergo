@@ -58,6 +58,7 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init :- !,
+        initialize_kb,
         assert(history([])),
         assert(program('__undef')).
 
@@ -87,6 +88,7 @@ execute(Action,SenseResult) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init(Program) :- !,
+        initialize_kb,
         assert(history([])),
         assert(program(Program)).
 

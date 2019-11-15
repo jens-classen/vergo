@@ -1,10 +1,17 @@
-:- module(l_kb, [entails_initially/2,
+:- module(l_kb, [initialize_kb/0,
+                 entails_initially/2,
                  extend_initial_kb_by/1,
                  print_kb/0]).
 
 :- use_module('def').
 :- use_module('l').
 :- use_module('../lib/utils').
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Initialize
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+initialize_kb. % nothing to do
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check formula against initial theory

@@ -42,6 +42,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init :- !,
+        initialize_kb,
         assert(history([])),
         assert(program('__undef')).
 
@@ -70,6 +71,7 @@ execute(Action,SenseResult) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init(Program) :- !,
+        initialize_kb,
         assert(history([])),
         assert(program(Program)).
 
