@@ -76,11 +76,17 @@ assert_partition([(I,Rules)|Partition]) :-
 partition(RuleSet,Partition) :-
         partition(RuleSet,0,Partition).
 partition([],_I,[]) :- !.
-partition(Rest,I,[(I,TRules)|Partition]) :- !,
+partition(Rest,I,[(I,TRules)|Partition]) :-
         tolerated_rules(Rest,TRules),
+        TRules \= [], !,
         setminus2(Rest,TRules,NewRest),
         I1 is I+1,
-        partition(NewRest,I1,Partition).       
+        partition(NewRest,I1,Partition).
+partition(_Rest,_I,_Rules) :- !,
+        report_message(['Error constructing ranking partition in System Z!']),
+        report_message(['The provided set of conditionals is not consistent!']),
+        report_message(['Aborting...']),
+        abort.
 
 tolerated_rules(RuleSet,ToleratedRuleSet) :- !,
         findall(Rule,
