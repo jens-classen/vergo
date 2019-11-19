@@ -30,7 +30,6 @@ discourse, of which propositional logic is a subset.
 :- op(1150, xfy, ~>).
 
 :- use_module('l').
-:- use_module('fol').
 :- use_module('../lib/utils').
 
 :- dynamic(zpart/2).

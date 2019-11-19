@@ -6,7 +6,6 @@
                       resolve/3]).
 
 :- use_module('../lib/utils').
-:- use_module('../logic/fol').
 :- use_module('../logic/l').
 :- use_module('../logic/l_kb').
 

@@ -10,6 +10,16 @@
               get_ini_std_names/1,
               get_new_std_name/2]).
 
+:- reexport('../logic/fol', [get_reasoner/1,
+                             set_reasoner/1,
+                             simplify/2,
+                             disjoin/2,
+                             conjoin/2,
+                             free_variables/2,
+                             op(1130, xfy, <=>),
+                             op(1110, xfy, <=),
+                             op(1110, xfy, =>)]).
+
 :- use_module('../logic/fol').
 
 % standard name: any constant (Prolog atom) starting with '#'

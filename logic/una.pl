@@ -1,7 +1,6 @@
 :- module(una, [apply_una/2]).
 
 :- use_module('../lib/utils').
-:- use_module('../logic/fol').
 :- use_module('../logic/l').
 
 apply_una(true,true) :- !.
