@@ -1,4 +1,21 @@
-% Note: standard names are Prolog atoms starting with '#', e.g. '#bob'
+/**
+
+<module> L
+
+This module implements the logic 'L', i.e. first-order logic with a
+countable set of standard names as the fixed universe of discourse, as
+described in
+
+Hector J. Levesque and Gerhard Lakemeyer: The Logic of Knowledge
+Bases. MIT Press, 2001.
+
+Here, a standard name is any Prolog atom starting with '#',
+e.g. '#1', '#2', '#bob'.
+
+@author  Jens Claßen
+@license GPLv2
+
+ **/
 
 :- module(l, [entails_l/3,
               inconsistent_l/2,
@@ -23,7 +40,6 @@
 :- use_module('../logic/fol').
 
 % standard name: any constant (Prolog atom) starting with '#'
-% e.g. '#1', '#2', '#bob'
 is_stdname(X) :-
         atomic(X),
         atom_concat('#',_,X).
