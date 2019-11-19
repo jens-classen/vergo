@@ -3,6 +3,8 @@
                  extend_initial_kb_by/1,
                  print_kb/0]).
 
+:- reexport(['l']).
+
 :- use_module('def').
 :- use_module('l').
 :- use_module('../lib/utils').

@@ -22,7 +22,6 @@ employed that uses "guards" on edges, i.e. sequences of test
 :- use_module('../lib/env').
 :- use_module('../projection/regression').
 :- use_module('../logic/fobdd').
-:- use_module('../logic/l').
 :- use_module('../logic/l_kb').
 :- use_module('../logic/una').
 
