@@ -12,7 +12,6 @@
            disjoint2/2,
            member2/2,
            nth2/3,
-           forall/2,
            write_readable/2,
            write_readable/1,
            measure_time_with_limit/4,
@@ -83,14 +82,6 @@ nth2(X,[_|L],N) :-
         N is N1+1.
 nth2(_,[]) :-
         fail.
-
-% do Action for each Goal
-forall(Goal,Action):-
-        Goal,
-	(Action
-	->	fail
-	;	!,fail).
-forall(_,_).
 
 % write Term to Stream using readable variables 
 % (A,B,C,... instead of _G201,_G202,...)
