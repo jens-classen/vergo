@@ -1,3 +1,4 @@
+:- use_module('../../lib/utils').
 
 rel_rigid(teach(_,_)).
 
@@ -38,25 +39,28 @@ query(14,know(some(Y,all(X,teach(X,Y) => know(teach(X,Y))))),true). % from Exerc
 
 def(kwhether(F),know(F)+know(-F)).
 
-test_all_queries :-
+:- begin_tests(lkb, [setup(test_setup)]).
+
+test(lkb_teacher_ask) :-
+        forall(query(N,_,_),
+               test_query(N)).
+
+test_setup :-
         init,
         report_message(['KB:']),
         print_kb,
-        report_message(['\n']),
-        test_all_queries2.
-
-test_all_queries2 :-
-        test_query(N),
-        fail.
-test_all_queries2.
+        report_message(['\n']).
 
 test_query(Number) :-
         query(Number,Formula,ExpectedResult),
         ask4(Formula,Result),
-        report_result(Number,Formula,Result,ExpectedResult).
+        report_result(Number,Formula,Result,ExpectedResult),
+        assertion(Result = ExpectedResult).
 
 report_result(Number,Formula,Result,ExResult) :-
         report_message(['Query          : ', Number, '\n',
                         'Formula        : ', Formula, '\n',
                         'Result         : ', Result, '\n',
                         'Expected Result: ', ExResult, '\n']).
+
+:- end_tests(lkb).
