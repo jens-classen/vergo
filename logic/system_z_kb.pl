@@ -55,4 +55,5 @@ print_kb :- !,
 extend_initial_kb_by(Fml) :-
         entails_initially(Fml,true), !.
 extend_initial_kb_by(Fml) :- !,
-        assert(initially(Fml)).
+        assert(initially(Fml)),
+        initialize_kb.
