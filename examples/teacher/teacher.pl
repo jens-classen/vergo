@@ -41,7 +41,13 @@ def(kwhether(F),know(F)+know(-F)).
 
 :- begin_tests(lkb, [setup(test_setup)]).
 
-test(lkb_teacher_ask) :-
+test(lkb_teacher_ask_eprover) :-
+        set_reasoner(eprover),
+        forall(query(N,_,_),
+               test_query(N)).
+
+test(lkb_teacher_ask_vampire) :-
+        set_reasoner(vampire),
         forall(query(N,_,_),
                test_query(N)).
 
