@@ -42,12 +42,20 @@ def(kwhether(F),know(F)+know(-F)).
 :- begin_tests(lkb, [setup(test_setup)]).
 
 test(lkb_teacher_ask_eprover) :-
+        report_message(['Testing with E theorem prover...\n']),
         set_reasoner(eprover),
         forall(query(N,_,_),
                test_query(N)).
 
 test(lkb_teacher_ask_vampire) :-
+        report_message(['Testing with Vampire theorem prover...\n']),
         set_reasoner(vampire),
+        forall(query(N,_,_),
+               test_query(N)).
+
+test(lkb_teacher_ask_fo2solver) :-
+        report_message(['Testing with FO2Solver...\n']),
+        set_reasoner(fo2solver),
         forall(query(N,_,_),
                test_query(N)).
 
