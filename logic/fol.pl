@@ -1,20 +1,14 @@
-:- module(fol, [entails/2,
-                inconsistent/1,
-                consistent/1,
-                valid/1,
-                equivalent/2,
-                get_reasoner/1,
-                set_reasoner/1,
-                check_equivalence/2,
-                simplify/2,
-                disjoin/2,
-                conjoin/2,
-                free_variables/2,
-                op(1130, xfy, <=>),
-                op(1110, xfy, <=),
-                op(1110, xfy, =>)]).
+/**
 
-/* We use the following symbols for writing formulas:
+<module> FOL
+
+This module implements first-order predicate logic (FOL), providing
+methods for testing entailment, (in-)consistency, validity, and
+equivalence of formulas. Moreover, it provides some predicates for
+manipulating formulas (conjoining, disjoining, simplifying, determine
+their free variables).
+
+Formulas are represented as terms, using the following symbols:
 
    true
    false
@@ -31,23 +25,48 @@
    some(Variable,Formula) existential quantification
    all(Variable,Formula)  universal quantification
 
-   Variables have to be (uppercase) Prolog variables. */
+   Variables have to be (uppercase) Prolog variables.
 
+Inference tasks are delegated to an embedded FOL theorem prover.
+At the moment, the following systems are supported:
 
-% % TPTP FOF operator definitions from Jens Otten's LeanCoP
-% /* Operator definitions for TPTP syntax. */
+   eprover    theorem prover 'E'
+              (http://www.eprover.org/)
+
+   vampire    theorem prover 'Vampire'
+              (https://vprover.github.io/index.html)
+
+   fo2solver  SAT solver 'FO2Solver'
+              (http://forsyte.at/people/kotek/fo2-solver/)
+
+The currently used prover can be queried and changed by means of the
+get_reasoner/1 and set_reasoner/1 predicates, respectively, using the
+above handles. The default reasoner is eprover.
+
+@author  Jens Claßen
+@license GPLv2
+
+ **/
+
+:- module(fol, [entails/2,
+                inconsistent/1,
+                consistent/1,
+                valid/1,
+                equivalent/2,
+                get_reasoner/1,
+                set_reasoner/1,
+                check_equivalence/2,
+                simplify/2,
+                disjoin/2,
+                conjoin/2,
+                free_variables/2,
+                op(1130, xfy, <=>),
+                op(1110, xfy, <=),
+                op(1110, xfy, =>)]).
+
 :- op(1130, xfy, <=>). % equivalence
 :- op(1110, xfy, =>).  % implication
 :- op(1110, xfy, <=).  % implication
-% :- op( 500, fy, ~).    % negation
-% :- op( 500,xfy, :).
-
-% :- op(1100, xfy, '|').  % disjunction
-% :- op(1000, xfy, &).    % conjunction
-% :- op( 500, fy, !).     % universal quantifier
-% :- op( 500, fy, ?).     % existential quantifier
-% :- op( 400, xfx, =).    % equality
-% :- op( 299, fx, $).     % for $true/$false
 
 :- use_module('../reasoners/eprover',
               [entails/2 as eprover_entails,
