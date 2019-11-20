@@ -2,46 +2,11 @@
                     inconsistent/1,
                     consistent/1,
                     valid/1,
-                    equivalent/2,
-                    op(1130, xfy, <=>),
-                    op(1110, xfy, <=),
-                    op(1110, xfy, =>)]).
+                    equivalent/2]).
 
-/* We use the following symbols for writing formulas:
-
-   true
-   false
-
-    *  conjunction
-    +  disjunction
-    -  negation
-   <=> equivalence
-    => implication
-   <=  implication
-    
-    =  equality
-
-   some(Variable,Formula) existential quantification
-   all(Variable,Formula)  universal quantification
-
-   Variables have to be (uppercase) Prolog variables. */
-
-
-% % TPTP FOF operator definitions from Jens Otten's LeanCoP
-% /* Operator definitions for TPTP syntax. */
-:- op(1130, xfy, <=>). % equivalence
-:- op(1110, xfy, =>).  % implication
-:- op(1110, xfy, <=).  % implication
-% :- op( 500, fy, ~).    % negation
-% :- op( 500,xfy, :).
-
-% :- op(1100, xfy, '|').  % disjunction
-% :- op(1000, xfy, &).    % conjunction
-% :- op( 500, fy, !).     % universal quantifier
-% :- op( 500, fy, ?).     % existential quantifier
-% :- op( 400, xfx, =).    % equality
-% :- op( 299, fx, $).     % for $true/$false
-
+:- use_module('../logic/fol', [op(1130, xfy, <=>),
+                               op(1110, xfy, <=),
+                               op(1110, xfy, =>)]).
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
 
@@ -51,7 +16,7 @@
 
 /* Succeeds if ListOfAxioms entails Conjecture. */
 entails(ListOfAxioms,Conjecture) :-
-        entails_eprover(ListOfAxioms,Conjecture).
+        eprover(ListOfAxioms,Conjecture).
 
 /* Succeeds if ListOfFormulas is inconsistent. */
 inconsistent(ListOfFormulas) :-
@@ -70,8 +35,8 @@ equivalent(Formula1,Formula2) :-
         entails([Formula1],Formula2),
         entails([Formula2],Formula1).
 
-/* Succeeds if ListOfAxioms entails Conjecture. Uses the E prover. */
-entails_eprover(ListOfAxioms,Conjecture) :-
+/* Calls E prover on ListOfAxioms and Conjecture. */
+eprover(ListOfAxioms,Conjecture) :-
         temp_file(File),
         writeToFile(ListOfAxioms, Conjecture, File),
         process_create(path('eprover'), 
@@ -85,12 +50,12 @@ entails_eprover(ListOfAxioms,Conjecture) :-
         process_wait(PID, Status), !,     % wait for completion
         check_eprover_status(Status).     % return value
 
-entails_eprover(_ListOfAxioms,_Conjecture) :-
+eprover(_ListOfAxioms,_Conjecture) :-
         report_message(['Failed while attempting to use E theorem prover!']),
         report_message(['Aborting...']),
         report_message(['Check your settings! (PATH_GOLOG variable set?)']),
         abort.
-        
+
 % eprover's return status determines the truth value:
 % 0 =    proof found = Conjecture derivable     => succeed
 % 1 = no proof found = Conjecture not derivable => fail
