@@ -127,14 +127,18 @@ The code is divided into the following subdirectories:
 
   Example domain definitions for agents.
 
-- projection:
+- lib:
 
-  Code implementing regression and progression methods.
+  Various libraries (utilities, environment variables).
 
 - logic:
 
   Contains code for representing and manipulating formulas in
   different base logics (propositional logic, FOL, L).
+
+- projection:
+
+  Code implementing regression and progression methods.
   
 - reasoners:
 
@@ -152,10 +156,6 @@ The code is divided into the following subdirectories:
 - transfinal:
 
   Contains various definitions for Golog program semantics.
-
-- lib:
-
-  Various libraries (utilities, environment variables).
 
 - verification:
 
