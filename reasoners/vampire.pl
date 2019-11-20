@@ -43,9 +43,7 @@ vampire(ListOfAxioms,Conjecture,Result) :-
         temp_file(File),
         writeToFile(ListOfAxioms,Conjecture,File),
         process_create(path('vampire'), 
-                       ['--mode casc',        % recommended mode
-                        '-t 0',               % no time limit
-                        File],                % input file
+                       [File],                % input file
                        [stdout(pipe(Output)), % pipe to parse result
                         stderr(pipe(Output)),
                         process(PID)]),       % need PID for exit status
