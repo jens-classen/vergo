@@ -1,18 +1,55 @@
-:- module('system_z_kb', [initialize_kb/0,
-                          entails_initially/2,
-                          print_kb/0,
-                          extend_initial_kb_by/1,
-                          op(1150, xfy, ~>)]).
+:- module('conditional_kb', [initialize_kb/0,
+                             entails_initially/2,
+                             print_kb/0,
+                             extend_initial_kb_by/1,
+                             get_reasoner/1,
+                             set_reasoner/1,
+                             op(1150, xfy, ~>)]).
 
 :- use_module('def').
+:- use_module('rational_closure').
 :- use_module('system_z').
 :- use_module('../lib/utils').
+
+:- dynamic(reasoner/1).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Reasoner
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% default: Rational Closure
+reasoner(rational_closure).
+%reasoner(system_z).
+
+set_reasoner(X) :-
+        member(X,[rational_closure,system_z]), !,
+        retract(reasoner(_)),
+        assert(reasoner(X)).
+
+get_reasoner(X) :-
+        reasoner(X).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Initialize
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 initialize_kb :-
+        reasoner(rational_closure),
+        findall((BP~>HP),
+                (initially(B~>H),
+                 expand_defs(B,BP),
+                 expand_defs(H,HP)),
+                KBCond),
+        findall((true~>FmlP),
+                (initially(Fml),
+                 Fml \= (_~>_),
+                 expand_defs(Fml,FmlP)),
+                KBNonCond),
+        append(KBCond,KBNonCond,KB),
+        construct_ranking(KB).
+
+initialize_kb :-
+        reasoner(system_z),
         findall((BP~>HP),
                 (initially(B~>H),
                  expand_defs(B,BP),
@@ -31,11 +68,25 @@ initialize_kb :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 entails_initially((B~>H),Truth) :-
+        reaonser(rational_closure),
+        expand_defs(B,BP),
+        expand_defs(H,HP),
+        rc_entails(BP,HP,Truth), !.
+
+entails_initially(Fml,Truth) :-
+        reaonser(rational_closure),
+        Fml \= (_~>_),
+        expand_defs(Fml,FmlP),
+        rc_entails(true,FmlP,Truth), !.
+
+entails_initially((B~>H),Truth) :-
+        reaonser(system_z),
         expand_defs(B,BP),
         expand_defs(H,HP),
         one_entails(BP,HP,Truth), !.
 
 entails_initially(Fml,Truth) :-
+        reaonser(system_z),
         Fml \= (_~>_),
         expand_defs(Fml,FmlP),
         one_entails(true,FmlP,Truth), !.
@@ -44,7 +95,12 @@ entails_initially(Fml,Truth) :-
 % Pretty-print KB
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-print_kb :- !,
+print_kb :-
+        reasoner(rational_closure), !,
+        print_ranking.
+
+print_kb :-
+        reasoner(system_z), !,
         print_partition.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,6 +110,7 @@ print_kb :- !,
 % todo: make this optional, may be costly
 extend_initial_kb_by(Fml) :-
         entails_initially(Fml,true), !.
+% we need to reconstruct the partition/ranking
 extend_initial_kb_by(Fml) :- !,
         assert(initially(Fml)),
         initialize_kb.

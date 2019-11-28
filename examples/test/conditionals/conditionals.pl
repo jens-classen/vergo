@@ -1,4 +1,4 @@
-:- use_module('../../../logic/system_z_kb').
+:- use_module('../../../logic/conditional_kb').
 
 initially(p~>b).
 initially(b~>f).
