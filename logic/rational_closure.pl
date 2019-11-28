@@ -17,7 +17,7 @@ discourse, of which propositional logic is a subset.
 
  **/
 
-:- module(rational_closure, [rc__entails/3,
+:- module(rational_closure, [rc_entails/3,
                              construct_ranking/1,
                              print_ranking/0,
                              op(1150, xfy, ~>)]).
