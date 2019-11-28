@@ -3,13 +3,15 @@
 :- use_module('l').
 :- use_module('../lib/utils').
 
+:- multifile user:def/2.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Macro expand defined formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 expand_defs(Fml1,Fml2) :-
         nonvar(Fml1),
-        def(Fml1,Fml3), !,
+        user:def(Fml1,Fml3), !,
         expand_defs(Fml3,Fml2).
 expand_defs(Fml1,Fml2) :-
         nonvar(Fml1),
