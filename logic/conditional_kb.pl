@@ -2,6 +2,7 @@
                              entails_initially/2,
                              print_kb/0,
                              extend_initial_kb_by/1,
+                             rank/2,
                              get_reasoner/1,
                              set_reasoner/1,
                              op(1150, xfy, ~>)]).
@@ -90,6 +91,18 @@ entails_initially(Fml,Truth) :-
         Fml \= (_~>_),
         expand_defs(Fml,FmlP),
         one_entails(true,FmlP,Truth), !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Rank of a formula
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+rank(Fml,R) :-
+        reasoner(rational_closure),
+        rc_rank(Fml,R).
+
+rank(Fml,R) :-
+        reasoner(system_z),
+        z_rank(Fml,R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Pretty-print KB

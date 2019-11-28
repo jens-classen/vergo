@@ -22,6 +22,7 @@ discourse, of which propositional logic is a subset.
 :- module(system_z, [one_entails/3,
                      construct_partition/1,
                      print_partition/0,
+                     z_rank/2,
                      op(1150, xfy, ~>)]).
 
 /* In addition to the symbols from module 'fol', we introduce a new
@@ -57,6 +58,9 @@ z_rank(Fml,I,N,RuleSet1) :-
         N1 is N-1,
         z_rank(Fml,I,N1,RuleSet).
 z_rank(_Fml,I,N,_RuleSet) :-
+        zmax(N), !,
+        I is inf. % infinity instead of zmax+1
+z_rank(_Fml,I,N,_RuleSet) :- !,
         I is N+1.
 
 construct_partition(RuleSet) :- !,

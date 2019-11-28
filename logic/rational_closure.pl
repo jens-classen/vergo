@@ -20,6 +20,7 @@ discourse, of which propositional logic is a subset.
 :- module(rational_closure, [rc_entails/3,
                              construct_ranking/1,
                              print_ranking/0,
+                             rc_rank/2,
                              op(1150, xfy, ~>)]).
 
 /* In addition to the symbols from module 'fol', we introduce a new
@@ -37,6 +38,9 @@ discourse, of which propositional logic is a subset.
 % Rational Closure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+rc_rank(Fml,R) :-
+        min_non_exceptional_rank(Fml,R).
+
 rc_entails(Left,Right,true) :-
         min_non_exceptional_rank(Left,K),
         rcpart(K,Rules),
@@ -53,6 +57,8 @@ min_non_exceptional_rank(Fml,I,K) :-
 min_non_exceptional_rank(Fml,K,K) :-
         rcpart(K,Rules),
         \+ exceptional(Fml,Rules), !.
+min_non_exceptional_rank(_Fml,_I,K) :- !,
+        K is inf.
 
 construct_ranking(RuleSet) :- !,
         retractall(rcpart(_,_)),
