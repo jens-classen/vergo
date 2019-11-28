@@ -68,25 +68,25 @@ initialize_kb :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 entails_initially((B~>H),Truth) :-
-        reaonser(rational_closure),
+        reasoner(rational_closure),
         expand_defs(B,BP),
         expand_defs(H,HP),
         rc_entails(BP,HP,Truth), !.
 
 entails_initially(Fml,Truth) :-
-        reaonser(rational_closure),
+        reasoner(rational_closure),
         Fml \= (_~>_),
         expand_defs(Fml,FmlP),
         rc_entails(true,FmlP,Truth), !.
 
 entails_initially((B~>H),Truth) :-
-        reaonser(system_z),
+        reasoner(system_z),
         expand_defs(B,BP),
         expand_defs(H,HP),
         one_entails(BP,HP,Truth), !.
 
 entails_initially(Fml,Truth) :-
-        reaonser(system_z),
+        reasoner(system_z),
         Fml \= (_~>_),
         expand_defs(Fml,FmlP),
         one_entails(true,FmlP,Truth), !.
