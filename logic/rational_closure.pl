@@ -76,7 +76,13 @@ construct_ranking_recursive(I) :-
         assert(rcpart(I1,RulesEx)),
         construct_ranking_recursive(I1).
 construct_ranking_recursive(I) :- !,
-        assert(rcmax(I)).
+        assert(rcmax(I)),
+        check_admissability(I).
+
+check_admissibility(I) :-
+        rcpart(I,[]), !.
+check_admissibility(_) :- !,
+        report_message(['Warning: The provided set of conditionals is not admissible!']).
 
 exceptional_rules(RulesEx,Rules) :-
         findall((B=>H),
