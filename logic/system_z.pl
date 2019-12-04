@@ -42,12 +42,25 @@ discourse, of which propositional logic is a subset.
 
 %TODO: zero-entailment
 
+/**
+ * one_entails(+Left,+Right,-Result) is det
+ *
+ * Returns the truth value Result of whether the conditional
+ * 'Left~>Right' is 1-entailed by the conditional KB.
+ */
 one_entails(Left,Right,true) :-
         z_rank(Left*Right,I1),
         z_rank(Left*(-Right),I2),
         I1 < I2, !.
 one_entails(_,_,false).
 
+/**
+ * z_rank(+Fml,-Rank) is det
+ *
+ * Returns the numeric rank Rank of a formula Fml according to the
+ * partition induced by the conditional KB. Returns 'inf' (positive
+ * infinity) in case the formula has no rank.
+ */
 z_rank(Fml,I) :- !,
         zmax(N),
         z_rank(Fml,I,N,[]).
@@ -63,6 +76,14 @@ z_rank(_Fml,I,N,_RuleSet) :-
 z_rank(_Fml,I,N,_RuleSet) :- !,
         I is N+1.
 
+/**
+ * construct_partition(+RuleSet) is det
+ *
+ * Given a list of conditionals RuleSet as KB, constructs an internal
+ * representation (through dynamic predicates) of a partition according
+ * to System Z. Prints a warning to standard output in case the
+ * RuleSet does not satisfy Pearl's consistency criterion.
+ */
 construct_partition(RuleSet) :- !,
         retractall(zpart(_,_)),
         retractall(zmax(_)),
@@ -109,6 +130,12 @@ materialize([],[]).
 materialize([(B~>H)|Rules],[(B=>H)|RulesM]) :-
         materialize(Rules,RulesM).
 
+/**
+ * print_partition is det
+ *
+ * Prints a presentation of the internal representation of the KB to
+ * standard output.
+ */
 print_partition :- !,
         zpart(I,Rules),
         write(I),

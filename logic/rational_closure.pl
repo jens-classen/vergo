@@ -38,9 +38,22 @@ discourse, of which propositional logic is a subset.
 % Rational Closure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+/**
+ * rc_rank(+Fml,-Rank) is det
+ *
+ * Returns the numeric rank Rank of a formula Fml according to the
+ * ranking induced by the conditional KB. Returns 'inf' (positive
+ * infinity) in case the formula has no rank.
+ */
 rc_rank(Fml,R) :-
         min_non_exceptional_rank(Fml,R).
 
+/**
+ * rc_entails(+Left,+Right,-Result) is det
+ *
+ * Returns the truth value Result of whether the conditional
+ * 'Left~>Right' is entailed by the conditional KB.
+ */
 rc_entails(Left,Right,true) :-
         min_non_exceptional_rank(Left,K),
         rcpart(K,Rules),
@@ -60,6 +73,14 @@ min_non_exceptional_rank(Fml,K,K) :-
 min_non_exceptional_rank(_Fml,_I,K) :- !,
         K is inf.
 
+/**
+ * construct_ranking(+RuleSet) is det
+ *
+ * Given a list of conditionals RuleSet as KB, constructs an internal
+ * representation (through dynamic predicates) of a ranking according
+ * to rational closure. Prints a warning to standard output in case the
+ * RuleSet does not satisfy Lehmann and Magidors admissibility criterion.
+ */
 construct_ranking(RuleSet) :- !,
         retractall(rcpart(_,_)),
         retractall(rcmax(_)),
@@ -96,6 +117,12 @@ materialize([],[]).
 materialize([(B~>H)|Rules],[(B=>H)|RulesM]) :-
         materialize(Rules,RulesM).
 
+/**
+ * print_ranking is det
+ *
+ * Prints a presentation of the internal representation of the KB to
+ * standard output.
+ */
 print_ranking :- !,
         rcpart(I,Rules),
         write(I),
