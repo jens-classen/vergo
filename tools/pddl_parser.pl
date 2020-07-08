@@ -343,11 +343,20 @@ pddl_type_definitions(Types, Axioms) -->
 
 pddl_typed_list_name(Types) -->
        pddl_name_star(Types).
+% this separate rule is needed b/c there may be no whitespace at end
+pddl_typed_list_name([Type]) -->
+        {must_support(typing)},
+        pddl_name_plus(Names), wp,
+        ascii("-"), wp, %note: spaces before and after "-"!
+        pddl_type(Type_name), % <<< *no* whitespace here!
+        {Type_name = either(ENames) ->
+            Type =.. [either, ENames, Names];
+            Type =.. [Type_name, Names]}.
 pddl_typed_list_name([Type|Types]) -->
         {must_support(typing)},
         pddl_name_plus(Names), wp,
         ascii("-"), wp, %note: spaces before and after "-"!
-        pddl_type(Type_name), wp,
+        pddl_type(Type_name), wp, % <<< whitespace here!
         {Type_name = either(ENames) ->
             Type =.. [either, ENames, Names];
             Type =.. [Type_name, Names]},
