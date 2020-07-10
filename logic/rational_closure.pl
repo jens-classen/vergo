@@ -98,7 +98,7 @@ construct_ranking_recursive(I) :-
         construct_ranking_recursive(I1).
 construct_ranking_recursive(I) :- !,
         assert(rcmax(I)),
-        check_admissability(I).
+        check_admissibility(I).
 
 check_admissibility(I) :-
         rcpart(I,[]), !.
