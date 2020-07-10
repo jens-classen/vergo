@@ -15,9 +15,6 @@ A simple BAT, mainly for testing purposes.
 
 initially(true).
 
-prim_action(a).
-prim_action(b).
-
 rel_fluent(p).
 
 poss(a,true).

@@ -27,14 +27,14 @@ trans(A,[],A,[]) :-
 trans(A,[],A,[]) :-
         not(include_preconditions),
         nonvar(A),
-        prim_action(A), !.
+        poss(A,_), !.
 trans(A,[test(poss(A))],A,[]) :-
         include_preconditions,
         var(A), !.
 trans(A,[test(poss(A))],A,[]) :-
         include_preconditions,
         nonvar(A),
-        prim_action(A), !.
+        poss(A,_), !.
 trans(test(_),_,_,_) :- !, 
         fail.
 trans([],_,_,_) :- !, 
@@ -112,7 +112,7 @@ step(failed,[],fail,failed).
 final(A,F) :-
         var(A), !, F=false.
 final(A,F) :-
-        prim_action(A), !, F=false.
+        poss(A,_), !, F=false.
 final(fail,false) :- !.
 final(test(F),F).
 final([],true).
@@ -163,7 +163,7 @@ is_action(A) :-
         var(A), !.
 is_action(A) :-
         nonvar(A), !,
-        prim_action(A).
+        poss(A,_).
 
 progdef(if(C,T,E),
         nondet([test(C),T],[test(-C),E])).
@@ -177,7 +177,7 @@ progdef(Name,Def) :-
 simplify_program(A,D) :-
         var(A), !, D=A.
 simplify_program(A,A) :-
-        prim_action(A), !.
+        poss(A,_), !.
 simplify_program(L,P) :-
         is_list(L), !,
         simplify_program_list(L,P).

@@ -11,12 +11,6 @@
 initially(empty(queue)).
 initially(all(A,-occ(A))).
 
-prim_action(wait).
-prim_action(requestCoffee(_)).
-prim_action(selectRequest(_)).
-prim_action(pickupCoffee).
-prim_action(bringCoffee(_)).
-
 rel_fluent(holdingCoffee).
 fun_fluent(queue).
 rel_fluent(occ(_)).

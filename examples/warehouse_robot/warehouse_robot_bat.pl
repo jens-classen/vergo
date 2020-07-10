@@ -9,12 +9,6 @@ initially(on('#s1','#box')).
 initially(all(X,-bubblewrap(X) + -fragile(X))).
 initially(contains('#box','#vase')).
 initially(all(X,-contains('#box',X) + fragile(X))).
-              
-              
-prim_action(crash(_)).
-prim_action(drop(_)).
-prim_action(repair(_)).
-prim_action(move(_,_,_)).
 
 rel_fluent(on(_,_)).
 rel_fluent(bubblewrap(_)).

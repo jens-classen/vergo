@@ -16,12 +16,6 @@ initially(role_assertion(has_fault,gear,fault1)).
 
 initially(-concept_assertion(system,gear)).
 
-prim_action(sense_fault(_,_)).
-prim_action(sense_on(_)).
-prim_action(repair(_,_)).
-prim_action(turn_on(_)).
-prim_action(raise_alarm).
-
 fluent_r(has_fault).
 fluent_c(on).
 rigid_c(fault).

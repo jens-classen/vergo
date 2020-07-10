@@ -26,17 +26,6 @@ initially(hasArrow).
 initially(aliveWumpus).
 initially(all(X,(visited(X) <=> X=loc(1,1)))).
 
-prim_action(smell).
-prim_action(senseBreeze).
-prim_action(senseGold).
-prim_action(shootFwd).
-prim_action(pickGold).
-prim_action(moveFwd).
-prim_action(turn).
-prim_action(climb).
-prim_action(enter).
-prim_action(scream).
-
 rel_fluent(inDungeon).
 fun_fluent(locWumpus).
 fun_fluent(locRobot).

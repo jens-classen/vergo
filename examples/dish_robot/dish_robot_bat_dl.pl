@@ -4,12 +4,6 @@
 initially(subsumedBy(some(dirtyDish,thing),nothing)).
 initially(subsumedBy(onRobot,nothing)).
 
-prim_action(requestDDR(_,_)).
-prim_action(load(_,_)).
-prim_action(unload(_)).
-prim_action(gotoRoom(_)).
-prim_action(gotoKitchen).
-
 rel_fluent(dirtyDish(_,_)).
 rel_fluent(onRobot(_)).
 

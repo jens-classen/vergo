@@ -11,7 +11,6 @@
 :- use_module('../logic/fol').
 :- use_module('../logic/una').
 
-:- multifile user:prim_action/1.
 :- multifile user:rel_fluent/1.
 :- multifile user:fun_fluent/1.
 :- multifile user:rel_rigid/1.

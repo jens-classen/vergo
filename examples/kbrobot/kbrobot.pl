@@ -1,8 +1,6 @@
 
 stdname(X) :- member(X,[book,room6213,robot,cup]).
 
-prim_action(lookFor(_)).
-
 fun_fluent(location(_)).
 
 %initially(location(book)=room6213).

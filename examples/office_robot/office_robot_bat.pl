@@ -30,11 +30,6 @@ initially(room(office('#ann')) *
           room('#kitchen')).
 initially(all(X,room(X)=>location(X))).
 
-prim_action(goto(_)).
-prim_action(pickup(_)).
-prim_action(putdown(_)).
-% prim_action(recharge).
-
 rel_fluent(holding(_)).
 fun_fluent(loc(_)).
 % fun_fluent(energy).

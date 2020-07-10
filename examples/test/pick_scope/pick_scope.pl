@@ -7,8 +7,6 @@
 :- discontiguous causes_false/3.
 :- discontiguous rel_fluent/1.
 
-prim_action(action(_)).
-
 rel_fluent(predicate(_)).
 
 poss(action(_),true).

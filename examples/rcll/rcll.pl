@@ -9,7 +9,6 @@
 
 :- discontiguous domain/2.
 :- discontiguous rel_fluent/1.
-:- discontiguous prim_action/1.
 :- discontiguous poss/2.
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
@@ -161,27 +160,23 @@ fluent_parameter_types('wp-on-shelf',[workpiece,mps,'shelf-spot']).
 % Structures (Actions)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-prim_action('prepare-bs'(A,B,C)).
 action_parameter_types('prepare-bs',[mps,'mps-side','product-base-color']).
 poss('prepare-bs'(A,B,C),'mps-type'(A,'BS')*'mps-state'(A,'IDLE')).
 causes_false('prepare-bs'(A,B,C),'mps-state'(A,'IDLE'),true).
 causes_true('prepare-bs'(A,B,C),'mps-state'(A,'PROCESSING'),true).
 causes_true('prepare-bs'(A,B,C),'bs-prepared-color'(A,C),true).
 causes_true('prepare-bs'(A,B,C),'bs-prepared-side'(A,B),true).
-prim_action('prepare-ds'(A,B,C)).
 action_parameter_types('prepare-ds',[robot,mps,'ds-gate']).
 poss('prepare-ds'(A,B,C),at(A,B,'INPUT')*('mps-type'(B,'DS')*'mps-state'(B,'IDLE'))).
 causes_false('prepare-ds'(A,B,C),'mps-state'(B,'IDLE'),true).
 causes_true('prepare-ds'(A,B,C),'mps-state'(B,'PREPARED'),true).
 causes_true('prepare-ds'(A,B,C),'ds-prepared-gate'(B,C),true).
-prim_action('prepare-cs'(A,B,C)).
 action_parameter_types('prepare-cs',[robot,mps,'cs-operation']).
 poss('prepare-cs'(A,B,C),at(A,B,'INPUT')*('mps-type'(B,'CS')*('mps-state'(B,'IDLE')*'cs-can-perform'(B,C)))).
 causes_false('prepare-cs'(A,B,C),'mps-state'(B,'IDLE'),true).
 causes_true('prepare-cs'(A,B,C),'mps-state'(B,'PREPARED'),true).
 causes_false('prepare-cs'(A,B,C),'cs-can-perform'(B,C),true).
 causes_true('prepare-cs'(A,B,C),'cs-prepared-for'(B,C),true).
-prim_action('bs-dispense'(A,B,C,D)).
 action_parameter_types('bs-dispense',[mps,'mps-side',workpiece,'product-base-color']).
 poss('bs-dispense'(A,B,C,D),'mps-type'(A,'BS')*('mps-state'(A,'PROCESSING')*('bs-prepared-color'(A,D)*('bs-prepared-side'(A,B)*('wp-base-color'(C,'BASE_NONE')*'wp-unused'(C)))))).
 causes_true('bs-dispense'(A,B,C,D),'wp-at'(C,A,B),true).
@@ -193,8 +188,6 @@ causes_false('bs-dispense'(A,B,C,D),'wp-unused'(C),true).
 causes_true('bs-dispense'(A,B,C,D),'wp-usable'(C),true).
 causes_false('bs-dispense'(A,B,C,D),'mps-state'(A,'PROCESSING'),true).
 causes_true('bs-dispense'(A,B,C,D),'mps-state'(A,'READY-AT-OUTPUT'),true).
-prim_action(start('cs-mount-cap',A,B,C)).
-prim_action(end('cs-mount-cap',A,B,C)).
 action_parameter_types(start('cs-mount-cap',A,B,C),[mps,workpiece,'cap-color']).
 action_parameter_types(end('cs-mount-cap',A,B,C),[mps,workpiece,'cap-color']).
 poss(start('cs-mount-cap',A,B,C),['mps-type'(A,'CS'),'mps-state'(A,'PROCESSING'),'cs-buffered'(A,C),'cs-prepared-for'(A,'CS_MOUNT'),'wp-usable'(B),'wp-at'(B,A,'INPUT'),'wp-cap-color'(B,'CAP_NONE')]).
@@ -211,8 +204,6 @@ causes_true(start('cs-mount-cap',A,B,C),true,true).
 causes_true(end('cs-mount-cap',A,B,C),'wp-cap-color'(B,C),true).
 causes_true(start('cs-mount-cap',A,B,C),true,true).
 causes_true(end('cs-mount-cap',A,B,C),'cs-can-perform'(A,'CS_RETRIEVE'),true).
-prim_action(start('cs-retrieve-cap',A,B,C)).
-prim_action(end('cs-retrieve-cap',A,B,C)).
 action_parameter_types(start('cs-retrieve-cap',A,B,C),[mps,'cap-carrier','cap-color']).
 action_parameter_types(end('cs-retrieve-cap',A,B,C),[mps,'cap-carrier','cap-color']).
 poss(start('cs-retrieve-cap',A,B,C),['mps-type'(A,'CS'),'mps-state'(A,'PROCESSING'),'cs-prepared-for'(A,'CS_RETRIEVE'),'wp-at'(B,A,'INPUT'),'wp-cap-color'(B,C)]).
@@ -230,14 +221,11 @@ causes_true(start('cs-retrieve-cap',A,B,C),true,true).
 causes_true(end('cs-retrieve-cap',A,B,C),'cs-buffered'(A,C),true).
 causes_true(start('cs-retrieve-cap',A,B,C),true,true).
 causes_true(end('cs-retrieve-cap',A,B,C),'cs-can-perform'(A,'CS_MOUNT'),true).
-prim_action('prepare-rs'(A,B,C,D,E,F)).
 action_parameter_types('prepare-rs',[robot,mps,'product-ring-color','ring-num','ring-num','ring-num']).
 poss('prepare-rs'(A,B,C,D,E,F),at(A,B,'INPUT')*('mps-type'(B,'RS')*('mps-state'(B,'IDLE')*('rs-ring-spec'(B,C,F)*('rs-filled-with'(B,D)*'rs-sub'(D,F,E)))))).
 causes_false('prepare-rs'(A,B,C,D,E,F),'mps-state'(B,'IDLE'),true).
 causes_true('prepare-rs'(A,B,C,D,E,F),'mps-state'(B,'PREPARED'),true).
 causes_true('prepare-rs'(A,B,C,D,E,F),'rs-prepared-color'(B,C),true).
-prim_action(start('rs-mount-ring1',A,B,C,D,E,F)).
-prim_action(end('rs-mount-ring1',A,B,C,D,E,F)).
 action_parameter_types(start('rs-mount-ring1',A,B,C,D,E,F),[mps,workpiece,'product-ring-color','ring-num','ring-num','ring-num']).
 action_parameter_types(end('rs-mount-ring1',A,B,C,D,E,F),[mps,workpiece,'product-ring-color','ring-num','ring-num','ring-num']).
 poss(start('rs-mount-ring1',A,B,C,D,E,F),['mps-type'(A,'RS'),'mps-state'(A,'PROCESSING'),'wp-at'(B,A,'INPUT'),'wp-usable'(B),'wp-ring1-color'(B,'RING_NONE'),'wp-cap-color'(B,'CAP_NONE'),'rs-prepared-color'(A,C),'rs-ring-spec'(A,C,F),'rs-filled-with'(A,D),'rs-sub'(D,F,E)]).
@@ -258,8 +246,6 @@ causes_true(end('rs-mount-ring1',A,B,C,D,E,F),'wp-ring1-color'(B,C),true).
 causes_false(start('rs-mount-ring1',A,B,C,D,E,F),'rs-filled-with'(A,D),true).
 causes_true(start('rs-mount-ring1',A,B,C,D,E,F),true,true).
 causes_true(end('rs-mount-ring1',A,B,C,D,E,F),'rs-filled-with'(A,E),true).
-prim_action(start('rs-mount-ring2',A,B,C,D,E,F,G)).
-prim_action(end('rs-mount-ring2',A,B,C,D,E,F,G)).
 action_parameter_types(start('rs-mount-ring2',A,B,C,D,E,F,G),[mps,workpiece,'product-ring-color','product-ring-color','ring-num','ring-num','ring-num']).
 action_parameter_types(end('rs-mount-ring2',A,B,C,D,E,F,G),[mps,workpiece,'product-ring-color','product-ring-color','ring-num','ring-num','ring-num']).
 poss(start('rs-mount-ring2',A,B,C,D,E,F,G),['mps-type'(A,'RS'),'mps-state'(A,'PROCESSING'),'wp-at'(B,A,'INPUT'),'wp-usable'(B),'wp-ring1-color'(B,D),'wp-ring2-color'(B,'RING_NONE'),'wp-cap-color'(B,'CAP_NONE'),'rs-prepared-color'(A,C),'rs-ring-spec'(A,C,G),'rs-filled-with'(A,E),'rs-sub'(E,G,F)]).
@@ -280,8 +266,6 @@ causes_true(end('rs-mount-ring2',A,B,C,D,E,F,G),'wp-ring2-color'(B,C),true).
 causes_false(start('rs-mount-ring2',A,B,C,D,E,F,G),'rs-filled-with'(A,E),true).
 causes_true(start('rs-mount-ring2',A,B,C,D,E,F,G),true,true).
 causes_true(end('rs-mount-ring2',A,B,C,D,E,F,G),'rs-filled-with'(A,F),true).
-prim_action(start('rs-mount-ring3',A,B,C,D,E,F,G,H)).
-prim_action(end('rs-mount-ring3',A,B,C,D,E,F,G,H)).
 action_parameter_types(start('rs-mount-ring3',A,B,C,D,E,F,G,H),[mps,workpiece,'product-ring-color','product-ring-color','product-ring-color','ring-num','ring-num','ring-num']).
 action_parameter_types(end('rs-mount-ring3',A,B,C,D,E,F,G,H),[mps,workpiece,'product-ring-color','product-ring-color','product-ring-color','ring-num','ring-num','ring-num']).
 poss(start('rs-mount-ring3',A,B,C,D,E,F,G,H),['mps-type'(A,'RS'),'mps-state'(A,'PROCESSING'),'wp-at'(B,A,'INPUT'),'wp-usable'(B),'wp-ring1-color'(B,D),'wp-ring2-color'(B,E),'wp-ring3-color'(B,'RING_NONE'),'wp-cap-color'(B,'CAP_NONE'),'rs-prepared-color'(A,C),'rs-ring-spec'(A,C,H),'rs-filled-with'(A,F),'rs-sub'(F,H,G)]).
@@ -302,8 +286,6 @@ causes_true(end('rs-mount-ring3',A,B,C,D,E,F,G,H),'wp-ring3-color'(B,C),true).
 causes_false(start('rs-mount-ring3',A,B,C,D,E,F,G,H),'rs-filled-with'(A,F),true).
 causes_true(start('rs-mount-ring3',A,B,C,D,E,F,G,H),true,true).
 causes_true(end('rs-mount-ring3',A,B,C,D,E,F,G,H),'rs-filled-with'(A,G),true).
-prim_action(start('move-wp-put-at-input',A,B,C,D)).
-prim_action(end('move-wp-put-at-input',A,B,C,D)).
 action_parameter_types(start('move-wp-put-at-input',A,B,C,D),[robot,location,'mps-side',mps]).
 action_parameter_types(end('move-wp-put-at-input',A,B,C,D),[robot,location,'mps-side',mps]).
 poss(start('move-wp-put-at-input',A,B,C,D),['entered-field'(A),at(A,B,C),'location-free'(D,'INPUT'),'mps-state'(D,'IDLE')]).
@@ -313,8 +295,6 @@ causes_true(start('move-wp-put-at-input',A,B,C,D),'location-free'(B,C),true).
 causes_false(start('move-wp-put-at-input',A,B,C,D),'location-free'(D,'INPUT'),true).
 causes_true(start('move-wp-put-at-input',A,B,C,D),true,true).
 causes_true(end('move-wp-put-at-input',A,B,C,D),at(A,D,'INPUT'),true).
-prim_action(start('move-wp-get',A,B,C,D,E)).
-prim_action(end('move-wp-get',A,B,C,D,E)).
 action_parameter_types(start('move-wp-get',A,B,C,D,E),[robot,location,'mps-side',mps,'mps-side']).
 action_parameter_types(end('move-wp-get',A,B,C,D,E),[robot,location,'mps-side',mps,'mps-side']).
 poss(start('move-wp-get',A,B,C,D,E),['entered-field'(A),at(A,B,C),'location-free'(D,E),'mps-state'(D,'READY-AT-OUTPUT'),'can-hold'(A)]).
@@ -324,8 +304,6 @@ causes_true(start('move-wp-get',A,B,C,D,E),'location-free'(B,C),true).
 causes_false(start('move-wp-get',A,B,C,D,E),'location-free'(D,E),true).
 causes_true(start('move-wp-get',A,B,C,D,E),true,true).
 causes_true(end('move-wp-get',A,B,C,D,E),at(A,D,E),true).
-prim_action(start('enter-field',A,B)).
-prim_action(end('enter-field',A,B)).
 action_parameter_types(start('enter-field',A,B),[robot,'team-color']).
 action_parameter_types(end('enter-field',A,B),[robot,'team-color']).
 poss(start('enter-field',A,B),['location-free'('START','INPUT'),'robot-waiting'(A)]).
@@ -339,14 +317,11 @@ causes_true(start('enter-field',A,B),true,true).
 causes_false(end('enter-field',A,B),'robot-waiting'(A),true).
 causes_true(start('enter-field',A,B),true,true).
 causes_true(end('enter-field',A,B),'can-hold'(A),true).
-prim_action('wp-discard'(A,B)).
 action_parameter_types('wp-discard',[robot,'cap-carrier']).
 poss('wp-discard'(A,B),holding(A,B)).
 causes_false('wp-discard'(A,B),holding(A,B),true).
 causes_false('wp-discard'(A,B),'wp-usable'(B),true).
 causes_true('wp-discard'(A,B),'can-hold'(A),true).
-prim_action(start('wp-get-shelf',A,B,C,D)).
-prim_action(end('wp-get-shelf',A,B,C,D)).
 action_parameter_types(start('wp-get-shelf',A,B,C,D),[robot,'cap-carrier',mps,'shelf-spot']).
 action_parameter_types(end('wp-get-shelf',A,B,C,D),[robot,'cap-carrier',mps,'shelf-spot']).
 poss(start('wp-get-shelf',A,B,C,D),[at(A,C,'INPUT'),'wp-on-shelf'(B,C,D),'can-hold'(A)]).
@@ -357,8 +332,6 @@ causes_false(start('wp-get-shelf',A,B,C,D),'can-hold'(A),true).
 causes_false(start('wp-get-shelf',A,B,C,D),'wp-on-shelf'(B,C,D),true).
 causes_true(start('wp-get-shelf',A,B,C,D),true,true).
 causes_true(end('wp-get-shelf',A,B,C,D),'wp-usable'(B),true).
-prim_action(start('wp-get',A,B,C,D)).
-prim_action(end('wp-get',A,B,C,D)).
 action_parameter_types(start('wp-get',A,B,C,D),[robot,workpiece,mps,'mps-side']).
 action_parameter_types(end('wp-get',A,B,C,D),[robot,workpiece,mps,'mps-side']).
 poss(start('wp-get',A,B,C,D),[at(A,C,D),'can-hold'(A),'wp-at'(B,C,D),'mps-state'(C,'READY-AT-OUTPUT'),'wp-usable'(B)]).
@@ -371,8 +344,6 @@ causes_false(start('wp-get',A,B,C,D),'can-hold'(A),true).
 causes_false(start('wp-get',A,B,C,D),'mps-state'(C,'READY-AT-OUTPUT'),true).
 causes_true(start('wp-get',A,B,C,D),true,true).
 causes_true(end('wp-get',A,B,C,D),'mps-state'(C,'IDLE'),true).
-prim_action(start('wp-put',A,B,C)).
-prim_action(end('wp-put',A,B,C)).
 action_parameter_types(start('wp-put',A,B,C),[robot,workpiece,mps]).
 action_parameter_types(end('wp-put',A,B,C),[robot,workpiece,mps]).
 poss(start('wp-put',A,B,C),[at(A,C,'INPUT'),'mps-state'(C,'PREPARED'),'wp-usable'(B),holding(A,B)]).
@@ -385,8 +356,6 @@ causes_true(end('wp-put',A,B,C),'can-hold'(A),true).
 causes_false(start('wp-put',A,B,C),'mps-state'(C,'PREPARED'),true).
 causes_true(start('wp-put',A,B,C),true,true).
 causes_true(end('wp-put',A,B,C),'mps-state'(C,'PROCESSING'),true).
-prim_action(start('wp-put-slide-cc',A,B,C,D,E)).
-prim_action(end('wp-put-slide-cc',A,B,C,D,E)).
 action_parameter_types(start('wp-put-slide-cc',A,B,C,D,E),[robot,'cap-carrier',mps,'ring-num','ring-num']).
 action_parameter_types(end('wp-put-slide-cc',A,B,C,D,E),[robot,'cap-carrier',mps,'ring-num','ring-num']).
 poss(start('wp-put-slide-cc',A,B,C,D,E),['mps-type'(C,'RS'),at(A,C,'INPUT'),'wp-usable'(B),holding(A,B),'rs-filled-with'(C,D),'rs-inc'(D,E)]).
@@ -400,7 +369,6 @@ causes_true(start('wp-put-slide-cc',A,B,C,D,E),true,true).
 causes_false(end('wp-put-slide-cc',A,B,C,D,E),'rs-filled-with'(C,D),true).
 causes_true(start('wp-put-slide-cc',A,B,C,D,E),true,true).
 causes_true(end('wp-put-slide-cc',A,B,C,D,E),'rs-filled-with'(C,E),true).
-prim_action('fulfill-order-c0'(A,B,C,D,E,F)).
 action_parameter_types('fulfill-order-c0',[order,workpiece,mps,'ds-gate','product-base-color','product-cap-color']).
 poss('fulfill-order-c0'(A,B,C,D,E,F),'wp-at'(B,C,'INPUT')*('wp-usable'(B)*('mps-type'(C,'DS')*('mps-state'(C,'PROCESSING')*('ds-prepared-gate'(C,D)*('order-complexity'(A,'C0')*('order-gate'(A,D)*('order-base-color'(A,E)*('wp-base-color'(B,E)*('order-cap-color'(A,F)*('wp-cap-color'(B,F)*('wp-ring1-color'(B,'RING_NONE')*('wp-ring2-color'(B,'RING_NONE')*'wp-ring3-color'(B,'RING_NONE')))))))))))))).
 causes_true('fulfill-order-c0'(A,B,C,D,E,F),'order-fulfilled'(A),true).
@@ -408,7 +376,6 @@ causes_false('fulfill-order-c0'(A,B,C,D,E,F),'wp-at'(B,C,'INPUT'),true).
 causes_false('fulfill-order-c0'(A,B,C,D,E,F),'ds-prepared-gate'(C,D),true).
 causes_false('fulfill-order-c0'(A,B,C,D,E,F),'wp-base-color'(B,E),true).
 causes_false('fulfill-order-c0'(A,B,C,D,E,F),'wp-cap-color'(B,F),true).
-prim_action('fulfill-order-c1'(A,B,C,D,E,F,G)).
 action_parameter_types('fulfill-order-c1',[order,workpiece,mps,'ds-gate','product-base-color','product-cap-color','product-ring-color']).
 poss('fulfill-order-c1'(A,B,C,D,E,F,G),'wp-at'(B,C,'INPUT')*('wp-usable'(B)*('mps-type'(C,'DS')*('mps-state'(C,'PROCESSING')*('ds-prepared-gate'(C,D)*('order-complexity'(A,'C1')*('order-gate'(A,D)*('order-base-color'(A,E)*('wp-base-color'(B,E)*('order-ring1-color'(A,G)*('wp-ring1-color'(B,G)*('order-cap-color'(A,F)*'wp-cap-color'(B,F))))))))))))).
 causes_true('fulfill-order-c1'(A,B,C,D,E,F,G),'order-fulfilled'(A),true).
@@ -416,7 +383,6 @@ causes_false('fulfill-order-c1'(A,B,C,D,E,F,G),'wp-at'(B,C,'INPUT'),true).
 causes_false('fulfill-order-c1'(A,B,C,D,E,F,G),'ds-prepared-gate'(C,D),true).
 causes_false('fulfill-order-c1'(A,B,C,D,E,F,G),'wp-base-color'(B,E),true).
 causes_false('fulfill-order-c1'(A,B,C,D,E,F,G),'wp-cap-color'(B,F),true).
-prim_action('fulfill-order-c2'(A,B,C,D,E,F,G,H)).
 action_parameter_types('fulfill-order-c2',[order,workpiece,mps,'ds-gate','product-base-color','product-cap-color','product-ring-color','product-ring-color']).
 poss('fulfill-order-c2'(A,B,C,D,E,F,G,H),'wp-at'(B,C,'INPUT')*('wp-usable'(B)*('mps-type'(C,'DS')*('mps-state'(C,'PROCESSING')*('ds-prepared-gate'(C,D)*('order-complexity'(A,'C2')*('order-gate'(A,D)*('order-base-color'(A,E)*('wp-base-color'(B,E)*('order-ring1-color'(A,G)*('wp-ring1-color'(B,G)*('order-ring2-color'(A,H)*('wp-ring2-color'(B,H)*('wp-ring3-color'(B,'RING_NONE')*('order-cap-color'(A,F)*'wp-cap-color'(B,F)))))))))))))))).
 causes_true('fulfill-order-c2'(A,B,C,D,E,F,G,H),'order-fulfilled'(A),true).
@@ -424,7 +390,6 @@ causes_false('fulfill-order-c2'(A,B,C,D,E,F,G,H),'wp-at'(B,C,'INPUT'),true).
 causes_false('fulfill-order-c2'(A,B,C,D,E,F,G,H),'ds-prepared-gate'(C,D),true).
 causes_false('fulfill-order-c2'(A,B,C,D,E,F,G,H),'wp-base-color'(B,E),true).
 causes_false('fulfill-order-c2'(A,B,C,D,E,F,G,H),'wp-cap-color'(B,F),true).
-prim_action('fulfill-order-c3'(A,B,C,D,E,F,G,H,I)).
 action_parameter_types('fulfill-order-c3',[order,workpiece,mps,'ds-gate','product-base-color','product-cap-color','product-ring-color','product-ring-color','product-ring-color']).
 poss('fulfill-order-c3'(A,B,C,D,E,F,G,H,I),'wp-at'(B,C,'INPUT')*('wp-usable'(B)*('mps-type'(C,'DS')*('mps-state'(C,'PROCESSING')*('ds-prepared-gate'(C,D)*('order-complexity'(A,'C3')*('order-gate'(A,D)*('order-base-color'(A,E)*('wp-base-color'(B,E)*('order-ring1-color'(A,G)*('wp-ring1-color'(B,G)*('order-ring2-color'(A,H)*('wp-ring2-color'(B,H)*('order-ring3-color'(A,I)*('wp-ring3-color'(B,I)*('order-cap-color'(A,F)*'wp-cap-color'(B,F))))))))))))))))).
 causes_true('fulfill-order-c3'(A,B,C,D,E,F,G,H,I),'order-fulfilled'(A),true).

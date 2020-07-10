@@ -1,5 +1,4 @@
 
-:- dynamic(prim_action/1).
 :- dynamic(ssa_inst/3).
 :- dynamic(stdname/1).
 :- dynamic(domain/2).
@@ -52,12 +51,6 @@
 initall. % do nothing
  
 preprocess :- !,
-        
-        % prim_action
-        findall(prim_action(Action),
-              (poss(Action) <=> _Cond),
-              PrimActions),
-        assert_list(PrimActions),
         
         % rel_fluent
         findall(rel_fluent(Fluent),

@@ -12,8 +12,6 @@
 
 initially(some(X,(onfloor(X)*(-ontable(X))))).
 
-prim_action(put_on_table(_)).
-
 rel_fluent(onfloor(_)).
 rel_fluent(ontable(_)).
 

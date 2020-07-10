@@ -26,7 +26,6 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
  * via (possibly non-ground) action Act under condition Cond.
  **/
 trans(A,A,[],F) :-
-        prim_action(A),
         poss(A,F).
 trans([D1|D2],A,DP,F) :-
         trans(D1,A,G,F),
@@ -114,7 +113,7 @@ step(failed,fail,failed,true).
 simplify_program(A,D) :-
         var(A), !, D=A.
 simplify_program(A,A) :-
-        prim_action(A), !.
+        poss(A,_), !. % primitive action
 simplify_program(L,P) :-
         is_list(L), !,
         simplify_program_list(L,LP),

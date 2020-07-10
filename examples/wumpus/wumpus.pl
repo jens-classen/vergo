@@ -51,13 +51,6 @@ domain(coordinate,X) :-
         between(0,N,X).
         %member(X, [0,1,2]).
 
-prim_action(senseStench).
-prim_action(senseBreeze).
-prim_action(senseGold).
-prim_action(shoot(_)).   % domain: direction
-prim_action(pick).
-prim_action(move(_)).    % domain: direction
-
 rel_fluent(at(_)).       % domain: location
 rel_fluent(wumpusAlive).
 rel_fluent(hasArrow).
@@ -79,9 +72,9 @@ cwa(wumpusAlive).
 poss(senseStench, true).
 poss(senseBreeze, true).
 poss(senseGold, true).
-poss(shoot(_), hasArrow).
+poss(shoot(_), hasArrow).                        % domain: direction
 poss(pick, some([X],at(X)*gold(X))).
-poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2))).
+poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2))).% domain: direction
 
 causes_true(move(D), at(R2), some([R1],at(R1)*adj(R1,D,R2))).
 causes_false(move(_), at(R1), at(R1)).

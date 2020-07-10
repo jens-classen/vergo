@@ -81,56 +81,47 @@ initially(all[X,Y],-robot_haspuck(X,Y)).
 % macro for CWA?
 
 % Skill: finish_puck_at
-prim_action(finish_puck_at(_Robot,_Machine)).
 poss(finish_puck_at(Robot,Machine)).
 causes_true().
 causes_false().
 
 % % Skill: finish_puck_at_deliver =(?) deliver_puck
-% prim_action().
 % poss().
 % causes_true().
 % causes_false().
 
 % % Skill: get_s0
 % The robot drives to the insertion area, picks up a puck and then turns towards the field. 
-% prim_action().
 % poss().
 % causes_true().
 % causes_false().
 
 % % Skill: get_produced
-% prim_action().
 % poss().
 % causes_true().
 % causes_false().
 
 % % Skill: get_consumed
-% prim_action().
 % poss().
 % causes_true().
 % causes_false().
 
 % % Skill: take_puck_to
-% prim_action().
 % poss().
 % causes_true().
 % causes_false().
 
 % % Skill: drive_to
-% prim_action().
 % poss().
 % causes_true().
 % causes_false().
 
 % % Skill: store_puck
-% prim_action().
 % poss().
 % causes_true().
 % causes_false().
 
 % % Skill: get_stored_puck
-% prim_action().
 % poss().
 % causes_true().
 % causes_false().

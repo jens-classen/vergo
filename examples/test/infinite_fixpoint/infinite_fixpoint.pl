@@ -12,9 +12,6 @@
 
 %initially(...).
 
-prim_action(a(_)).
-prim_action(b(_)).
-
 rel_fluent(f(_)).
 
 poss(a(_),true).

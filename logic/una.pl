@@ -3,6 +3,8 @@
 :- use_module('../lib/utils').
 :- use_module('../logic/l').
 
+:- multifile user:poss/2.
+
 apply_una(true,true) :- !.
 apply_una(false,false) :- !.
 apply_una(poss(A),poss(A)) :- !.
@@ -102,7 +104,7 @@ make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :- !,
         make_inequalities(Xs,Ys,Equ).
 
 unique_name(X) :-
-        prim_action(X);
+        poss(X,_);
         X == fail; X == terminate;
         X =.. [F|_], is_stdname(F).
 
