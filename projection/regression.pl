@@ -15,7 +15,7 @@
 :- multifile user:fun_fluent/1.
 :- multifile user:rel_rigid/1.
 :- multifile user:fun_rigid/1.
-:- multifile user:poss/1.
+:- multifile user:poss/2.
 :- multifile user:causes_true/3.
 :- multifile user:causes_false/3.
 :- multifile user:ssa_inst/3.
