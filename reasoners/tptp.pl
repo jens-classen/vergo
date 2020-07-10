@@ -18,6 +18,7 @@ theorem prover.
 :- use_module('../logic/fol', [op(1130, xfy, <=>),
                                op(1110, xfy, <=),
                                op(1110, xfy, =>)]).
+:- use_module('../lib/utils').
 
 /* writeTPTPFile(+ListOfAxioms, +Conjecture, +FileName)
    Writes the formulas in ListOfAxioms and +Conjecture in TPTP
