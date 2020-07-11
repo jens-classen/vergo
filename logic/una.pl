@@ -2,6 +2,7 @@
 
 :- use_module('../lib/utils').
 :- use_module('../logic/l').
+:- use_module('../projection/regression', [isfluent/1,isrigid/1]).
 
 :- multifile user:poss/2.
 
