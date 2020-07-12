@@ -62,7 +62,7 @@ get_vampire_result(String, refutation) :-
         sub_string(String,_,_,_N,"Refutation found."), !.
 get_vampire_result(String, satisfiable) :-
         sub_string(String,_,_,_N,"Satisfiable!"), !.
-get_fo2_solver_result(String,_) :- !,
+get_vampire_result(String,_) :- !,
         temp_file(File),
         report_message(['Unexpected Vampire output:']),
         report_message(['Aborting...']),
