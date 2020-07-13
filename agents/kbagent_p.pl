@@ -23,11 +23,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
  **/
 
-:- multifile initially/1.
-
 :- dynamic(history/1).
 :- dynamic(program/1).
-:- dynamic(initially/1).
 
 :- use_module('../projection/reduction').
 :- use_module('../projection/regression').
