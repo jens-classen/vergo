@@ -36,6 +36,7 @@ initialize :-
         initialize(3).
 
 initialize(GridSize) :-
+        retractall(grid_size(_)),
         assert(grid_size(GridSize)),
         create, % wumpus_sim
         init.   % kbagent_r
