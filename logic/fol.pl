@@ -206,6 +206,10 @@ simplify(F1<=>F2,R) :-
 
 simplify_equiv(true,false,false) :- !.
 simplify_equiv(false,true,false) :- !.
+simplify_equiv(true,X,X) :- !.
+simplify_equiv(X,true,X) :- !.
+simplify_equiv(false,X,-X) :- !.
+simplify_equiv(X,false,-X) :- !.
 simplify_equiv(F1,F2,true) :-
         F1 == F2, !.
 simplify_equiv(F1,F2,F1<=>F2).
@@ -218,6 +222,7 @@ simplify(F1=>F2,R) :-
 
 simplify_impl(_,true,true) :- !.
 simplify_impl(false,_,true) :- !.
+simplify_impl(F1,false,-F1) :- !.
 simplify_impl(F1,F2,true) :-
         F1 == F2, !.
 simplify_impl(F1,F2,F1=>F2).
