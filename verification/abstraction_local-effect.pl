@@ -65,6 +65,8 @@ CEUR-WS.org, 2015.
 
 % use_sink_states.
 
+% TODO: include support for closed-world assumption
+
 compute_abstraction(ProgramName) :-
         
         retractall(program_to_verify(ProgramName)),
@@ -282,7 +284,7 @@ split(_,_).
 % split over positive effect conditions
 create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
         
-        causes_true(Action,Fluent,Condition),
+        pos_effect_con(Action,Fluent,Condition),
         regression(Condition,Literals,RegressedCondition),
         
         not(is_entailed(Formulas,RegressedCondition)),
@@ -309,7 +311,7 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
 % split over negative effect conditions
 create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
         
-        causes_false(Action,Fluent,Condition),
+        neg_effect_con(Action,Fluent,Condition),
         regression(Condition,Literals,RegressedCondition),
         
         not(is_entailed(Formulas,RegressedCondition)),
@@ -536,13 +538,37 @@ determine_effects(Formulas,Action,Effects) :-
         findall(Effect,is_effect(Formulas,Action,Effect),Effects).
 
 is_effect(Formulas,Action,Effect) :-
-        causes_true(Action,Fluent,Condition),
+        pos_effect_con(Action,Fluent,Condition),
         is_entailed(Formulas,Condition),
         Effect=Fluent.
 is_effect(Formulas,Action,Effect) :-
-        causes_false(Action,Fluent,Condition),
+        neg_effect_con(Action,Fluent,Condition),
         is_entailed(Formulas,Condition),
         Effect=(-Fluent).
+
+% need this for integrating types
+pos_effect_con(Action,Fluent,Condition) :-
+        rel_fluent(Fluent),
+        causes_true(Action,Fluent,Condition).
+pos_effect_con(Action,Fluent,Condition) :-
+        rel_fluent(Fluent,Types),
+        causes_true(Action,Fluent,EffCon),
+        types_cons(Types,TyCons),
+        conjoin([EffCon|TyCons],Condition).
+neg_effect_con(Action,Fluent,Condition) :-
+        rel_fluent(Fluent),
+        causes_false(Action,Fluent,Condition).
+
+types_cons([],[]).
+% X is an atom (std.name) => check if type is correct
+types_cons([X-T|XTs],Pres) :-
+        atomic(X), !,
+        domain(T,X),
+        types_cons(XTs,Pres).
+% X is anything else => treat type as unary rigid predicate
+types_cons([X-T|XTs],[Pre|Pres]) :- !,
+        Pre =.. [T,X],
+        types_cons(XTs,Pres).
 
 apply_effects(Literals,Effects,NewEffects) :- !,
         apply_neg_effects(Literals,Effects,Effects2),

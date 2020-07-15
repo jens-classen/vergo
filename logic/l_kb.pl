@@ -5,6 +5,7 @@
 
 :- reexport(['l']).
 
+:- use_module('cwa').
 :- use_module('def').
 :- use_module('l').
 :- use_module('../lib/utils').
@@ -20,12 +21,24 @@ initialize_kb. % nothing to do
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 entails_initially(Fml,Truth) :-
-        expand_defs(Fml,FmlP),
+        apply_cwa(Fml,FmlP), % includes macro expansion
+        entails_initially2(FmlP,Truth).
+
+% don't call theorem prover on 'true'
+entails_initially2(true,true) :- !.
+% call theorem prover only on non-trivial formula
+entails_initially2(Fml,Truth) :-
         findall(IniFml,
-                (initially(IniFml2),
-                 expand_defs(IniFml2,IniFml)),
+                initial_axiom(IniFml),
                 KB),
-        entails_l(KB,FmlP, Truth), !.
+        entails_l(KB,Fml, Truth), !.
+
+initial_axiom(F) :-
+        initially(F2),
+        not(cwa(F2)), % CWA is compiled away from queries
+        apply_cwa(F2,F3),
+        apply_una(F3,F4),
+        simplify(F4,F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Pretty-print KB

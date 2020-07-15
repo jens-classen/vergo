@@ -27,6 +27,9 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
  **/
 trans(A,A,[],F) :-
         poss(A,F).
+trans(A,A,[],F) :-
+        poss(A,Types,F),
+        type_cons(Types).
 trans([D1|D2],A,DP,F) :-
         trans(D1,A,G,F),
         flatten([G|D2],DP).
@@ -110,10 +113,16 @@ step(D,fail,failed,-F2) :-
 step(terminated,terminate,terminated,true).
 step(failed,fail,failed,true).
 
+type_cons([X-T|XTs]) :-
+        type(T),
+        domain(X,T),
+        type_cons(XTs).
+type_cons([]).
+
 simplify_program(A,D) :-
         var(A), !, D=A.
 simplify_program(A,A) :-
-        poss(A,_), !. % primitive action
+        (poss(A,_);poss(A,_,_)), !. % primitive action
 simplify_program(L,P) :-
         is_list(L), !,
         simplify_program_list(L,LP),

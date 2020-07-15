@@ -2,14 +2,14 @@
 % Basic Action Theory for (simple version) of Wumpus world
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% todo: domains
-
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rel_fluent/1.
 :- discontiguous def/2.
 
 :- dynamic grid_size/1.
+
+grid_size(3). % default for testing, overwritten in main file
 
 sensing_style(truth).
 include_preconditions.
@@ -19,7 +19,7 @@ initially(at('#room-0-0')).
 % initially(-hasGold). % by CWA
 initially(hasArrow).
 initially(wumpusAlive).
-initially(all([X,Y],(wumpus(X)*wumpus(Y))=>(X=Y))).
+initially(all_t([X-loc,Y-loc],(wumpus(X)*wumpus(Y))=>(X=Y))).
 
 initially(adj(R1,D,R2)) :-
         domain(coordinate,X1),
@@ -39,9 +39,12 @@ initially(facing(R1,D,R2)) :-
         initially(adj(R1,D,R3)),
         initially(facing(R3,D,R2)).
 
-domain(dir, D) :-
+type(dir).
+type(loc).
+
+domain(dir,D) :-
         member(D, ['#n','#w','#s','#e']).
-domain(loc, L) :- 
+domain(loc,L) :-
         domain(coordinate,X),
         domain(coordinate,Y),
         atomic_list_concat(['#room', X, Y], '-', L).
@@ -49,18 +52,17 @@ domain(coordinate,X) :-
         grid_size(G),
         N is G-1,
         between(0,N,X).
-        %member(X, [0,1,2]).
 
-rel_fluent(at(_)).       % domain: location
-rel_fluent(wumpusAlive).
-rel_fluent(hasArrow).
-rel_fluent(hasGold).
-rel_fluent(gold(_)).     % domain: location
+rel_fluent(at(X),       [X-loc]).
+rel_fluent(wumpusAlive, []).
+rel_fluent(hasArrow,    []).
+rel_fluent(hasGold,     []).
+rel_fluent(gold(X),     [X-loc]).
 
-rel_rigid(adj(_,_,_)).   % domains: location, direction, location
-rel_rigid(facing(_,_,_)).% domains: location, direction, location
-rel_rigid(pit(_)).       % domain: location
-rel_rigid(wumpus(_)).    % domain: location
+rel_rigid(adj(X,Y,Z),    [X-loc,Y-dir,Z-loc]).
+rel_rigid(facing(X,Y,Z), [X-loc,Y-dir,Z-loc]).
+rel_rigid(pit(X),        [X-loc]).
+rel_rigid(wumpus(X),     [X-loc]).
 
 cwa(at(_)).
 cwa(adj(_,_,_)).
@@ -69,27 +71,27 @@ cwa(hasGold).
 cwa(hasArrow).
 cwa(wumpusAlive).
 
-poss(senseStench, true).
-poss(senseBreeze, true).
-poss(senseGold, true).
-poss(shoot(_), hasArrow).                        % domain: direction
-poss(pick, some([X],at(X)*gold(X))).
-poss(move(D), some([R1,R2],at(R1)*adj(R1,D,R2))).% domain: direction
+poss(senseStench, [],      true).
+poss(senseBreeze, [],      true).
+poss(senseGold,   [],      true).
+poss(shoot(X),    [X-dir], hasArrow).
+poss(pick,        [],      some_t([X-loc],at(X)*gold(X))).
+poss(move(D),     [D-dir], some_t([R1-loc,R2-loc],at(R1)*adj(R1,D,R2))).
 
-causes_true(move(D), at(R2), some([R1],at(R1)*adj(R1,D,R2))).
+causes_true(move(D), at(R2), some_t([R1-loc],at(R1)*adj(R1,D,R2))).
 causes_false(move(_), at(R1), at(R1)).
 
 causes_false(shoot(D), wumpusAlive, aimingAtWumpus(D)).
 causes_false(shoot(_), hasArrow, true).
 senses(shoot(D), wumpusAlive*aimingAtWumpus(D)).
 
-causes_true(pick, hasGold, some([X],at(X)*gold(X))).
+causes_true(pick, hasGold, some_t([X-loc],at(X)*gold(X))).
 causes_false(pick, gold(X), at(X)).
 
 senses(senseStench,wumpusNearby).
 senses(senseBreeze,pitNearby).
-senses(senseGold,some([X],at(X)*gold(X))).
+senses(senseGold,some_t([X-loc],at(X)*gold(X))).
 
-def(wumpusNearby, some([R1,D,R2],at(R1)*adj(R1,D,R2)*wumpus(R2))).
-def(pitNearby, some([R1,D,R2],at(R1)*adj(R1,D,R2)*pit(R2))).
-def(aimingAtWumpus(D), some([R1,R2],at(R1)*wumpus(R2)*facing(R1,D,R2))).
+def(wumpusNearby,some_t([R1-loc,D-dir,R2-loc],at(R1)*adj(R1,D,R2)*wumpus(R2))).
+def(pitNearby,some_t([R1-loc,D-dir,R2-loc],at(R1)*adj(R1,D,R2)*pit(R2))).
+def(aimingAtWumpus(D),some_t([R1-loc,R2-loc],at(R1)*wumpus(R2)*facing(R1,D,R2))).

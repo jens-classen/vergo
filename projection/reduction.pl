@@ -31,6 +31,10 @@ reduce(all(Vars,Fml),all(Vars,Result)) :- !,
         reduce(Fml,Result).
 reduce(some(Vars,Fml),some(Vars,Result)) :- !,
         reduce(Fml,Result).
+reduce(all_t(Vars,Fml),all_t(Vars,Result)) :- !,
+        reduce(Fml,Result).
+reduce(some_t(Vars,Fml),some_t(Vars,Result)) :- !,
+        reduce(Fml,Result).
 reduce(Fml,Result) :-
         user:def(Fml,Def), !,
         reduce(Def,Result).

@@ -2,14 +2,12 @@
 % Basic Action Theory for Wumpus world, grid size 8x8
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% todo: domains
 % todo: nested functional fluents
-% todo: CWA (local CWA, \cite{DBLP:journals/ai/EtzioniGW97})
 % todo: definitions (grid, adjacency)
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
-:- discontiguous rel_fluent/1.
+:- discontiguous rel_fluent/2.
 :- discontiguous def/2.
 
 sensing_style(truth).
@@ -26,16 +24,23 @@ initially(hasArrow).
 initially(aliveWumpus).
 initially(all(X,(visited(X) <=> X=loc(1,1)))).
 
-rel_fluent(inDungeon).
-fun_fluent(locWumpus).
-fun_fluent(locRobot).
-fun_fluent(dirRobot).
-rel_fluent(isGold(_)).  % domain: location
-rel_fluent(hasGold).
-rel_fluent(isPit(_)).   % domain: location
-rel_fluent(hasArrow).
-rel_fluent(aliveWumpus).
-rel_fluent(visited(_)). % domain: location
+rel_fluent(inDungeon,        []).
+fun_fluent(locWumpus,   loc, []).
+fun_fluent(locRobot,    loc, []).
+fun_fluent(dirRobot,    dir, []).
+rel_fluent(isGold(X),        [X - loc]).
+rel_fluent(hasGold,          []).
+rel_fluent(isPit(X),         [X - loc]).
+rel_fluent(hasArrow,         []).
+rel_fluent(aliveWumpus,      []).
+rel_fluent(visited(X),       [X - loc]).
+
+cwa(inDungeon).
+cwa(hasGold).
+cwa(hasArrow).
+cwa(aliveWumpus).
+cwa(visited(_)).
+% locRobot and dirRobot are functional fluents => CWA holds
 
 poss(smell, true).
 poss(senseBreeze, true).

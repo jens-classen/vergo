@@ -120,7 +120,12 @@ get_ini_std_names(Names) :- !,
                  collect_names(Fml,Names2)),
                 Names3),
         flatten(Names3,Names4),
-        sort(Names4,Names).
+        findall(DName,
+                (type(Type),
+                 domain(Type,DName)),
+                Names5),
+        append(Names4,Names5,Names6),
+        sort(Names6,Names).
 get_new_std_name(Names,New) :- !,
         create_new_names(Names,1,[New]).
 

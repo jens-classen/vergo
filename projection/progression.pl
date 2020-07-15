@@ -16,6 +16,8 @@
 
 :- discontiguous progress/2.
 
+:- dynamic user:initially/1.
+
 progress(Action) :-
         user:progression_style(Style),
         progress(Action,Style).
@@ -23,6 +25,9 @@ progress(Action) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Closed-World STRIPS progression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% todo: make sure CWA applies to fluents and all actions are STRIPS
+%       (produce warning when not)
 
 progress(Action,strips(closed)) :-
         ground(Action), !,
@@ -44,6 +49,9 @@ add_facts_closed([]).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Open-World STRIPS progression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% todo: make sure CWA applies to fluents and all actions are STRIPS
+%       (produce warning when not)
 
 progress(Action,strips(open)) :-
         ground(Action), !,
@@ -68,45 +76,18 @@ add_facts_open([]).
 % ADL (PDDL subset, i.e. CWA + domain closure)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% todo: Cond may contain non-CWA atoms => need reasoning!
-%       (example: Wumpus shoot action)
+% todo: make sure CWA applies to fluents and effect conditions are
+%       just-in-time CWA (produce warning when not)
+%       e.g. shoot action in Wumpus world
 
 progress(Action,adl) :-
         ground(Action), !,
         findall(Fluent,(user:causes_false(Action,Fluent,Cond),
-                        adl_holds(Cond)),Dels),
+                        eval_cwa(Cond)),Dels),
         findall(Fluent,(user:causes_true(Action,Fluent,Cond),
-                        adl_holds(Cond)),Adds),
+                        eval_cwa(Cond)),Adds),
         del_facts_closed(Dels),
         add_facts_closed(Adds).
-
-adl_holds(Atom) :-
-        cwa(Atom),
-        user:initially(Atom).
-adl_holds(true).
-adl_holds(false) :-
-        fail.
-adl_holds(F1*F2) :-
-        adl_holds(F1),
-        adl_holds(F2).
-adl_holds(F1+F2) :-
-        adl_holds(F1);
-        adl_holds(F2).
-adl_holds(-F) :-
-        not(adl_holds(F)).
-adl_holds(F1<=>F2) :-
-        adl_holds((F1=>F2)*(F2=>F1)).
-adl_holds(F1=>F2) :-
-        adl_holds((-F1)+F2).
-adl_holds(F1<=F2) :-
-        adl_holds(F2=>F1).
-adl_holds(some(_V,F)) :-
-        adl_holds(F). %succeed if able to instantiate _V
-adl_holds(all(V,F)) :-
-        not(adl_holds(some(V,-F))).
-adl_holds(F) :-
-        user:def(F,FD),
-        adl_holds(FD).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Progression for local-effect theories

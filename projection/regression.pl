@@ -12,10 +12,16 @@
 :- use_module('../logic/una').
 
 :- multifile user:rel_fluent/1.
+:- multifile user:rel_fluent/2.
 :- multifile user:fun_fluent/1.
+:- multifile user:fun_fluent/2.
 :- multifile user:rel_rigid/1.
+:- multifile user:rel_rigid/2.
 :- multifile user:fun_rigid/1.
+:- multifile user:fun_rigid/2.
+:- multifile user:type/1.
 :- multifile user:poss/2.
+:- multifile user:poss/3.
 :- multifile user:causes_true/3.
 :- multifile user:causes_false/3.
 :- multifile user:ssa_inst/3.
@@ -29,10 +35,10 @@
 
 % poss if A is a variable => big disjunction over all cases
 precond(A,Precondition) :- var(A), !, 
-        condition(user:poss(B,Phi),Phi,B,A,Precondition).
+        condition(action_precond(B,Phi),Phi,B,A,Precondition).
 % poss if A is instantiated => take predefined axiom
 precond(A,Precondition) :- nonvar(A),
-        user:poss(A,Precondition), !.
+        action_precond(A,Precondition), !.
 % poss otherwise: false
 precond(_,false) :- !.
 
@@ -70,13 +76,13 @@ sfcond(_,Y,(Y = '#ok')) :- user:sensing_style(object), !.
 % ssa if exists pre-instantiated axiom by user => use it
 ssa(Fluent,A,Condition) :- ssa_inst(Fluent,A,Condition), !.
 % ssa if A is a variable => big disjunction over all cases
-ssa(Fluent,A,Condition) :- user:rel_fluent(Fluent), var(A), !,
+ssa(Fluent,A,Condition) :- rel_fluent_con(Fluent,CondF), var(A), !,
         condition(user:causes_true(B,Fluent,Phi),Phi,B,A,Poscondition),
         condition(user:causes_false(B,Fluent,Phi),Phi,B,A,Negcondition),
-        Condition2 = Poscondition+Fluent*(-Negcondition),
+        Condition2 = CondF*Poscondition+Fluent*(-Negcondition),
         simplify(Condition2,Condition).
 % ssa if A is instantiated => instantiate
-ssa(Fluent,A,Condition) :- user:rel_fluent(Fluent), nonvar(A), !,
+ssa(Fluent,A,Condition) :- rel_fluent_con(Fluent,_), nonvar(A), !,
         ssa(Fluent,B,Condition3), B=A,
         apply_una(Condition3,Condition2),
         simplify(Condition2,Condition).
@@ -84,14 +90,14 @@ ssa(Fluent,A,Condition) :- user:rel_fluent(Fluent), nonvar(A), !,
 % ssa if exists pre-instantiated axiom by user => use it
 ssa(Fluent=Y,A,Condition) :- ssa_inst(Fluent=Y,A,Condition), !.
 % ssa if A is a variable => big disjunction over all cases
-ssa(Fluent=Y,A,Condition) :- user:fun_fluent(Fluent), var(A), !,
+ssa(Fluent=Y,A,Condition) :- fun_fluent_con(Fluent,CondF), var(A), !,
         condition(user:causes(B,Fluent,Y,Phi),Phi,B,A,Cond),
         copy_term((Cond,Y,A),(CondC,Y,A)),
         subv(Y,X,CondC,CondD), % Y may not be a variable
-        Condition2 = Cond+(Fluent=Y)*(-some(X,CondD)),
+        Condition2 = CondF*Cond+(Fluent=Y)*(-some(X,CondD)),
         simplify(Condition2,Condition).
 % ssa if A is instantiated => instantiate
-ssa(Fluent=Y,A,Condition) :- user:fun_fluent(Fluent), nonvar(A), !,
+ssa(Fluent=Y,A,Condition) :- fun_fluent_con(Fluent,_), nonvar(A), !,
         ssa(Fluent=Y,B,Condition3), B=A,
         apply_una(Condition3,Condition2),
         simplify(Condition2,Condition).       
@@ -121,21 +127,79 @@ construct_disjuncts([E|D1],[Cond|D2],A,FreeVars) :-
         Cond = some(Vars,((A=B)*Phi)),
         construct_disjuncts(D1,D2,A,FreeVars).
 
-isfluent(F) :- 
-        user:rel_fluent(F2),
-        unifiable(F,F2,_). % don't unify (b/c of free vars)
-isfluent((F=_)) :- 
-        nonvar(F), 
-        user:fun_fluent(F2),
-        unifiable(F,F2,_). % don't unify (b/c of free vars)
+% non-typed action precondition declaration
+action_precond(Action,Precond) :-
+        user:poss(Action,Precond).
+% typed action precondition declaration
+action_precond(Action,Precond) :-
+        user:poss(Action,Types,Precond1),
+        types_cons(Types,Preconds2),
+        conjoin([Precond1|Preconds2],Precond).
 
-isrigid(F) :- 
+rel_fluent_con(F,true) :-
+        user:rel_fluent(F).
+rel_fluent_con(F,Con) :-
+        user:rel_fluent(F,Types),
+        types_cons(Types,Cons),
+        conjoin(Cons,Con).
+
+fun_fluent_con(F,true) :-
+        user:fun_fluent(F).
+fun_fluent_con(F,Con) :-
+        user:fun_fluent(F,Types),
+        types_cons(Types,Cons),
+        conjoin(Cons,Con).
+
+types_cons([],[]).
+% X is an atom (std.name) => check if type is correct
+types_cons([X-T|XTs],Pres) :-
+        atomic(X), !,
+        domain(T,X),
+        types_cons(XTs,Pres).
+% X is anything else => treat type as unary rigid predicate
+types_cons([X-T|XTs],[Pre|Pres]) :- !,
+        Pre =.. [T,X],
+        types_cons(XTs,Pres).
+
+isfluent(F) :-
+        user:rel_fluent(F2),
+        unifiable(F,F2,_).   % don't unify (b/c of free vars)
+isfluent(F) :-
+        user:rel_fluent(F2,Types),
+        unifiable(F,F2,_),   % don't unify (b/c of free vars)
+        types_cons(Types,_). % fails if names of incorrect type
+isfluent((F=_)) :-
+        nonvar(F),
+        user:fun_fluent(F2),
+        unifiable(F,F2,_).   % don't unify (b/c of free vars)
+isfluent((F=_)) :-
+        nonvar(F),
+        user:fun_fluent(F2,Types),
+        unifiable(F,F2,_),   % don't unify (b/c of free vars)
+        types_cons(Types,_). % fails if names of incorrect type
+
+isrigid(F) :-
+        nonvar(F),
         user:rel_rigid(F2),
-        unifiable(F,F2,_). % don't unify (b/c of free vars)
-isrigid((F=_)) :- 
-        nonvar(F), 
+        unifiable(F,F2,_).   % don't unify (b/c of free vars)
+isrigid(F) :-
+        nonvar(F),
+        user:rel_rigid(F2,Types),
+        unifiable(F,F2,_),   % don't unify (b/c of free vars)
+        types_cons(Types,_). % fails if names of incorrect type
+isrigid((F=_)) :-
+        nonvar(F),
         user:fun_rigid(F2),
-        unifiable(F,F2,_). % don't unify (b/c of free vars)
+        unifiable(F,F2,_).   % don't unify (b/c of free vars)
+isrigid((F=_)) :-
+        nonvar(F),
+        user:fun_rigid(F2,Types),
+        unifiable(F,F2,_),   % don't unify (b/c of free vars)
+        types_cons(Types,_). % fails if names of incorrect type
+isrigid(F) :-
+        nonvar(F),
+        F =.. [Type,_],
+        user:type(Type).     % type = unary rigid predicate
 
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
@@ -181,6 +245,12 @@ regress(S,some(Vars,Formula),Result) :- !,
 regress(S,all(Vars,Formula),Result) :- !,
         regress(S,Formula,Result1),
         Result=all(Vars,Result1).
+regress(S,some_t(Vars,Formula),Result) :- !,
+        regress(S,Formula,Result1),
+        Result=some_t(Vars,Result1).
+regress(S,all_t(Vars,Formula),Result) :- !,
+        regress(S,Formula,Result1),
+        Result=all_t(Vars,Result1).
 regress(S,F1<=>F2,Result) :- !, 
         regress(S,F1,Result1), 
         regress(S,F2,Result2),

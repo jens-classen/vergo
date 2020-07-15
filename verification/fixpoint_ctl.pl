@@ -276,6 +276,10 @@ fluent_formula(some(_,F)) :- !,
         fluent_formula(F).
 fluent_formula(all(_,F)) :- !,
         fluent_formula(F).
+fluent_formula(some_t(_,F)) :- !,
+        fluent_formula(F).
+fluent_formula(all_t(_,F)) :- !,
+        fluent_formula(F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkEX
