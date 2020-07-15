@@ -26,8 +26,8 @@ subv(_,_,T1,T2)   :- var(T1), !, T2 = T1.
 subv(X1,X2,T1,T2) :- T1 == X1, !, T2 = X2.
 subv(X1,X2,T1,T2) :- T1 =..[F|L1], subvl(X1,X2,L1,L2), T2 =..[F|L2].
 
-subvl(_,_,[],[]).
-subvl(X1,X2,[T1|L1],[T2|L2]) :- subv(X1,X2,T1,T2), subvl(X1,X2,L1,L2).
+subvl(_,_,[],[]) :- !.
+subvl(X1,X2,[T1|L1],[T2|L2]) :- !, subv(X1,X2,T1,T2), subvl(X1,X2,L1,L2).
 
 /* Print a mesage */
 report_message([L|Ls]) :- !, write(L), report_message(Ls).
