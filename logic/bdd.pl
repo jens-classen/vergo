@@ -215,15 +215,15 @@ label_less_than(L1,L2) :-
 % get Result node when Label==Value at Node
 branch(Node,Label,_Value,Result) :-
         bdd_node(Label2,_Then,_Else,Node),
-        Label \=@= Label2,
+        Label \=@= Label2, !,
         Result = Node.
 branch(Node,Label,1,Result) :-
         bdd_node(Label2,Then,_Else,Node),
-        Label =@= Label2,
+        Label =@= Label2, !,
         Result = Then.
 branch(Node,Label,0,Result) :-
         bdd_node(Label2,_Then,Else,Node),
-        Label =@= Label2,
+        Label =@= Label2, !,
         Result = Else.
 
 % succeeds if Fml is an atom
