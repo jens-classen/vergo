@@ -14,11 +14,11 @@
 :- multifile user:rel_fluent/1.
 :- multifile user:rel_fluent/2.
 :- multifile user:fun_fluent/1.
-:- multifile user:fun_fluent/2.
+:- multifile user:fun_fluent/3.
 :- multifile user:rel_rigid/1.
 :- multifile user:rel_rigid/2.
 :- multifile user:fun_rigid/1.
-:- multifile user:fun_rigid/2.
+:- multifile user:fun_rigid/3.
 :- multifile user:type/1.
 :- multifile user:poss/2.
 :- multifile user:poss/3.
@@ -146,8 +146,8 @@ rel_fluent_con(F,Con) :-
 fun_fluent_con(F,true) :-
         user:fun_fluent(F).
 fun_fluent_con(F,Con) :-
-        user:fun_fluent(F,Types),
-        types_cons(Types,Cons),
+        user:fun_fluent(F,Type,Types),
+        types_cons([Type|Types],Cons),
         conjoin(Cons,Con).
 
 types_cons([],[]).
@@ -163,43 +163,43 @@ types_cons([X-T|XTs],[Pre|Pres]) :- !,
 
 isfluent(F) :-
         user:rel_fluent(F2),
-        unifiable(F,F2,_).   % don't unify (b/c of free vars)
+        unifiable(F,F2,_).          % don't unify (b/c of free vars)
 isfluent(F) :-
         user:rel_fluent(F2,Types),
-        unifiable(F,F2,_),   % don't unify (b/c of free vars)
-        types_cons(Types,_). % fails if names of incorrect type
+        unifiable(F,F2,_),          % don't unify (b/c of free vars)
+        types_cons(Types,_).        % fails if names of incorrect type
 isfluent((F=_)) :-
         nonvar(F),
         user:fun_fluent(F2),
-        unifiable(F,F2,_).   % don't unify (b/c of free vars)
+        unifiable(F,F2,_).          % don't unify (b/c of free vars)
 isfluent((F=_)) :-
         nonvar(F),
-        user:fun_fluent(F2,Types),
-        unifiable(F,F2,_),   % don't unify (b/c of free vars)
-        types_cons(Types,_). % fails if names of incorrect type
+        user:fun_fluent(F2,Type,Types),
+        unifiable(F,F2,_),          % don't unify (b/c of free vars)
+        types_cons([Type|Types],_). % fails if names of incorrect type
 
 isrigid(F) :-
         nonvar(F),
         user:rel_rigid(F2),
-        unifiable(F,F2,_).   % don't unify (b/c of free vars)
+        unifiable(F,F2,_).          % don't unify (b/c of free vars)
 isrigid(F) :-
         nonvar(F),
         user:rel_rigid(F2,Types),
-        unifiable(F,F2,_),   % don't unify (b/c of free vars)
-        types_cons(Types,_). % fails if names of incorrect type
+        unifiable(F,F2,_),          % don't unify (b/c of free vars)
+        types_cons(Types,_).        % fails if names of incorrect type
 isrigid((F=_)) :-
         nonvar(F),
         user:fun_rigid(F2),
-        unifiable(F,F2,_).   % don't unify (b/c of free vars)
+        unifiable(F,F2,_).          % don't unify (b/c of free vars)
 isrigid((F=_)) :-
         nonvar(F),
-        user:fun_rigid(F2,Types),
-        unifiable(F,F2,_),   % don't unify (b/c of free vars)
-        types_cons(Types,_). % fails if names of incorrect type
+        user:fun_rigid(F2,Type,Types),
+        unifiable(F,F2,_),          % don't unify (b/c of free vars)
+        types_cons([Type|Types],_). % fails if names of incorrect type
 isrigid(F) :-
         nonvar(F),
         F =.. [Type,_],
-        user:type(Type).     % type = unary rigid predicate
+        user:type(Type).            % type = unary rigid predicate
 
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
