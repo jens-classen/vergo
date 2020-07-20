@@ -11,7 +11,7 @@
            setminus2/3,
            disjoint2/2,
            member2/2,
-           nth2/3,
+           nth02/3,
            write_readable/2,
            write_readable/1,
            measure_time_with_limit/4,
@@ -74,13 +74,13 @@ member2(X,[Y|_L]) :- X == Y.
 member2(X,[_|L]) :- member2(X,L).
 member2(_,[]) :- fail.
 
-nth2(X,[Y|_L],N) :-
+nth02(N,[Y|_L],X) :-
         X == Y,
         N = 0.
-nth2(X,[_|L],N) :-
-        nth2(X,L,N1),
+nth02(N,[_|L],X) :-
+        nth02(N1,L,X),
         N is N1+1.
-nth2(_,[]) :-
+nth02(_,[],_) :-
         fail.
 
 % write Term to Stream using readable variables 
