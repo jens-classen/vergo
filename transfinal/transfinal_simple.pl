@@ -50,7 +50,7 @@ trans(star(D),A,DP,F) :-
         flatten([G|star(D)],DP).
 
 trans(pick(Var,Domain,D),A,DP,F) :-
-        domain(Domain,Element),
+        is_type_element(Domain,Element),
         subv(Var,Element,D,D2),
         trans(D2,A,DP,F).
 
@@ -72,7 +72,7 @@ final(star(_D),true).
 final([],true).
 
 final(pick(Var,Domain,D),F) :-
-        domain(Domain,Element),
+        is_type_element(Domain,Element),
         subv(Var,Element,D,D2),
         final(D2,F).
 

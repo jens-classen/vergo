@@ -122,7 +122,7 @@ get_ini_std_names(Names) :- !,
                 Names3),
         flatten(Names3,Names4),
         findall(DName,
-                (is_type_element(Type,DName)),
+                (is_type_element(_Type,DName)),
                 Names5),
         append(Names4,Names5,Names6),
         sort(Names6,Names).

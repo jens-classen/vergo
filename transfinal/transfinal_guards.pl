@@ -13,6 +13,8 @@ arbitrarily alternate between pick quantifiers and condition formulas.
 
  **/
 
+:- use_module('../logic/cwa').
+
 :- multifile include_preconditions/0.
 
 /**
@@ -52,7 +54,7 @@ trans(nondet(D1,D2),G,A,DP) :-
 trans(pick(Var,D),[pick(Var)|G],A,DP) :-
         trans(D,G,A,DP).
 trans(pick(Var,Domain,D),G,A,DP) :-
-        domain(Domain,Element),
+        is_type_element(Domain,Element),
         subv(Var,Element,D,D2),
         trans(D2,G,A,DP).
 trans(conc(D1,D2),G,A,conc(D1P,D2)) :-
@@ -125,7 +127,7 @@ final(nondet(D1,D2),F1+F2) :-
 final(pick(Var,D),some(Var,F)) :-
         final(D,F).
 final(pick(Var,Domain,D),F) :-
-        domain(Domain,Element),
+        is_type_element(Domain,Element),
         subv(Var,Element,D,D2),
         final(D2,F).
 final(conc(D1,D2),F1*F2) :-

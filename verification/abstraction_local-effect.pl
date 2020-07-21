@@ -32,6 +32,7 @@ CEUR-WS.org, 2015.
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 
+:- use_module('../logic/cwa').
 :- use_module('../logic/l').
 :- use_module('../reasoners/konclude', [consistent/1 as dl_consistent,
                                         inconsistent/1 as dl_inconsistent]).
@@ -558,17 +559,6 @@ pos_effect_con(Action,Fluent,Condition) :-
 neg_effect_con(Action,Fluent,Condition) :-
         rel_fluent(Fluent),
         causes_false(Action,Fluent,Condition).
-
-types_cons([],[]).
-% X is an atom (std.name) => check if type is correct
-types_cons([X-T|XTs],Pres) :-
-        atomic(X), !,
-        domain(T,X),
-        types_cons(XTs,Pres).
-% X is anything else => treat type as unary rigid predicate
-types_cons([X-T|XTs],[Pre|Pres]) :- !,
-        Pre =.. [T,X],
-        types_cons(XTs,Pres).
 
 apply_effects(Literals,Effects,NewEffects) :- !,
         apply_neg_effects(Literals,Effects,Effects2),

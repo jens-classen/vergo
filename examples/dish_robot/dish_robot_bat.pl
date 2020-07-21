@@ -24,6 +24,9 @@ causes_false(load(X,Y),dirtyDish(X,Y),true).
 causes_true(load(X,_Y),onRobot(X),true).
 causes_false(unload(X),onRobot(X),true).
 
+type(dish).
+type(room).
+
 domain(dish,'#d1').
 domain(dish,'#d2').
 domain(room,'#r1').

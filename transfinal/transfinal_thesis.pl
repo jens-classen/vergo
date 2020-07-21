@@ -15,6 +15,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
  **/
 
+:- use_module('../logic/cwa').
+
 /**
  * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
  *
@@ -72,7 +74,7 @@ trans(nondet(D1,D2),A,DP,F1,Vars,F2) :-
 trans(pick(Var,D),A,DP,F1,[Var|Vars],F2) :-
         trans(D,A,DP,F1,Vars,F2).
 trans(pick(Var,Domain,D),A,DP,F1,Vars,F2) :-
-        domain(Domain,Element),
+        is_type_element(Domain,Element),
         subv(Var,Element,D,D2),
         trans(D2,A,DP,F1,Vars,F2).
 trans(conc(D1,D2),A,conc(D1P,D2),F1,Vars,F2) :-
@@ -141,7 +143,7 @@ final(nondet(D1,D2),F1+F2) :-
 final(pick(Var,D),some(Var,F)) :-
         final(D,F).
 final(pick(Var,Domain,D),F) :-
-        domain(Domain,Element),
+        is_type_element(Domain,Element),
         subv(Var,Element,D,D2),
         final(D2,F).
 final(conc(D1,D2),F1*F2) :-

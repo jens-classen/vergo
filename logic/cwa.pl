@@ -20,15 +20,21 @@ This module also handles types, which can be viewed as unary rigid
 predicates, with a finite domain, underlying the CWA. They are hence
 treated similarly by the above mentioned procedures.
 
-untype/2 removes typed quantifiers by re-writing them using standard
-first order syntax (treating types as unary predicates).
+is_type/1 unifies its argument with anything that is a type.
+is_type_element/2 unifies its two arguments with pairs of type and
+type element. types_cons/2 turns a list of typed variables into an
+equivalent list of type constraint formulas, where types are
+represented as unary predicates. untype/2 removes typed quantifiers by
+re-writing them using standard first order syntax (treating types as
+unary predicates).
 
 @author  Jens Claßen
 @license GPLv2
 
  **/
 :- module(cwa, [apply_cwa/2, eval_cwa/1,
-                is_type/1, is_type_element/2, untype/2]).
+                is_type/1, is_type_element/2,
+                untype/2, types_cons/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../logic/l').
@@ -278,29 +284,45 @@ eval_cwa(all_t(VTs,F)) :-
         eval_cwa(-some_t(VTs,-F)).
 
 /**
-  * is_type(?Type) is nondet
+  * is_type(?Type) is nondet.
   *
-  * Unifies Type with an atom that was declared by the user as a type,
-  * either by means of user:type/1 or user:subtype/2.
+  * Unifies Type with a term representing a type, either declared by
+  * the user as primitive type by means of user:type/1 or
+  * user:subtype/2, or a term of the form either(List), where List is
+  * a list of such primitive types.
   *
-  * @arg Type a variable or an atom, representing a type name
+  * @arg Type a variable or an atom, representing a primitive type, or
+  *           a term of the form either(List), where List is a list of
+  *           atoms representing the union of primitive types
   **/
 is_type(T) :-
-        user:type(T).
+        is_primitive_type(T).
 is_type(T) :-
+        nonvar(T),
+        T = either([T2]),
+        is_primitive_type(T2).
+is_type(T) :-
+        nonvar(T),
+        T = either([T2|Ts]),
+        is_primitive_type(T2),
+        is_type(either(Ts)).
+
+is_primitive_type(T) :-
+        user:type(T).
+is_primitive_type(T) :-
         user:subtype(_,T).
 
 /**
-  * is_type_element(?Type, ?Element) is nondet
+  * is_type_element(?Type, ?Element) is nondet.
   *
-  * Unifies Type with an atom and Element with an atom such that
-  * Type was declared by the user as a type, either by means of
-  * user:type/1 or user:subtype/2, and Element was declared by the
-  * user to be an element of type Type, either by means of
-  * user:domain/2 directly, or indirectly through a subtype
-  * relationship via user:subtype/2.
+  * Unifies Type with a ground term representing a type, and Element
+  * with an atom representing a standard name such that Element is an
+  * element of type Type. Type terms are the same as for is_type/1,
+  * i.e., either an atom representing a primitive term declared by the
+  * user by means of user:type/1 or user:subtype/2, or an expression
+  * either(List), where List is a list of such primitive types.
   *
-  * @arg Type    a variable or an atom, representing a type name
+  * @arg Type    a ground term representing a type
   * @arg Element a variable or an atom, representing a standard name
   **/
 is_type_element(T,E) :-
@@ -309,9 +331,18 @@ is_type_element(T,E) :-
 is_type_element(T,E) :-
         user:subtype(TS,T),
         is_type_element(TS,E).
+is_type_element(T,E) :-
+        nonvar(T),
+        T = either([T2]),
+        is_primitive_type(T2),
+        is_type_element(T2,E).
+is_type_element(T,E) :-
+        nonvar(T),
+        T = either([_|Ts]),
+        is_type_element(either(Ts),E).
 
 /**
-  * untype(+Formula,-Result) is det
+  * untype(+Formula,-Result) is det.
   *
   * Turns a typed quantified formula into an equivalent one where the
   * type information is represented through unary predicates. E.g.,
@@ -363,9 +394,43 @@ untype(F1,F2) :-
 untype(F,F) :- !.
 
 untype_vars(VTs,Vs,TVFml) :- !,
-        untype_vars2(VTs,Vs,TVs),
-        conjoin(TVs,TVFml).
-untype_vars2([V-T|VTs],[V|Vs],[TV|TVs]) :- !,
-        TV =.. [T,V],
-        untype_vars2(VTs,Vs,TVs).
-untype_vars2([],[],[]) :- !.
+        types_cons(VTs,Cons),
+        free_variables(Cons,Vs),
+        conjoin(Cons,TVFml).
+
+/**
+  * types_cons(+TypedVarList,-ResultList) is det.
+  *
+  * Given a list of typed variables, returns a list of formulas
+  * corresponding to equivalent type constraints where primitive types
+  * are represented as unary predicates. For example, if 'block' is a
+  * primitive type, X-block is translated to block(X), and an
+  * expression  X-either([car,bike]) to car(X)+bike(X).
+  *
+  * @arg TypedVarList a list of typed variables
+  * @arg ResultList   a list representing these type constraints
+  *                   through formulas
+  **/
+types_cons([],[]).
+% X is an atom (std.name) => check if type is correct
+types_cons([X-T|XTs],Pres) :-
+        atomic(X), !,
+        is_type_element(T,X),
+        types_cons(XTs,Pres).
+% X is anything else, T is primitive => treat T as unary rigid predicate
+types_cons([X-T|XTs],[Pre|Pres]) :-
+        atomic(T), !,
+        Pre =.. [T,X],
+        types_cons(XTs,Pres).
+% X is anything else, T is either([...]) => disjunction
+types_cons([X-T|XTs],[Pre|Pres]) :-
+        T = either(Ts), !,
+        types_con_either(Ts,X,Pre),
+        types_cons(XTs,Pres).
+
+types_con_either([T],X,Pre) :- !,
+        Pre =.. [T,X].
+types_con_either([T|Ts],X,Pre) :- !,
+        Pre1 =.. [T,X],
+        types_con_either(Ts,X,Pre2),
+        Pre = Pre1+Pre2.

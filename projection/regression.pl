@@ -150,17 +150,6 @@ fun_fluent_con(F,Con) :-
         types_cons([Type|Types],Cons),
         conjoin(Cons,Con).
 
-types_cons([],[]).
-% X is an atom (std.name) => check if type is correct
-types_cons([X-T|XTs],Pres) :-
-        atomic(X), !,
-        is_type_element(T,X),
-        types_cons(XTs,Pres).
-% X is anything else => treat type as unary rigid predicate
-types_cons([X-T|XTs],[Pre|Pres]) :- !,
-        Pre =.. [T,X],
-        types_cons(XTs,Pres).
-
 isfluent(F) :-
         user:rel_fluent(F2),
         unifiable(F,F2,_).          % don't unify (b/c of free vars)
