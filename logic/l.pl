@@ -37,6 +37,7 @@ e.g. '#1', '#2', '#bob'.
                              op(1110, xfy, <=),
                              op(1110, xfy, =>)]).
 
+:- use_module('../logic/cwa').
 :- use_module('../logic/fol').
 
 % standard name: any constant (Prolog atom) starting with '#'
@@ -121,8 +122,7 @@ get_ini_std_names(Names) :- !,
                 Names3),
         flatten(Names3,Names4),
         findall(DName,
-                (type(Type),
-                 domain(Type,DName)),
+                (is_type_element(Type,DName)),
                 Names5),
         append(Names4,Names5,Names6),
         sort(Names6,Names).

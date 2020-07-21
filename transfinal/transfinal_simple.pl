@@ -19,6 +19,8 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
 
  **/
 
+:- use_module('../logic/cwa').
+
 /**
  * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
  *
@@ -114,8 +116,7 @@ step(terminated,terminate,terminated,true).
 step(failed,fail,failed,true).
 
 type_cons([X-T|XTs]) :-
-        type(T),
-        domain(X,T),
+        is_type_element(T,X),
         type_cons(XTs).
 type_cons([]).
 

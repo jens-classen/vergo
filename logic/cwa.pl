@@ -27,7 +27,8 @@ first order syntax (treating types as unary predicates).
 @license GPLv2
 
  **/
-:- module(cwa, [apply_cwa/2, eval_cwa/1, untype/2]).
+:- module(cwa, [apply_cwa/2, eval_cwa/1,
+                is_type/1, is_type_element/2, untype/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../logic/l').
@@ -35,6 +36,8 @@ first order syntax (treating types as unary predicates).
 
 :- multifile user:cwa/1.
 :- multifile user:type/1.
+:- multifile user:subtype/2.
+:- multifile user:domain/2.
 
 /**
   * apply_cwa(+Formula,-Result) is det
@@ -94,21 +97,21 @@ apply_cwa(F,R) :-
 apply_cwa(F,true) :-
         ground(F),
         F =.. [Type,Ele],
-        user:type(Type),
-        domain(Type,Ele), !.
+        is_type(Type),
+        is_type_element(Type,Ele), !.
 apply_cwa(F,false) :-
         ground(F),
         F =.. [Type,Ele],
-        user:type(Type),
-        not(domain(Type,Ele)), !.
+        is_type(Type),
+        not(is_type_element(Type,Ele)), !.
 % maybe too expensive...
 apply_cwa(F,R) :-
         nonvar(F),
         F =.. [Type,Var],
         var(Var),
-        user:type(Type), !,
+        is_type(Type), !,
         findall((Var,Unifier),
-                (domain(Type,Ele),
+                (is_type_element(Type,Ele),
                  unifiable(Var,Ele,Unifier)),
                 Instances),
         describe_instances(Var,Instances,R).
@@ -137,7 +140,7 @@ apply_cwa((F1<=F2),R) :- !,
 apply_cwa(some_t([],F),R) :- !,
         apply_cwa(F,R).
 apply_cwa(some_t([V-T|VTs],F),R) :- !,
-        findall(E,domain(T,E),Es),
+        findall(E,is_type_element(T,E),Es),
         apply_cwa(some_inst(V,Es,some_t(VTs,F)),R).
 apply_cwa(some_inst(_,[],_F),false) :- !.
 apply_cwa(some_inst(V,[E|Es],F),R) :- !,
@@ -146,7 +149,7 @@ apply_cwa(some_inst(V,[E|Es],F),R) :- !,
 apply_cwa(all_t([],F),R) :- !,
         apply_cwa(F,R).
 apply_cwa(all_t([V-T|VTs],F),R) :- !,
-        findall(E,domain(T,E),Es),
+        findall(E,is_type_element(T,E),Es),
         apply_cwa(all_inst(V,Es,all_t(VTs,F)),R).
 apply_cwa(all_inst(_,[],_F),true) :- !.
 apply_cwa(all_inst(V,[E|Es],F),R) :- !,
@@ -245,8 +248,8 @@ eval_cwa(Atom) :-
         initially(Atom).
 eval_cwa(TAtom) :-
         TAtom =.. [Type,Arg],
-        user:type(Type),
-        domain(Type,Arg).
+        is_type(Type),
+        is_type_element(Type,Arg).
 eval_cwa(X=Y) :-
         X = Y.
 eval_cwa(true).
@@ -266,13 +269,46 @@ eval_cwa(F1=>F2) :- !,
 eval_cwa(F1<=F2) :- !,
         eval_cwa(F1+(-F2)).
 eval_cwa(some_t([V-T|VTs],F)) :-
-        domain(T,E),
+        is_type_element(T,E),
         subv(V,E,F,F1), % substitute, vars may be reused!
         eval_cwa(some_t(VTs,F1)).
 eval_cwa(some_t([],F)) :- !,
         eval_cwa(F).
 eval_cwa(all_t(VTs,F)) :-
         eval_cwa(-some_t(VTs,-F)).
+
+/**
+  * is_type(?Type) is nondet
+  *
+  * Unifies Type with an atom that was declared by the user as a type,
+  * either by means of user:type/1 or user:subtype/2.
+  *
+  * @arg Type a variable or an atom, representing a type name
+  **/
+is_type(T) :-
+        user:type(T).
+is_type(T) :-
+        user:subtype(_,T).
+
+/**
+  * is_type_element(?Type, ?Element) is nondet
+  *
+  * Unifies Type with an atom and Element with an atom such that
+  * Type was declared by the user as a type, either by means of
+  * user:type/1 or user:subtype/2, and Element was declared by the
+  * user to be an element of type Type, either by means of
+  * user:domain/2 directly, or indirectly through a subtype
+  * relationship via user:subtype/2.
+  *
+  * @arg Type    a variable or an atom, representing a type name
+  * @arg Element a variable or an atom, representing a standard name
+  **/
+is_type_element(T,E) :-
+        user:type(T),
+        user:domain(T,E).
+is_type_element(T,E) :-
+        user:subtype(TS,T),
+        is_type_element(TS,E).
 
 /**
   * untype(+Formula,-Result) is det

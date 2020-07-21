@@ -8,6 +8,7 @@
                        isrigid/1]).
 
 :- use_module('../lib/utils').
+:- use_module('../logic/cwa').
 :- use_module('../logic/fol').
 :- use_module('../logic/una').
 
@@ -19,7 +20,6 @@
 :- multifile user:rel_rigid/2.
 :- multifile user:fun_rigid/1.
 :- multifile user:fun_rigid/3.
-:- multifile user:type/1.
 :- multifile user:poss/2.
 :- multifile user:poss/3.
 :- multifile user:causes_true/3.
@@ -154,7 +154,7 @@ types_cons([],[]).
 % X is an atom (std.name) => check if type is correct
 types_cons([X-T|XTs],Pres) :-
         atomic(X), !,
-        domain(T,X),
+        is_type_element(T,X),
         types_cons(XTs,Pres).
 % X is anything else => treat type as unary rigid predicate
 types_cons([X-T|XTs],[Pre|Pres]) :- !,
@@ -199,7 +199,7 @@ isrigid((F=_)) :-
 isrigid(F) :-
         nonvar(F),
         F =.. [Type,_],
-        user:type(Type).            % type = unary rigid predicate
+        is_type(Type).            % type = unary rigid predicate
 
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
