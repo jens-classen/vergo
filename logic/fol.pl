@@ -222,6 +222,7 @@ simplify(F1=>F2,R) :-
 
 simplify_impl(_,true,true) :- !.
 simplify_impl(false,_,true) :- !.
+simplify_impl(true,F2,F2) :- !.
 simplify_impl(F1,false,-F1) :- !.
 simplify_impl(F1,F2,true) :-
         F1 == F2, !.
