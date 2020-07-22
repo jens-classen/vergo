@@ -326,10 +326,10 @@ is_primitive_type(T) :-
   * @arg Element a variable or an atom, representing a standard name
   **/
 is_type_element(T,E) :-
-        user:type(T),
+        is_primitive_type(T),
         user:domain(T,E).
 is_type_element(T,E) :-
-        user:subtype(TS,T),
+        user:subtype(T,TS),
         is_type_element(TS,E).
 is_type_element(T,E) :-
         nonvar(T),
