@@ -42,12 +42,12 @@ report_message(ML,M) :-
         NC =< NM, !,
         report_message2(M).
 report_message(_,_) :- !.
-report_message(M) :- !,
+report_message(M) :- !, % default if no level indicated
         report_message(info,M).
 
-report_message2([L|Ls]) :- !, write(L), report_message(Ls).
+report_message2([L|Ls]) :- !, write(L), report_message2(Ls).
 report_message2([]) :- !, write('\n'), flush_output(user_output).
-report_message2(M) :- report_message([M]).
+report_message2(M) :- report_message2([M]).
 
 current_log_level(info). % default
 
