@@ -26,7 +26,8 @@ type element. types_cons/2 turns a list of typed variables into an
 equivalent list of type constraint formulas, where types are
 represented as unary predicates. untype/2 removes typed quantifiers by
 re-writing them using standard first order syntax (treating types as
-unary predicates).
+unary predicates). get_types/3 looks up the types of variables in a
+list of typed variables.
 
 @author  Jens Claßen
 @license GPLv2
@@ -34,7 +35,8 @@ unary predicates).
  **/
 :- module(cwa, [apply_cwa/2, eval_cwa/1,
                 is_type/1, is_type_element/2,
-                untype/2, types_cons/2]).
+                untype/2, types_cons/2,
+                get_types/3]).
 
 :- use_module('../lib/utils').
 :- use_module('../logic/l').
@@ -434,3 +436,33 @@ types_con_either([T|Ts],X,Pre) :- !,
         Pre1 =.. [T,X],
         types_con_either(Ts,X,Pre2),
         Pre = Pre1+Pre2.
+
+/**
+  * get_types(+VarList,+TypedVarList,-Result) is det.
+  *
+  * Given a list of variables VarList and a list of typed variables
+  * TypedVarList, returns the subset of TypedVarList for variables
+  * that occur in VarList. A variable that occurs untyped in VarList,
+  * but has no typed counterpart in TypedVarList is not included in
+  * the result.
+  *
+  * For example, get_type([X,Y],[Y-typeA,Z-typeB],Result) will yield
+  * in Result = [Y-typeA].
+  *
+  * @arg VarList      a list of variables without associated types
+  * @arg TypedVarList a list of variables with associated types
+  * @arg Result       a list of those variables with associated types
+  *                   from TypedVarList that also occur in VarList
+  **/
+get_types([],_YTs,[]) :- !.
+get_types([X|Xs],YTs,[X-T|XTs]) :-
+        get_type(X,YTs,T), !,
+        get_types(Xs,YTs,XTs).
+get_types([_|Xs],YTs,XTs) :- !,
+        get_types(Xs,YTs,XTs).
+
+get_type(Var,[X-T|_XTs],T) :-
+        Var == X, !.
+get_type(Var,[_-_|XTs],T) :- !,
+        get_type(Var,XTs,T).
+get_type(_Var,[],_T) :- !, fail.
