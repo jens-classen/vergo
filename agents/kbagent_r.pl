@@ -56,6 +56,8 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 
 init :- !,
         initialize_kb,
+        retractall(history(_)),
+        retractall(program(_)),
         assert(history([])),
         assert(program('__undef')).
 

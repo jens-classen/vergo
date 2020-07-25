@@ -40,6 +40,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 init :- !,
         initialize_kb,
+        retractall(history(_)),
+        retractall(program(_)),
         assert(history([])),
         assert(program('__undef')).
 
