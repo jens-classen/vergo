@@ -52,9 +52,9 @@ eprover(ListOfAxioms,Conjecture) :-
         check_eprover_status(Status).     % return value
 
 eprover(_ListOfAxioms,_Conjecture) :-
-        report_message(['Failed while attempting to use E theorem prover!']),
-        report_message(['Aborting...']),
-        report_message(['Check your settings! (PATH_GOLOG variable set?)']),
+        report_message(error,['Failed while attempting to use E theorem prover!']),
+        report_message(error,['Aborting...']),
+        report_message(error,['Check your settings! (PATH_GOLOG variable set?)']),
         abort.
 
 % eprover's return status determines the truth value:
@@ -66,10 +66,9 @@ check_eprover_status(exit(1)) :- !,
         fail.
 check_eprover_status(exit(S)) :- !,
         temp_file(File),
-        report_message(['Unexpected eprover return status (', S,
-                        ')!']),
-        report_message(['Aborting...']),
-        report_message(['Check ', File, '.']),
+        report_message(error,['Unexpected eprover return status (',S,')!']),
+        report_message(error,['Aborting...']),
+        report_message(error,['Check ', File, '.']),
         abort.        
 
 temp_file(File) :-

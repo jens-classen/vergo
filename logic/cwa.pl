@@ -250,9 +250,9 @@ eval_cwa(Atom) :-
 eval_cwa(Atom) :-
         (isfluent(Atom);isrigid(Atom)),
         not(user:cwa(Atom)),
-        report_message(['Warning: Applying closed-world',
-                        ' assumption to non-CWA atom <',
-                        Atom, '>!']),
+        report_message(warn,['Warning: Applying closed-world',
+                             ' assumption to non-CWA atom <',
+                             Atom, '>!']),
         initially(Atom).
 eval_cwa(TAtom) :-
         TAtom =.. [Type,Arg],

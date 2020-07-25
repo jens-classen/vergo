@@ -103,7 +103,7 @@ construct_ranking_recursive(I) :- !,
 check_admissibility(I) :-
         rcpart(I,[]), !.
 check_admissibility(_) :- !,
-        report_message(['Warning: The provided set of conditionals is not admissible!']).
+        report_message(warn,['Warning: The provided set of conditionals is not admissible!']).
 
 exceptional_rules(RulesEx,Rules) :-
         findall((B=>H),

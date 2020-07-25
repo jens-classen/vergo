@@ -2,6 +2,9 @@
           [subv/4,
            subvl/4,
            report_message/1,
+           report_message/2,
+           get_log_level/1,
+           set_log_level/1,
            count/2,
            atom_string/2,
            string_codes/2,
@@ -20,6 +23,8 @@
 
 :- use_module(library(csv)).
 
+:- dynamic current_log_level/1.
+
 /*  T2 is T1 with X1 replaced by X2  */
 subv(X1,X2,T1,T2) :- var(T1), T1 == X1, !, T2 = X2.
 subv(_,_,T1,T2)   :- var(T1), !, T2 = T1.
@@ -30,9 +35,36 @@ subvl(_,_,[],[]) :- !.
 subvl(X1,X2,[T1|L1],[T2|L2]) :- !, subv(X1,X2,T1,T2), subvl(X1,X2,L1,L2).
 
 /* Print a mesage */
-report_message([L|Ls]) :- !, write(L), report_message(Ls).
-report_message([]) :- !, write('\n').
-report_message(M) :- report_message([M]).
+report_message(ML,M) :-
+        current_log_level(CL),
+        log_level(CL,NC),
+        log_level(ML,NM),
+        NC =< NM, !,
+        report_message2(M).
+report_message(_,_) :- !.
+report_message(M) :- !,
+        report_message(info,M).
+
+report_message2([L|Ls]) :- !, write(L), report_message(Ls).
+report_message2([]) :- !, write('\n'), flush_output(user_output).
+report_message2(M) :- report_message([M]).
+
+current_log_level(info). % default
+
+log_level(all,0).
+log_level(debug,1).
+log_level(info,2).
+log_level(warn,3).
+log_level(error,4).
+log_level(off,5).
+
+set_log_level(L) :-
+        log_level(L,N),
+        N > 0, N < 5, !,
+        retractall(current_log_level(_)),
+        assert(current_log_level(L)).
+get_log_level(L) :-
+        current_log_level(L).
 
 /* Count solutions */
 count(G, Count) :-

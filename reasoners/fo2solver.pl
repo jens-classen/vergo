@@ -79,9 +79,9 @@ fo2_solver(Formulas,Result) :-
         working_directory(_,WorkDir).
         
 fo2_solver(_Formulas,_Result) :-
-        report_message(['Failed while attempting to use FO²-Solver!']),
-        report_message(['Aborting...']),
-        report_message(['Check your settings! (PATH_FO2SOLVER variable set?)']),
+        report_message(error,['Failed while attempting to use FO²-Solver!']),
+        report_message(error,['Aborting...']),
+        report_message(error,['Check your settings! (PATH_FO2SOLVER variable set?)']),
         abort.
         
 get_fo2_solver_result(String, sat) :-
@@ -90,10 +90,10 @@ get_fo2_solver_result(String, unsat) :-
         sub_string(String,_,_,_N,"UNSATISFIABLE"), !.
 get_fo2_solver_result(String,_) :- !,
         temp_file(File),
-        report_message(['Unexpected FO²-Solver output:']),
-        report_message(['Aborting...']),
-        report_message([String]),
-        report_message(['Check ', File, '.']),
+        report_message(error,['Unexpected FO²-Solver output:']),
+        report_message(error,['Aborting...']),
+        report_message(error,[String]),
+        report_message(error,['Check ', File, '.']),
         abort.
 
 temp_file(File) :-
@@ -143,10 +143,10 @@ convert_formula_to_fo2(F1+F2,CF1+CF2) :- !,
         convert_formula_to_fo2(F1,CF1),
         convert_formula_to_fo2(F2,CF2).
 convert_formula_to_fo2(Formula,_ConvertedFormula) :- !,
-        report_message(['Failed while attempting to use FO²-Solver!']),
-        report_message(['Input formula contains more than two variable symbols:']),
-        report_message([Formula]),
-        report_message(['Aborting...']),
+        report_message(error,['Failed while attempting to use FO²-Solver!']),
+        report_message(error,['Input formula contains more than two variable symbols:']),
+        report_message(error,[Formula]),
+        report_message(error,['Aborting...']),
         abort.
 
 write_formula(Stream, F1<=>F2) :- !,

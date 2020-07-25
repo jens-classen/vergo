@@ -92,10 +92,10 @@ consistent_konclude(Ontology) :- !,
 check_konclude_result(String) :- 
         sub_string(String,_,_,_N,"error"), !,
         temp_file(File),
-        report_message(['Konclude reported an error:']),
-        report_message(['Aborting...']),
-        report_message([String]),
-        report_message(['Check ', File, '.']),
+        report_message(error,['Konclude reported an error:']),
+        report_message(error,['Aborting...']),
+        report_message(error,[String]),
+        report_message(error,['Check ', File, '.']),
         abort.
 check_konclude_result(String) :-
         sub_string(String,_,_,_N,"is consistent."), !.
@@ -104,10 +104,10 @@ check_konclude_result(String) :-
         fail.
 check_konclude_result(String) :- 
         temp_file(File),
-        report_message(['Unexpected Konclude output:']),
-        report_message(['Aborting...']),
-        report_message([String]),
-        report_message(['Check ', File, '.']),
+        report_message(error,['Unexpected Konclude output:']),
+        report_message(error,['Aborting...']),
+        report_message(error,[String]),
+        report_message(error,['Check ', File, '.']),
         abort.
 
 temp_file(File) :- !,

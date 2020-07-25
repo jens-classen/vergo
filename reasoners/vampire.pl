@@ -53,9 +53,9 @@ vampire(ListOfAxioms,Conjecture,Result) :-
         get_vampire_result(String,Result).    % return value
 
 vampire(_ListOfAxioms,_Conjecture,_Result) :-
-        report_message(['Failed while attempting to use Vampire theorem prover!']),
-        report_message(['Aborting...']),
-        report_message(['Check your settings! (PATH_GOLOG variable set?)']),
+        report_message(error,['Failed while attempting to use Vampire theorem prover!']),
+        report_message(error,['Aborting...']),
+        report_message(error,['Check your settings! (PATH_GOLOG variable set?)']),
         abort.
 
 get_vampire_result(String, refutation) :-
@@ -64,10 +64,10 @@ get_vampire_result(String, satisfiable) :-
         sub_string(String,_,_,_N,"Satisfiable!"), !.
 get_vampire_result(String,_) :- !,
         temp_file(File),
-        report_message(['Unexpected Vampire output:']),
-        report_message(['Aborting...']),
-        report_message([String]),
-        report_message(['Check ', File, '.']),
+        report_message(error,['Unexpected Vampire output:']),
+        report_message(error,['Aborting...']),
+        report_message(error,[String]),
+        report_message(error,['Check ', File, '.']),
         abort.
 
 temp_file(File) :-

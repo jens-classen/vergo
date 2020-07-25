@@ -181,9 +181,9 @@ equivalent(Formula1,Formula2,fo2solver) :-
 check_equivalence(F2,F3) :-
         equivalent(F2,F3), !.
 check_equivalence(F2,F3) :-  !,
-        report_message(['Not equivalent: ']),
-        report_message(['Fml1 = ', F2]),
-        report_message(['Fml2 = ', F3]),
+        report_message(error,['Not equivalent: ']),
+        report_message(error,['Fml1 = ', F2]),
+        report_message(error,['Fml2 = ', F3]),
         gtrace.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -108,11 +108,11 @@ partition(Rest,I,[(I,TRules)|Partition]) :-
         partition(NewRest,I1,Partition).
 partition(Rest,I,Rules) :- !,
         Rules = [(I,Rest)],
-        report_message(['Warning: The provided set of conditionals is not consistent!']).
+        report_message(warn,['Warning: The provided set of conditionals is not consistent!']).
 % partition(_Rest,_I,_Rules) :- !,
-%         report_message(['Error constructing ranking partition in System Z!']),
-%         report_message(['The provided set of conditionals is not consistent!']),
-%         report_message(['Aborting...']),
+%         report_message(error,['Error constructing ranking partition in System Z!']),
+%         report_message(error,['The provided set of conditionals is not consistent!']),
+%         report_message(error,['Aborting...']),
 %         abort.
 
 tolerated_rules(RuleSet,ToleratedRuleSet) :- !,
