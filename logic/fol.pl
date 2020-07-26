@@ -313,8 +313,9 @@ conjoin([T|Fs],R) :-
 conjoin([F|_Fs],false) :-
         F == false, !.
 conjoin([F],F) :- !.
-conjoin([F1,F2|Fs],F1*FR) :- !,
-        conjoin([F2|Fs],FR).
+conjoin([F1,F2|Fs],R) :- !,
+        conjoin([F2|Fs],FR),
+        (FR = false -> R = false; R = F1*FR).
 conjoin([],true) :- !.
 
 /* disjoin(+L,-F)
@@ -325,8 +326,9 @@ disjoin([F|Fs],R) :-
 disjoin([T|_Fs],true) :-
         T == true, !.
 disjoin([F],F) :- !.
-disjoin([F1,F2|Fs],F1+FR) :- !,
-        disjoin([F2|Fs],FR).
+disjoin([F1,F2|Fs],R) :- !,
+        disjoin([F2|Fs],FR),
+        (FR = true -> R = true; R = F1+FR).
 disjoin([],false) :- !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
