@@ -307,6 +307,11 @@ simplify(F,FS) :-
 
 /* conjoin(+L,-F)
    F is the conjunction of the list of formulas L */
+conjoin([T|Fs],R) :-
+        T == true, !,
+        conjoin(Fs,R).
+conjoin([F|_Fs],false) :-
+        F == false, !.
 conjoin([F],F) :- !.
 conjoin([F1,F2|Fs],F1*FR) :- !,
         conjoin([F2|Fs],FR).
@@ -314,11 +319,16 @@ conjoin([],true) :- !.
 
 /* disjoin(+L,-F)
    F is the disjunction of the list of formulas L */
+disjoin([F|Fs],R) :-
+        F == false, !,
+        disjoin(Fs,R).
+disjoin([T|_Fs],true) :-
+        T == true, !.
 disjoin([F],F) :- !.
 disjoin([F1,F2|Fs],F1+FR) :- !,
         disjoin([F2|Fs],FR).
 disjoin([],false) :- !.
-        
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Formula Properties
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
