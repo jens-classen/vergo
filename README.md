@@ -285,6 +285,19 @@ are the following dependencies to external tools and systems:
    and dynamically linked form. Its source code is published under the
    LGPL.
 
+6. **The Fast Downward PDDL Planner**
+
+   To use PDDL planning, we require that 'fast-downward.py' is visible
+   in PATH and executable (meaning Python and all dependencies are
+   installed). Instructions for obtaining and running Fast Downward
+   are available at
+
+   http://www.fast-downward.org/
+
+   Fast Downward will be run using the default configuration using
+   `--alias lama-first`. So far, Fast Downward is the only PDDL
+   planner supported.
+
 ## References
 
 1. Jens Claßen: <br/>
