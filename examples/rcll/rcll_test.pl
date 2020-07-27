@@ -1,4 +1,4 @@
-:- use_module('../../tools/pddl_parser').
+:- use_module('../../planning/pddl_parser').
 
 % Parse RCLL PDDL domain description.
 % So far, duration constraints are ignored.
