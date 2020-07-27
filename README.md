@@ -136,6 +136,10 @@ The code is divided into the following subdirectories:
   Contains code for representing and manipulating formulas in
   different base logics (propositional logic, FOL, L).
 
+- planning:
+
+  Planning related code such as PDDL parser.
+
 - projection:
 
   Code implementing regression and progression methods.
@@ -148,10 +152,6 @@ The code is divided into the following subdirectories:
 - temp:
 
   Temporary files are put here.
-
-- tools:
-
-  Conversion tools such as PDDL parser.
 
 - transfinal:
 
