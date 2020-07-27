@@ -20,6 +20,7 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
  **/
 
 :- use_module('../logic/cwa').
+:- use_module('program_simplify').
 
 /**
  * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
@@ -80,16 +81,6 @@ final(D,F) :-
         progdef(D,M),
         final(M,F).
 
-progdef(if(C,T,E),
-        nondet([test(C),T],[test(-C),E])).
-progdef(while(C,D),
-        [star([test(C),D]),test(-C)]).
-progdef(loop(D),
-        while(true,D)).
-
-progdef(Name,Def) :-
-        program(Name,Def).
-
 /**
  * step(+Prog1,?Act,?Prog2,?Cond1) is nondet
  *
@@ -119,48 +110,3 @@ type_cons([X-T|XTs]) :-
         is_type_element(T,X),
         type_cons(XTs).
 type_cons([]).
-
-simplify_program(A,D) :-
-        var(A), !, D=A.
-simplify_program(A,A) :-
-        (poss(A,_);poss(A,_,_)), !. % primitive action
-simplify_program(L,P) :-
-        is_list(L), !,
-        simplify_program_list(L,LP),
-        flatten(LP,P).
-simplify_program(nondet(P1,P2),P) :-
-        simplify_program(P1,PS1),
-        simplify_program(P2,PS2), !,
-        simplify_nondet(PS1,PS2,P).
-simplify_program(conc(P1,P2),conc(NP1,NP2)) :- !,
-        simplify_program(P1,NP1),
-        simplify_program(P2,NP2). 
-simplify_program(star(P),star(NP)) :- !,
-        simplify_program(P,NP).
-simplify_program(pick(Var,Domain,P),pick(Var,Domain,NP)) :- !,
-        simplify_program(P,NP).
-simplify_program(test(F),R) :- !,
-        simplify_test(F,R).
-simplify_program(P,NP) :-
-        progdef(P,D), !,
-        simplify_program(D,NP).
-simplify_program(fail,fail) :- !.
-simplify_program(failed,failed) :- !.
-simplify_program(terminate,terminate) :- !.
-simplify_program(terminated,terminated) :- !.
-
-simplify_nondet(P1,P2,R) :-
-        P1==P2, !, R=P1.
-simplify_nondet(P1,P2,nondet(P1,P2)) :- !.
-
-simplify_test(F,R) :-
-        simplify(F,FS), !,
-        simplify_test2(FS,R).
-simplify_test2(true,[]) :- !.
-simplify_test2(false,fail) :- !.
-simplify_test2(F,test(F)) :- !.
-
-simplify_program_list([],[]).
-simplify_program_list([P|Ps],[NP|NPs]) :-
-        simplify_program(P,NP),
-        simplify_program_list(Ps,NPs).
