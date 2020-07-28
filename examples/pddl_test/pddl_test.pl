@@ -109,5 +109,6 @@ validate(fail,Goal) :- !,
         ask(Goal,false).               % no plan => Goal shouldn't hold
 validate(Plan,Goal) :- 
         append(Prefix,[_LastAction],Plan), !,
+        ask(executable(Plan),true),    % plan should be executable
         ask(after(Plan,Goal),true),    % plan should achieve Goal
         ask(after(Prefix,Goal),false). % plan w/o last action shouldn't
