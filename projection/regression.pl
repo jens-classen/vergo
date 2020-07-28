@@ -190,6 +190,14 @@ isrigid(F) :-
         F =.. [Type,_],
         is_type(Type).            % type = unary rigid predicate
 
+regress(_S,executable([]),Result) :- !,
+        Result=true.
+regress(S,executable([A]),Result) :- !,
+        regress(S,poss(A),Result).
+regress(S,executable([A|As]),Result) :- !,
+        regress(S,poss(A),Result1),
+        regress(S,after(A,executable(As)),Result2),
+        Result=Result1*Result2.
 regress(S,poss(A),Result) :- 
         precond(A,Precondition), !, 
         regress(S,Precondition,Result).
