@@ -135,12 +135,13 @@ parse_pddl_result(AxiomsT,axioms(Axioms)) :-
         flatten(AxiomsL,Axioms).
 parse_pddl_result(Axioms,file(File)) :-
         Axioms = proax(Problem,Domain,ObjectAxioms,InitAxioms,
-                       GoalAxioms),
+                       GoalAxioms,MetricAxioms),
         open(File, write, Stream),
         write_problem_header(Stream, Problem, Domain),
         write_rules(Stream, ObjectAxioms, "Objects"),
         write_rules(Stream, InitAxioms, "Initial Values"),
         write_rules(Stream, GoalAxioms, "Goal"),
+        write_rules(Stream, MetricAxioms, "Metric"),
         close(Stream).
 
 write_directives(Stream) :- !,
@@ -1262,7 +1263,7 @@ pddl_derived_def(D,[]) -->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pddl_problem(D,proax(Problem,Domain,ObjectAxioms,
-                     InitAxioms,GoalAxioms)) -->
+                     InitAxioms,GoalAxioms,MetricAxioms)) -->
         ws,
         "(", ws, "define", ws,
         "(", ws, "problem", ws,
@@ -1278,7 +1279,8 @@ pddl_problem(D,proax(Problem,Domain,ObjectAxioms,
         pddl_init(DP,InitAxioms), ws,
         pddl_goal(DP,GoalAxioms), ws,
         ([]; pddl_problem_constraints, ws),
-        ([]; pddl_metric_spec, ws),
+        ([],{MetricAxioms=[]};
+         pddl_metric_spec(DP,MetricAxioms), ws),
         ([]; pddl_length_spec, ws), ")", !, ws.
 
 pddl_problem_name(Name) -->
@@ -1382,45 +1384,53 @@ pddl_pref_con_gd_star -->
         pddl_pref_con_gd, ws,
         pddl_pref_con_gd_star.
 
-pddl_metric_spec -->
+pddl_metric_spec(D,[metric(P,M)]) -->
         {requires(numeric-fluents)},
         "(", ws, ":metric", wp, !,
-        pddl_optimization, wp,
-        pddl_metric_f_exp, ws, ")".
+        {D = dom((_,P),_,_,_,_,_)}, % metric ID = problem name
+        pddl_optimization(O), wp,
+        pddl_metric_f_exp(D,E), ws, ")",
+        {M =.. [O,E]}.
 
-pddl_optimization -->
-        "minimize"; "maximize".
+pddl_optimization(minimize) --> "minimize".
+pddl_optimization(maximize) --> "maxnimize".
 
-pddl_metric_f_exp -->
-        "(", ws, pddl_binary_op(_), wp,
-        pddl_metric_f_exp, wp,
-        pddl_metric_f_exp, ws, ")".
-pddl_metric_f_exp -->
-        "(", ws, pddl_multi_op(_), wp,
-        pddl_metric_f_exp, wp,
-        pddl_metric_f_exp_plus, ws, ")".
-pddl_metric_f_exp -->
+pddl_metric_f_exp(D,Exp) -->
+        "(", ws, pddl_binary_op(Op), wp,
+        pddl_metric_f_exp(D,Exp1), wp,
+        pddl_metric_f_exp(D,Exp2), ws, ")",
+        {Exp =.. [Op,Exp1,Exp2]}.
+pddl_metric_f_exp(D,Exp) -->
+        "(", ws, pddl_multi_op(Op), wp,
+        pddl_metric_f_exp(D,Exp1), wp,
+        pddl_metric_f_exp_plus(D,Exps2), ws, ")",
+        {apply_multi_op(Op,[Exp1|Exps2],Exp)}.
+pddl_metric_f_exp(D,-Exp) -->
         "(", ws, "-", ws,
-        pddl_metric_f_exp, ws, ")".
-pddl_metric_f_exp -->
-        pddl_number(_).
-pddl_metric_f_exp -->
-        "(", ws, pddl_function_symbol(_), ws,
-        pddl_name_star(_,_), ws, ")".
-pddl_metric_f_exp -->
-        pddl_function_symbol(_).
-pddl_metric_f_exp -->
+        pddl_metric_f_exp(D,Exp), ws, ")".
+pddl_metric_f_exp(_,Number) -->
+        pddl_number(Number).
+pddl_metric_f_exp(D,Exp) -->
+        "(", ws, pddl_function_symbol(F), ws,
+        pddl_name_star(Names,'#'), ws, ")",
+        {Exp =.. [F|Names]},
+        {check_fhead(D,[],[],[],Exp)}.
+pddl_metric_f_exp(D,F) -->
+        pddl_function_symbol(F),
+        {check_fhead(D,[],[],[],F)}.
+pddl_metric_f_exp(_D,'total-time') -->
         "total-time".
-pddl_metric_f_exp -->
+pddl_metric_f_exp(D,'is-violated'(N)) -->
         {requires(preferences)},
         "(", ws, "is-violated", wp, !,
-        pddl_pref_name(_), ws, ")".
+        pddl_pref_name(N), ws, ")".
+        % todo: check pref name!
 
-pddl_metric_f_exp_plus -->
-        pddl_metric_f_exp.
-pddl_metric_f_exp_plus -->
-        pddl_metric_f_exp, wp,
-        pddl_metric_f_exp_plus.
+pddl_metric_f_exp_plus(D,[Exp]) -->
+        pddl_metric_f_exp(D,Exp).
+pddl_metric_f_exp_plus(D,[Exp|Exps]) -->
+        pddl_metric_f_exp(D,Exp), wp,
+        pddl_metric_f_exp_plus(D,Exps).
 
 pddl_length_spec -->
         "(", ws, ":length", wp, !,
