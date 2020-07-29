@@ -25,6 +25,7 @@
 :- dynamic domain/2.
 :- dynamic initially/1.
 :- dynamic goal/2.
+:- dynamic metric/2.
 
 :- discontiguous pddl_domain/2.
 :- discontiguous pddl_problem/3.
@@ -46,6 +47,11 @@ test(trucks) :-
         check(trucks,p2),
         check(trucks,p3).
 
+test(citycar) :-
+        check(citycar,p1),
+        check(citycar,p2),
+        check(citycar,p3).
+
 :- end_tests(pddl).
 
 pddl_domain(airport,'airport-adl_domain.pddl').
@@ -63,6 +69,11 @@ pddl_problem(trucks,p1,'trucks_problem_1.pddl').
 pddl_problem(trucks,p2,'trucks_problem_2.pddl').
 pddl_problem(trucks,p3,'trucks_problem_3.pddl').
 
+pddl_domain(citycar,'citycar-opt14-adl_domain.pddl').
+pddl_problem(citycar,p1,'citycar-opt14-adl_problem_1.pddl').
+pddl_problem(citycar,p2,'citycar-opt14-adl_problem_2.pddl').
+pddl_problem(citycar,p3,'citycar-opt14-adl_problem_3.pddl').
+
 check(Dom,Pro) :-
         clear,
         
@@ -73,7 +84,9 @@ check(Dom,Pro) :-
         report_message(['Done loading problem ',Pro,'.']),
         
         goal(_,Goal),
-        get_plan(Goal,Plan),
+        (metric(_,MetricD) -> Metric=MetricD; Metric=none),
+
+        get_plan(Goal,Metric,Plan),
         length(Plan,N),
         report_message(['Found plan of length ',N,'.']),
         
@@ -93,7 +106,8 @@ clear :-
         retractall(causes(_,_,_,_)),
         retractall(domain(_,_)),
         retractall(initially(_)),
-        retractall(goal(_,_)).
+        retractall(goal(_,_)),
+        retractall(metric(_,_)).
 
 load_pddl_domain_file(Domain,Symbols) :-
         pddl_domain(Domain,File), !,

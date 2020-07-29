@@ -6,11 +6,13 @@ This module provides functionality for solving planning tasks in Golog
 by means of a PDDL planner following the approach described in [Claßen
 et al. 2007] and [Claßen 2013, Ch. 4].
 
-All involved fluents have to underly the closed-world assumption, and
-all involved fluents and actions must be typed.
+All involved fluents and rigids have to underly the closed-world
+assumption, and all involved fluents, rigids and actions must be
+typed.
 
-Currently, only PDDL's ADL fragment is supported. In particular,
-functional fluents will not be considered.
+So far, this module supports what can be mapped to PDDL's ADL fragment
+together with (number and object) functions, metrics, and action
+costs.
 
 As PDDL planner, at the moment only Fast Downward (www.fast-
 downward.org) is being used, but support for other planners may be
@@ -32,10 +34,11 @@ References:
 **/
 
 :- module(pddl_planner, [get_plan/2,
+                         get_plan/3,
                          generate_domain/4,
                          generate_problem/2,
                          write_domain/6,
-                         write_problem/6,
+                         write_problem/7,
                          fastdownward/3,
                          read_plan/2]).
 
@@ -47,6 +50,21 @@ References:
                                op(1110, xfy, =>)]).
 :- use_module(library(pio)).
 
+:- multifile user:goal/2.
+:- multifile user:def/2.
+:- multifile user:metric/2.
+:- multifile user:type/1.
+:- multifile user:subtype/2.
+:- multifile user:domain/2.
+:- multifile user:cwa/1.
+:- multifile user:rel_fluent/2.
+:- multifile user:fun_fluent/3.
+:- multifile user:rel_rigid/2.
+:- multifile user:fun_rigid/3.
+:- multifile user:causes_true/3.
+:- multifile user:causes_false/3.
+:- multifile user:causes/4.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Main Method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,12 +72,15 @@ References:
 /**
   * get_plan(+Goal,-Plan) is det.
   *
-  * Generates a PDDL domain and problem from the current state of the
-  * BAT, using all typed relational fluents underlying the CWA and all
-  * typed actions, calls the Fast Downward PDDL planner on it, and
-  * converts the resulting plan back into a sequence of actions. If
-  * there is no solution plan, or Fast Downward did not find any,
-  * 'fail' is returned.
+  * This predicate (1) generates a PDDL domain and problem from the
+  * current state of the BAT, using all typed fluents (relational and
+  * functional, including numeric ones) that are subject to the CWA,
+  * all typed rigids (relational and functional, including numeric
+  * ones) that are subject to the CWA, and all typed actions. It then
+  * (2) calls the Fast Downward PDDL planner on it, and (3) converts
+  * the resulting plan back into a sequence of actions. If there is no
+  * solution plan, or Fast Downward did not find any, 'fail' is
+  * returned.
   *
   * @arg Goal a goal, either in the form of a formula, or the name of
   *           a goal formula defined through goal/2 or def/2
@@ -67,7 +88,24 @@ References:
   *           plan, or 'fail'
   */
 get_plan(Goal,Plan) :-
+        get_plan(Goal,none,Plan).
+
+/**
+  * get_plan(+Goal,+Metric,-Plan) is det.
+  *
+  * Similar as get_plan/2, but additionally uses a plan metric.
+  *
+  * @arg Goal   a goal, either in the form of a formula, or the name
+  *             of a goal formula defined through goal/2 or def/2
+  * @arg Metric a metric, either in the form of a term minimize(Exp)
+  *             or maximize(Exp), or the name of a metric defined
+  *             through metric/2, or 'none'
+  * @arg Plan   a sequence (list) of actions representing a solution
+  *             plan, or 'fail'
+  */
+get_plan(Goal,Metric,Plan) :-
         goal_fml(Goal,GoalF),
+        metric_def(Metric,MetricF),
         temp_domain_file(DomF),
         temp_problem_file(ProF),
         temp_plan_file(PlaF),
@@ -76,15 +114,19 @@ get_plan(Goal,Plan) :-
         generate_domain(Typ,Pre,Fun,Act),
         generate_problem(Obj,Ini),
         write_domain(DomF,Dom,Typ,Pre,Fun,Act),
-        write_problem(ProF,Pro,Dom,Obj,Ini,GoalF),
+        write_problem(ProF,Pro,Dom,Obj,Ini,GoalF,MetricF),
         fastdownward(DomF,ProF,PlaF),
         read_plan(PlaF,Plan).
 
 goal_fml(Goal,GoalF) :-
-        goal(Goal,GoalF), !.
+        user:goal(Goal,GoalF), !.
 goal_fml(Goal,GoalF) :-
-        def(Goal,GoalF), !.
+        user:def(Goal,GoalF), !.
 goal_fml(Goal,Goal) :- !.
+
+metric_def(Name,MetricF) :-
+        user:metric(Name,MetricF), !.
+metric_def(MetricF,MetricF) :- !.
 
 temp_domain_file(File) :-
         temp_dir(TempDir),
@@ -103,10 +145,10 @@ temp_problem_name(tmppro).
 % Domains
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-generate_domain(Types,Predicates,_Functions,Actions) :- !,
+generate_domain(Types,Predicates,Functions,Actions) :- !,
         collect_types(Types),
         collect_predicates(Predicates),
-        % collect_functions(Functions),
+        collect_functions(Functions),
         collect_actions(Actions).
 
 collect_types(Types) :- !,
@@ -135,6 +177,19 @@ collect_predicates(Predicates) :- !,
                 Predicates2),
         append(Predicates1,Predicates2,Predicates).
 
+collect_functions(Functions) :- !,
+        findall(function(Name,Type,Args),
+                (fun_fluent(Fluent,Type,Args),
+                 user:cwa(Fluent=_),
+                 Fluent =.. [Name|_]),
+                Functions1),
+        findall(function(Name,Type,Args),
+                (fun_rigid(Rigid,Type,Args),
+                 user:cwa(Rigid=_),
+                 Rigid =.. [Name|_]),
+                Functions2),
+        append(Functions1,Functions2,Functions).
+
 collect_actions(Actions) :- !,
         findall(action(Name,Args,Precondition,Effects),
                 (poss(A,Args,Precondition),
@@ -157,15 +212,49 @@ is_effect(A,(A,QArgTypes,Cond,AddOrDel,F)) :-
         setminus2(FArgs,AArgs,NArgs),
         get_types(NArgs,FArgTypes,QArgTypes).
 
+is_effect(A,(A,QArgTypes,Cond,Op,F)) :-
+        assign_op(A,F,Cond,Op),
+        user:fun_fluent(F,number,FArgTypes),
+        user:cwa(F=_),
+        F =.. [_FName|FArgs],
+        A =.. [_AName|AArgs],
+        setminus2(FArgs,AArgs,NArgs),
+        get_types(NArgs,FArgTypes,QArgTypes).
+
 add_or_del(A,F,Cond,add) :-
         user:causes_true(A,F,Cond).
 add_or_del(A,F,Cond,del) :-
         user:causes_false(A,F,Cond).
 
+assign_op(A,F,true,increase(Val)) :-
+        user:causes(A,F,Y,(Y=(F+Val))).
+assign_op(A,F,Cond,increase(Val)) :-
+        user:causes(A,F,Y,(Y=(F+Val))*Cond).
+assign_op(A,F,true,decrease(Val)) :-
+        user:causes(A,F,Y,(Y=(F-Val))).
+assign_op(A,F,Cond,decrease(Val)) :-
+        user:causes(A,F,Y,(Y=(F-Val))*Cond).
+assign_op(A,F,true,'scale-up'(Val)) :-
+        user:causes(A,F,Y,(Y=(F*Val))).
+assign_op(A,F,Cond,'scale-up'(Val)) :-
+        user:causes(A,F,Y,(Y=(F*Val))*Cond).
+assign_op(A,F,true,'scale-down'(Val)) :-
+        user:causes(A,F,Y,(Y=(F/Val))).
+assign_op(A,F,Cond,'scale-down'(Val)) :-
+        user:causes(A,F,Y,(Y=(F/Val))*Cond).
+assign_op(A,F,true,assign(Val)) :-
+        user:causes(A,F,Y,(Y=Val)),
+        \+ (Val =.. [Op,_T1,_T2], % Val is number or function
+            member(Op,['+','-','*','/'])).
+assign_op(A,F,Cond,assign(Val)) :-
+        user:causes(A,F,Y,(Y=Val)*Cond),
+        \+ (Val =.. [Op,_T1,_T2], % Val is number or function
+            member(Op,['+','-','*','/'])).
+
 instantiate_effects(_A,[],[]) :- !.
 instantiate_effects(A,[Effect|Effects],[IEffect|IEffects]) :- !,
-        Effect = (A,QArgTypes,Cond,ADl,F),
-        IEffect = eff(QArgTypes,Cond,ADl,F),
+        Effect = (A,QArgTypes,Cond,AddDelOp,F),
+        IEffect = eff(QArgTypes,Cond,AddDelOp,F),
         instantiate_effects(A,Effects,IEffects).
 
 write_domain(File,Name,Types,Predicates,Functions,Actions) :-
@@ -177,14 +266,14 @@ write_domain(File,Name,Types,Predicates,Functions,Actions) :-
 % just before writing to file to avoid problems with Prolog's internal
 % variable representation (an internal name such as "_123456" may
 % change while writing to a file).
-construct_domain(Domain,Name,Types,Predicates,_Functions,Actions) :- !,
+construct_domain(Domain,Name,Types,Predicates,Functions,Actions) :- !,
         construct_domain_header(D1,Name),
         construct_types(D2,Types),
         construct_predicates(D3,Predicates),
-        % construct_functions(D4,Functions),
+        construct_functions(D4,Functions),
         construct_actions(D5,Actions),
         construct_domain_footer(D6),
-        append([D1,D2,D3,D5,D6],Domain).
+        append([D1,D2,D3,D4,D5,D6],Domain).
 
 construct_types(D,Types) :- !,
         construct_types2(DT,Types),
@@ -208,10 +297,26 @@ construct_predicates(D,Predicates) :- !,
         append([['(:predicates\n'],DP,[')\n']],D).
         
 construct_predicates2([],[]) :- !.
+construct_predicates2(D,[predicate(Name,[])|Predicates]) :- !,
+        construct_predicates2(DP,Predicates),
+        append([['\t(',Name,')\n'],DP],D).
 construct_predicates2(D,[predicate(Name,Args)|Predicates]) :- !,
         construct_args(DA,Args),
         construct_predicates2(DP,Predicates),
         append([['\t(',Name,' '],DA,[')\n'],DP],D).
+
+construct_functions(D,Functions) :- !,
+        construct_functions2(DF,Functions),
+        append([['(:functions\n'],DF,[')\n']],D).
+
+construct_functions2([],[]) :- !.
+construct_functions2(D,[function(Name,Type,[])|Functions]) :- !,
+        construct_functions2(DF,Functions),
+        append([['\t(',Name,') - ',Type,'\n'],DF],D).
+construct_functions2(D,[function(Name,Type,Args)|Functions]) :- !,
+        construct_args(DA,Args),
+        construct_functions2(DF,Functions),
+        append([['\t(',Name,' '],DA,[') - ',Type,'\n'],DF],D).
 
 construct_actions([],[]) :- !.
 construct_actions(D,[Action|Actions]) :- !,
@@ -242,20 +347,27 @@ construct_effects2(D,[Effect|Effects]) :- !,
         append([DE,['\n'],DEs],D).
 
 % QArgs \= [] => '(forall ...)'
-construct_effect(D,eff([],Cond,AorD,F)) :- !,
-        construct_effect2(DE,Cond,AorD,F),
+construct_effect(D,eff([],Cond,Op,F)) :- !,
+        construct_effect2(DE,Cond,Op,F),
         append([['\t\t'],DE],D).
-construct_effect(D,eff(QArgs,Cond,AorD,F)) :- !,
+construct_effect(D,eff(QArgs,Cond,Op,F)) :- !,
         construct_args(DArgs, QArgs),
-        construct_effect2(DEff,Cond,AorD,F),
+        construct_effect2(DEff,Cond,Op,F),
         append([['\t\t(forall ('],DArgs,[') '],DEff,[')']],D).
 % Cond \= true => '(when ...)'
-construct_effect2(D,true,AorD,F) :- !,
-        construct_effect3(D,AorD,F).
-construct_effect2(D,Cond,AorD,F) :- !,
+construct_effect2(D,true,Op,F) :- !,
+        construct_effect3(D,Op,F).
+construct_effect2(D,Cond,Op,F) :- !,
         construct_formula2(DCond, Cond),
-        construct_effect3(DEff,AorD,F),
+        construct_effect3(DEff,Op,F),
         append([['(when '],DCond,[' '],DEff,[')']],D).
+% assignment of function value
+construct_effect3(D,Assign,F) :-
+        Assign =.. [Op,Val],
+        member(Op,[increase,decrease,'scale-up','scale-down',assign]), !,
+        construct_pterm(DF,F),
+        construct_exp(DV,Val),
+        append([['(',Op,' '],DF,[' '],DV,[')']],D).
 % AorD == del => '(not ...)'
 construct_effect3(D,add,F) :- !,
         construct_effect4(D,F).
@@ -294,17 +406,18 @@ collect_init(Init) :- !,
                  cwa(Atom)),
                 Init).
 
-write_problem(File,PName,DName,Objects,Init,Goal) :- !,
-        construct_problem(Desc,PName,DName,Objects,Init,Goal),
+write_problem(File,PName,DName,Objects,Init,Goal,Metric) :- !,
+        construct_problem(Desc,PName,DName,Objects,Init,Goal,Metric),
         write_description(Desc,File).
         
-construct_problem(Problem,PName,DName,Objects,Init,Goal) :- !,
+construct_problem(Problem,PName,DName,Objects,Init,Goal,Metric) :- !,
         construct_problem_header(D1,PName,DName),
         construct_objects(D2,Objects),
         construct_init(D3,Init),
         construct_goal(D4,Goal),
-        construct_problem_footer(D5),
-        append([D1,D2,D3,D4,D5],Problem).
+        construct_metric(D5,Metric),
+        construct_problem_footer(D6),
+        append([D1,D2,D3,D4,D5,D6],Problem).
 
 construct_objects(D,Objects) :- !,
         construct_objects2(DO,Objects),
@@ -313,7 +426,7 @@ construct_objects2([],[]) :- !.
 construct_objects2(D,[O-T|OTs]) :- !,
         atom_concat('#',N,O), % remove "#" from std.name
         construct_objects2(DO,OTs),
-        append([['\t',N,' - ',T],DO],D).
+        append([['\t',N,' - ',T,'\n'],DO],D).
 
 construct_init(D,Init) :- !,
         construct_init2(DI,Init),
@@ -329,6 +442,16 @@ construct_goal(D,Goal) :- !,
         append([['(:goal\n'],DG,['\n)\n']],D).
 construct_goal2(D,Goal) :- !,
         construct_formula(D,'\t',Goal).
+
+construct_metric(D,none) :- !,
+        D = [].
+construct_metric(D,Metric) :- !,
+        construct_metric2(DM,Metric),
+        append([['(:metric\n'],DM,['\n)\n']],D).
+construct_metric2(D,Metric) :- !,
+        Metric =.. [MinMax,Exp],
+        construct_exp(DE,Exp),
+        append([['\t',MinMax,' '],DE],D).
 
 construct_problem_header(D,PName,DName) :- !,
         construct_timestamp(DT),
@@ -428,6 +551,18 @@ construct_quantified_formula(D,Op,V,F) :- !,
         construct_formula2(DF,F),
         append([['(',Op,' ('],DArgs,[') '],DF,[')']],D).
 
+construct_exp(D,Exp) :-
+        Exp =.. [Op,T1,T2],
+        member(Exp,['+','-','*','/']), !,
+        construct_exp(D1,T1),
+        construct_exp(D2,T2),
+        append([['(',Op,' '],D1,[' '],D2,[')']],D).
+construct_exp(D,Num) :-
+        number(Num), !,
+        D = [Num].
+construct_exp(D,T) :- !,
+        construct_pterm(D,T).
+
 construct_pterms([],[]) :- !.
 construct_pterms(D,[T]) :- !,
         construct_pterm(D,T).
@@ -439,10 +574,19 @@ construct_pterms(D,[T|Ts]) :- !,
 construct_pterm(D,T) :-
         var(T), !,
         D = ['?',T].
-construct_pterm(D,T) :- !,
+construct_pterm(D,T) :-
         atom_concat('#',Name,T), !,  % remove "#" from std.name
         D = [Name].
-% other kinds of terms (functions)?
+construct_pterm(D,Num) :-
+        number(Num), !,
+        D = [Num].
+construct_pterm(D,T) :-
+        T =.. [F], !,
+        append([['(',F,')']],D).
+construct_pterm(D,T) :-
+        T =.. [F|Args], !,
+        construct_pterms(DArgs,Args),
+        append([['(',F,' '],DArgs,[')']],D).
 
 construct_timestamp(D) :- !,
         local_time_and_date_as_string(TimeS),
