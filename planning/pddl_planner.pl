@@ -136,7 +136,7 @@ temp_problem_file(File) :-
         string_concat(TempDir, '/problem.pddl', File).
 temp_plan_file(File) :-
         temp_dir(TempDir),
-        string_concat(TempDir, '/plan.pddl', File).
+        string_concat(TempDir, '/sas_plan', File).
 
 temp_domain_name(tmpdom).
 temp_problem_name(tmppro).
@@ -378,7 +378,6 @@ construct_effect3(D,del,F) :- !,
 % write actual effect
 construct_effect4(D,F) :- !,
         construct_formula2(D,F).
-
 
 construct_domain_header(D,Name) :- !,
         construct_timestamp(DTime),
@@ -669,19 +668,41 @@ delete_old_plan(_) :- !.
 % Interface to Fast Downward PDDL Planner
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% We use the following search/evaluator configuration because we want
+% - optimality (via A* and an admissable heuristic function)
+% - support for full ADL, including conditional effects
+% cf. http://www.fast-downward.org/Doc/Evaluator#Additive_heuristic
+fdconf('astar(hmax(transform=no_transform(),cache_estimates=true))').
+
+% Execution:
+% $ fast-downward.py domain.pddl problem.pddl --search \
+%   "astar(hmax(transform=no_transform(), cache_estimates=true))"
+% (Unfortunately, this configuration does not support specifying a
+% designated output plan file, but Fast Downward will just put the
+% solution into 'sas_plan' in the current working directory, so we
+% have to change to the temp directory and back...)
+
+% To get fast, satisficing planning, we could use
+% $ fast-downward.py --alias lama-first domain.pddl problem.pddl \
+%   --plan-file plan.pddl
+% (Perhaps make this an alternative or option?)
+
 /* Calls Fast Downward on planning problem. */
 fastdownward(DomainFile,ProblemFile,PlanFile) :-
         delete_old_plan(PlanFile),               % no plan file = no plan
+        temp_dir(TempDir),
+        working_directory(WorkDir,TempDir),      % change to temp dir
+        fdconf(FDConf),
         process_create(path('fast-downward.py'), 
-                       ['--alias', 'lama-first', % default alias (config)
-                        '--plan-file', PlanFile, % plan result file
-                        DomainFile,              % domain input file
-                        ProblemFile],            % problem input file
+                       [DomainFile,              % domain input file
+                        ProblemFile,             % problem input file
+                        '--search', FDConf],     % search conf.
                        [stdout(pipe(Output)),    % use output for debugging
                         stderr(pipe(Output)),    % use output for debugging
                         process(PID)]),          % need PID for exit status
         process_wait(PID, Status), !,            % wait for completion
-        fd_result(Status, Output).               % check for failures
+        working_directory(_,WorkDir),            % back to previous wd
+        fd_result(Status,Output).                % check for failures
 fastdownward(_,_,_) :-
         fd_failed.
 
