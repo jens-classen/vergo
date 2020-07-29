@@ -1420,7 +1420,7 @@ pddl_metric_f_exp(D,F) -->
         {check_fhead(D,[],[],[],F)}.
 pddl_metric_f_exp(_D,'total-time') -->
         "total-time".
-pddl_metric_f_exp(D,'is-violated'(N)) -->
+pddl_metric_f_exp(_D,'is-violated'(N)) -->
         {requires(preferences)},
         "(", ws, "is-violated", wp, !,
         pddl_pref_name(N), ws, ")".
