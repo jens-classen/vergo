@@ -268,12 +268,13 @@ write_domain(File,Name,Types,Predicates,Functions,Actions) :-
 % change while writing to a file).
 construct_domain(Domain,Name,Types,Predicates,Functions,Actions) :- !,
         construct_domain_header(D1,Name),
-        construct_types(D2,Types),
-        construct_predicates(D3,Predicates),
-        construct_functions(D4,Functions),
-        construct_actions(D5,Actions),
-        construct_domain_footer(D6),
-        append([D1,D2,D3,D4,D5,D6],Domain).
+        construct_requirements(D2,Functions),
+        construct_types(D3,Types),
+        construct_predicates(D4,Predicates),
+        construct_functions(D5,Functions),
+        construct_actions(D6,Actions),
+        construct_domain_footer(D7),
+        append([D1,D2,D3,D4,D5,D6,D7],Domain).
 
 construct_types(D,Types) :- !,
         construct_types2(DT,Types),
@@ -378,13 +379,35 @@ construct_effect3(D,del,F) :- !,
 construct_effect4(D,F) :- !,
         construct_formula2(D,F).
 
+
 construct_domain_header(D,Name) :- !,
         construct_timestamp(DTime),
-        append([DTime,
-                ['(define (domain ',Name,')\n'],
-                ['(:requirements :adl :equality :typing)\n']],D).
+        append([DTime,['(define (domain ',Name,')\n']],D).
 construct_domain_footer(D) :- !,
         D = [')'].
+
+construct_requirements(D,Functions) :-
+        construct_requirements2(DReq,Functions),
+        append([['(:requirements :adl'],DReq,[')\n']],D).
+construct_requirements2(D,Functions) :-
+        member(function('total-cost',number,[]),Functions), !,
+        construct_requirements3(DReq,Functions),
+        append([[' :action-costs'],DReq],D).
+construct_requirements2(D,Functions) :- !,
+        construct_requirements3(D,Functions).
+construct_requirements3(D,Functions) :-
+        member(function(F,number,_),Functions),
+        F \= 'total-cost', !,
+        construct_requirements4(DReq,Functions),
+        append([[' :numeric-fluents'],DReq],D).
+construct_requirements3(D,Functions) :- !,
+        construct_requirements4(D,Functions).
+construct_requirements4(D,Functions) :-
+        member(function(_,T,_),Functions),
+        T \= number, !,
+        D = [' :object-fluents'].
+construct_requirements4(D,_Functions) :- !,
+        D = [].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problems
