@@ -677,25 +677,29 @@ fastdownward(DomainFile,ProblemFile,PlanFile) :-
                         '--plan-file', PlanFile, % plan result file
                         DomainFile,              % domain input file
                         ProblemFile],            % problem input file
-                       [stdout(null),            % completely silent
-                        stderr(null),            % completely silent
+                       [stdout(pipe(Output)),    % use output for debugging
+                        stderr(pipe(Output)),    % use output for debugging
                         process(PID)]),          % need PID for exit status
         process_wait(PID, Status), !,            % wait for completion
-        fd_succeeded(Status).                    % check for failures
+        fd_result(Status, Output).               % check for failures
 fastdownward(_,_,_) :-
         fd_failed.
 
 % Exit codes according to http://www.fast-downward.org/ExitCodes.
 % Block 0-9: successfull termination
-fd_succeeded(exit(N)) :-
+fd_result(exit(N),_) :-
         N < 10, !.
 % Block 10-19: unsuccessfull, but error-free termination
-fd_succeeded(exit(N)) :-
+fd_result(exit(N),_) :-
         N >= 10, N < 20, !.
 % Block 20-29: expected failures
 % Block 30-39: unrecoverable failures
-get_fd_result(exit(N)) :-
+fd_result(exit(N),Output) :-
         N >= 20, !,
+        read_string(Output,"","",_,String),
+        close(Output),
+        report_message(error,['Fast Downward output:']),
+        report_message(error,[String]),
         fail.
 
 fd_failed :-
