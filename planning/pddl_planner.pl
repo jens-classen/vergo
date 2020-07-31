@@ -670,6 +670,7 @@ delete_old_plan(_) :- !.
 
 % We use the following search/evaluator configuration because we want
 % - optimality (via A* and an admissable heuristic function)
+% - support for action costs
 % - support for full ADL, including conditional effects
 % cf. http://www.fast-downward.org/Doc/Evaluator#Additive_heuristic
 fdconf('astar(hmax(transform=no_transform(),cache_estimates=true))').
