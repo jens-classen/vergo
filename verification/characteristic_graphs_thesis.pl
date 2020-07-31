@@ -14,6 +14,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
  **/
 
+:- use_module('../transfinal/program_simplify').
+
 :- multifile use_sink_states/0.
 
 :- dynamic cg_node/4.

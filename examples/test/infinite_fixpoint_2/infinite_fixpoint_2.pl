@@ -6,6 +6,8 @@
 % many objects on the floor, but not on the table).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+:- ['../../../verification/fixpoint_ctl'].
+
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rel_fluent/1.
@@ -30,3 +32,7 @@ program(main,
 property(prop1,
          main,
          somepath(always(some(X,(onfloor(X)*(-ontable(X))))))).
+
+run_infinite :-
+        construct_characteristic_graph(main),
+        verify(main,prop1).

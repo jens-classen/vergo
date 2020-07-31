@@ -10,6 +10,8 @@ A simple BAT, mainly for testing purposes.
 
 **/
 
+:- ['../../../verification/fixpoint_ctl'].
+
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 

@@ -10,6 +10,8 @@ A simple BAT, mainly for testing purposes.
 
 **/
 
+:- ['../../../verification/abstraction_local-effect'].
+
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 

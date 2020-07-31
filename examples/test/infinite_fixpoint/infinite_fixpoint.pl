@@ -6,6 +6,8 @@
 % many instances of the f fluent).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+:- ['../../../verification/fixpoint_ctl'].
+
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rel_fluent/1.
@@ -31,3 +33,7 @@ program(main,
 property(prop1,
          main,
          somepath(always(-f('#c')))).
+
+run_infinite :-
+        construct_characteristic_graph(main),
+        verify(main,prop1).
