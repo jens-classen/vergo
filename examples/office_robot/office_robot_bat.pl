@@ -8,6 +8,10 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+:- ['../../agents/kbagent_r'].
+
+:- use_module('../../lib/utils').
+
 % todo: numerical fluents 
 
 initially(-some(X,holding(X))).
@@ -73,17 +77,19 @@ expect(4, [goto(loc('#cup'))], (loc('#robot')='#kitchen'), true).
 expect(6, [goto(loc('#cup'))], poss(pickup('#cup')), true).
 expect(7, [goto(loc('#cup')), pickup('#cup')], holding('#cup'), true).
 
-test(Prop) :-
-        expect(Prop, History, Query, Outcome),
+check(History, Query, Outcome) :-
         report_message(['Querying ask(after(', History, ',', Query,
                         ')...']),
         ask(after(History,Query), ActualOutcome),
         report_message(['  Expected Outcome: ', Outcome]),
         report_message(['  Actual   Outcome: ', ActualOutcome]),
-        report_message([]).
+        report_message([]),
+        ActualOutcome = Outcome.
 
-testall :-
-        expect(Prop,_,_,_),
-        test(Prop),
-        fail.
-testall.
+:- begin_tests(regression).
+
+test(all) :-
+        init,
+        forall(expect(_P,H,Q,O),check(H,Q,O)).
+
+:- end_tests(regression).
