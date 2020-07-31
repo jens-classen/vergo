@@ -295,7 +295,7 @@ check_ex(Program,LabelSet1,LabelSet) :-
 check_ex(Program,LabelSet1,LabelSet) :-
         use_path_labels, !,
         check_path(Program,PathLabels),
-        labelset_conjoin(LabelSet1,PathLabels,LabelSet2),
+        labelset_conjoin(Program,LabelSet1,PathLabels,LabelSet2),
         labelset_preimage(Program,LabelSet2,LabelSet).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
