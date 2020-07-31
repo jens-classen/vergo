@@ -1,3 +1,6 @@
+% verification algorithm
+:- ['../../verification/abstraction_local-effect'].
+
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rigid_r/1.
@@ -56,4 +59,4 @@ test :-
         findall(Axiom,
                 initially(Axiom),
                 Axioms),
-        consistent(Axioms).
+        dl_consistent(Axioms).
