@@ -8,10 +8,10 @@
 % 4. Validate the plan/sequence in Golog
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- ['../../agents/kbagent_r'].
-:- use_module('../../lib/utils').
-:- use_module('../../planning/pddl_parser').
-:- use_module('../../planning/pddl_planner').
+:- ['../../../agents/kbagent_r'].
+:- use_module('../../../lib/utils').
+:- use_module('../../../planning/pddl_parser').
+:- use_module('../../../planning/pddl_planner').
 
 :- dynamic type/1.
 :- dynamic subtype/2.
