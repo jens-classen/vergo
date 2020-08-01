@@ -7,6 +7,10 @@
 % verification algorithm to be tested
 :- ['../../verification/fixpoint_ctl'].
 
+:- use_module('../../lib/utils').
+:- use_module('../../logic/l').
+:- use_module('../../projection/regression').
+
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rel_fluent/1.
@@ -223,7 +227,7 @@ previous_label_set(Prog,Prop,Labels,Previous) :-
 
 report_equivalence(I,N,Psi1,Psi2) :-
         regress(Psi1,Psi3), % to macro-expand defined formulas
-        equivalent(Psi3,Psi2), !,
+        equivalent_l(Psi3,Psi2,true), !,
         report_message(['Label for node ', N, ' in iteration ', I,
                         ' is as expected.']).
 report_equivalence(I,N,Psi1,_Psi2) :- !,

@@ -20,8 +20,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../logic/fobdd').
 :- use_module('../logic/l_kb').
 :- use_module('../logic/una').
-
-:- ['characteristic_graphs_thesis'].
+:- use_module('characteristic_graphs_thesis').
 
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).

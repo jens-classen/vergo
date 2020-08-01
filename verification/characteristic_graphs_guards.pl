@@ -1,19 +1,28 @@
 /**
  
-characteristic_graphs_guards
+<module> characteristic_graphs_guards
 
-This file provides predicates for using characteristic graphs 
-that use "guards" on edges, i.e. sequences of test conditions and pick
+This module provides predicates for using characteristic graphs that
+use "guards" on edges, i.e. sequences of test conditions and pick
 operators.
 
 @author  Jens Claßen
 @license GPLv2
 
  **/
+:- module(characteristic_graphs_guards,
+          [construct_characteristic_graph/1,
+           cg_print_graph/1,
+           cg_draw_graph/1,
+           cg_node/4,
+           cg_edge/5,
+           cg_number_of_nodes/2]).
+
+:- reexport('../transfinal/transfinal_guards',
+            [guardcond/2, guardcond/3]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
-:- use_module('../logic/fobdd').
 :- use_module('../logic/fol').
 :- use_module('../transfinal/program_simplify').
 :- use_module('../transfinal/transfinal_guards').
@@ -24,6 +33,63 @@ operators.
 :- dynamic cg_edge/5.
 :- dynamic cg_number_of_nodes/2.
 
+/**
+  * cg_node(?ProgramName,?Program,?Final,?ID) is nondet.
+  *
+  * Facts of this dynamic predicate represent a single node each. They
+  * will be created when calling construct_characteristic_graph/1.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+  * @arg Program     the program expression representing what remains
+  *                  to be executed at this node
+  * @arg Final       a formula expressing under what condition program
+  *                  execution may terminate at this node
+  * @arg ID          a numerical ID that is unique for ProgramName;
+  *                  nodes are numbered consecutively, starting at 0
+  *                  (representing the initial node)
+  */
+
+/**
+  * cg_edge(?ProgramName,?FromID,?Guard,?Action,?ToID) is nondet.
+  *
+  * Facts of this dynamic predicate represent a single edge each. They
+  * will be created when calling construct_characteristic_graph/1.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+  * @arg FromID      the ID of the node from which the edge starts
+  * @arg Guard       a guard for the edge, a sequence (list) of pick
+  *                  operators and test conditions
+  * @arg Action      an action term
+  * @arg ToID        the ID of the node to where the edge leads 
+ **/
+
+/**
+  * cg_number_of_nodes(?ProgramName,?Number) is nondet.
+  *
+  * A fact of this dynamic predicate represents the number of nodes in
+  * a characteristic graph. It will be created when calling
+  * construct_characteristic_graph/1. For a graph with N nodes, node
+  * IDs will be 0,...,N-1, where 0 represents the initial node.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+  * @arg Number      the number of nodes in the graph
+ **/
+
+/**
+  * construct_characteristic_graph(+ProgramName) is det.
+  *
+  * Constructs the characteristic graph for the program of the given
+  * name. Nodes and edges will be generated in the form of newly
+  * created facts for the dynamic predicates cg_node/4 and cg_edge/5,
+  * as well as cg_number_of_nodes/2, deleting any previous instances
+  * for a program of the same name.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+ **/
 construct_characteristic_graph(ProgramName) :-
         
         % eliminate previous instances
@@ -105,7 +171,15 @@ cg_get_node_id(ProgramName,Program,ID) :-
         simplify_condition(Final,FinalS),
         assert(cg_node(ProgramName,Program,FinalS,ID)).
 
-% print description of characteristic graph to console
+/**
+  * cg_print_graph(+ProgramName) is det.
+  *
+  * Prints a textual representation of the characteristic graph for
+  * the program of the given name to standard output.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+ */
 cg_print_graph(ProgramName) :- !,
         write('================================================\n'),
         write('Characteristic graph for program \''),
@@ -163,6 +237,15 @@ cg_print_guarded_action([test(F)|Gs],Action) :- !,
         write(':'),
         cg_print_guarded_action(Gs,Action).
 
+/**
+  * cg_draw_graph(+ProgramName) is det.
+  *
+  * Generates a dot file in the temp directory for drawing the
+  * characteristic graph for the program of the given name.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+ */
 % draw characteristic graph using dot
 cg_draw_graph(ProgramName) :-
         cgraph_file(CGraphFile,ProgramName),

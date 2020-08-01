@@ -37,7 +37,7 @@ CEUR-WS.org, 2015.
 :- use_module('../reasoners/konclude', [consistent/1 as dl_consistent,
                                         inconsistent/1 as dl_inconsistent]).
 
-:- ['characteristic_graphs_guards'].
+:- use_module('characteristic_graphs_guards').
 
 :- discontiguous(stdnames_axioms/1).
 :- discontiguous(is_entailed/2).

@@ -1,6 +1,6 @@
 /**
  
-characteristic_graphs_guards
+<module> characteristic_graphs_thesis
 
 This file provides predicates for using characteristic graphs 
 as described in 
@@ -13,7 +13,18 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 @license GPLv2
 
  **/
+:- module(characteristic_graphs_thesis,
+          [construct_characteristic_graph/1,
+           cg_print_graph/1,
+           cg_draw_graph/1,
+           cg_node/4,
+           cg_edge/7,
+           cg_number_of_nodes/2]).
 
+:- use_module('../lib/utils').
+:- use_module('../lib/env').
+:- use_module('../logic/fobdd').
+:- use_module('../logic/fol').
 :- use_module('../transfinal/program_simplify').
 :- use_module('../transfinal/transfinal_thesis').
 
@@ -23,6 +34,69 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- dynamic cg_edge/7.
 :- dynamic cg_number_of_nodes/2.
 
+/**
+  * cg_node(?ProgramName,?Program,?Final,?ID) is nondet.
+  *
+  * Facts of this dynamic predicate represent a single node each. They
+  * will be created when calling construct_characteristic_graph/1.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+  * @arg Program     the program expression representing what remains
+  *                  to be executed at this node
+  * @arg Final       a formula expressing under what condition program
+  *                  execution may terminate at this node
+  * @arg ID          a numerical ID that is unique for ProgramName;
+  *                  nodes are numbered consecutively, starting at 0
+  *                  (representing the initial node)
+  */
+
+/**
+  * cg_edge(?ProgramName,?FromID,?Action,?ToID,
+  *         ?Condition1,?Vars,?Condition2) is nondet.
+  *
+  * Facts of this dynamic predicate represent a single edge each. They
+  * will be created when calling construct_characteristic_graph/1.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+  * @arg FromID      the ID of the node from which the edge starts
+  * @arg Action      an action term
+  * @arg ToID        the ID of the node to where the edge leads
+  * @arg Condition1  a formula, representing the part of this
+  *                  edge's transition condition before
+  *                  pick-quantifying the new variables
+  * @arg Vars        the newly pick-quantified variables of this edge
+  * @arg Condition2  a formula, representing the part of this
+  *                  edge's transition condition after
+  *                  pick-quantifying the new variables
+ **/
+
+/**
+  * cg_number_of_nodes(?ProgramName,?Number) is nondet.
+  *
+  * A fact of this dynamic predicate represents the number of nodes in
+  * a characteristic graph. It will be created when calling
+  * construct_characteristic_graph/1. For a graph with N nodes, node
+  * IDs will be 0,...,N-1, where 0 represents the initial node.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+  * @arg Number      the number of nodes in the graph
+ **/
+
+/**
+  * construct_characteristic_graph(+ProgramName) is det.
+  *
+  * Constructs the characteristic graph for the program of the given
+  * name. Nodes and edges will be generated in the form of newly
+  * created facts for the dynamic predicates cg_node/4 and cg_edge/7,
+  * as well as cg_number_of_nodes/2, deleting any previous instances
+  * for a program of the same name.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+ **/
 construct_characteristic_graph(ProgramName) :-
         
         % eliminate previous instances
@@ -185,3 +259,9 @@ cgraph_file(File,ProgramName) :-
         string_concat('/', ProgramNameS, S),
         string_concat(S, '_cgraph.dot', FileName),
         string_concat(TempDir, FileName, File).
+
+% use fol simplification
+simplify_fml(F,R) :- !,
+        apply_una(F,F2),
+        minimize(F2,F3),
+        apply_una(F3,R).

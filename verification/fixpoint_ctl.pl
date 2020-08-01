@@ -24,8 +24,7 @@ employed that uses "guards" on edges, i.e. sequences of test
 :- use_module('../logic/fobdd').
 :- use_module('../logic/l_kb').
 :- use_module('../logic/una').
-
-:- ['characteristic_graphs_guards'].
+:- use_module('characteristic_graphs_guards').
 
 :- dynamic labelset_maxid/1.
 :- dynamic label/4.
