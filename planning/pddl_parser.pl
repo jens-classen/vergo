@@ -1083,7 +1083,7 @@ pddl_duration_constraint(D,V,T,PV,VT,DurVar,SDurCon,EDurCon) -->
 
 % Possible bug in PDDL 3.1 grammar: the following rules allow nesting
 % of (at start ...) and (at end ...) conditions. Here we assume this
-% doesn't happen, at that no time specifier defaults to "at start".
+% doesn't happen, and that no time specifier defaults to "at start".
 
 pddl_simple_duration_constraint(D,V,T,PV,VT,DV,SCon,ECon) -->
         "(", ws, pddl_d_op(Op), ws,
@@ -1393,7 +1393,7 @@ pddl_metric_spec(D,[metric(P,M)]) -->
         {M =.. [O,E]}.
 
 pddl_optimization(minimize) --> "minimize".
-pddl_optimization(maximize) --> "maxnimize".
+pddl_optimization(maximize) --> "maximize".
 
 pddl_metric_f_exp(D,Exp) -->
         "(", ws, pddl_binary_op(Op), wp,
