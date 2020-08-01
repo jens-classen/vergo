@@ -151,7 +151,7 @@ trans_s(Program,Action,Condition) :-
 
 new_program('__undef',_,'__undef') :- !.
 new_program(P,A,Q) :-
-        trans(P,_,A,R),
+        trans(P,_,A,R), !,
         simplify_program(R,Q).
 
 new_program(_,_,_,failed).
