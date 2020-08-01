@@ -34,7 +34,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../logic/fobdd').
 :- use_module('../logic/una').
 
-:- ['../transfinal/transfinal_simple'].
+:- ['../transfinal/transfinal_guards'].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations
@@ -128,14 +128,15 @@ reduce_s(Fml1,Fml2) :- !,
         minimize(Fml4,Fml2).
 
 trans_s(Program,Action,Condition) :-
-        trans(Program,Action,_,Cond1),
+        trans(Program,Guard,Action,_),
+        guardcond(Guard,Cond1),
         minimize(Cond1,Condition).
 
 new_program('__undef',_,'__undef') :- !.
 new_program(P,A,Q) :-
-        trans(P,A,R,_), !,
+        trans(P,_,A,R), !,
         simplify_program(R,Q).
-        
+
 new_program(_,_,_,failed).
 
 update_program(Action) :-
