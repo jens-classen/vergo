@@ -1,6 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Basic Action Theory for Wumpus world, grid size 8x8
+% Wumpus World (version with direction)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+:- ['../../agents/kbagent_r'].
 
 % todo: nested functional fluents
 % todo: definitions (grid, adjacency)
@@ -12,6 +14,11 @@
 
 sensing_style(truth).
 include_preconditions.
+progression_style(adl).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Basic Action Theory
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 initially(inDungeon).
 initially(location(locWumpus)).

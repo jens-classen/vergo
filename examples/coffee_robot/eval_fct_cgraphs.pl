@@ -1,6 +1,6 @@
 :- dynamic(def/2).
 
-:- ['main_fct'].
+:- ['coffee_bat_fct'].
 
 experiment(QueueSize,FileName,TimeOutC,TimeOutP) :- 
         local_time_and_date_as_string(TimeS),

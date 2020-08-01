@@ -1,6 +1,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Basic Action Theory for (simple version) of Wumpus world
+% Wumpus World (simple version without direction)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% agent
+:- ['../../agents/kbagent_p'].
+
+% simulator
+:- ['wumpus_sim'].
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
@@ -14,6 +20,10 @@ grid_size(3). % default for testing, overwritten in main file
 sensing_style(truth).
 include_preconditions.
 progression_style(adl).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Basic Action Theory
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 initially(at('#room-0-0')).
 % initially(-hasGold). % by CWA
@@ -95,3 +105,25 @@ senses(senseGold,some_t([X-loc],at(X)*gold(X))).
 def(wumpusNearby,some_t([R1-loc,D-dir,R2-loc],at(R1)*adj(R1,D,R2)*wumpus(R2))).
 def(pitNearby,some_t([R1-loc,D-dir,R2-loc],at(R1)*adj(R1,D,R2)*pit(R2))).
 def(aimingAtWumpus(D),some_t([R1-loc,R2-loc],at(R1)*wumpus(R2)*facing(R1,D,R2))).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Top-Level
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+initialize :-
+        initialize(3).
+
+initialize(GridSize) :-
+        retractall(grid_size(_)),
+        assert(grid_size(GridSize)),
+        create, % wumpus_sim
+        init.   % kbagent_r
+
+% todo: what if action not possible? (Java exception, sensing result?)
+perform(Action) :-
+        ask(poss(Action),true),
+        do_action(Action,SensingResult),  % wumpus_sim
+        execute(Action,SensingResult).    % kbagent_r
+
+finalize :-
+        destroy.

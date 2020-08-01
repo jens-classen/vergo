@@ -81,9 +81,9 @@ To get started with verification by fixpoint computation, consider the
 `coffee_robot` domain in the `examples` directory. Look at the file
 `coffee_bat_fct.pl` and how actions, fluents, programs and temporal
 properties are defined in it. From within the directory, call
-SWI-Prolog and consult the main file:
+SWI-Prolog and consult the file:
 
-    ?- [main_fct].
+    ?- [coffee_bat_fct].
 
 Next, construct the characteristic graph via
 

@@ -1,3 +1,5 @@
+:- ['../../agents/kbagent_r'].
+
 :- use_module('../../lib/utils').
 
 rel_rigid(teach(_,_)).

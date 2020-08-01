@@ -1,7 +1,11 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Basic Action Theory for coffee delivery robot
-% Variant with infinite "queue", which is acutally a stack
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% - infinite "queue" (actually, a stack)
+% - queue represented by functional fluent
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% verification algorithm to be tested
+:- ['../../verification/fixpoint_ctl'].
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.

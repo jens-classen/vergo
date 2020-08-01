@@ -50,6 +50,8 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 :- use_module('../logic/fobdd').
 :- use_module('../logic/una').
 
+:- ['../transfinal/transfinal_simple'].
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,6 +1,11 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Basic Action Theory for coffee delivery robot, queue size 2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Basic Action Theory for coffee delivery robot
+% - finite queue of size 2
+% - queue represented by relational fluent
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% verification algorithm to be tested
+:- ['../../verification/fixpoint_ctl'].
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
