@@ -33,8 +33,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../logic/l_kb').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/una').
-
-:- ['../transfinal/transfinal_guards'].
+:- use_module('../transfinal/transfinal_guards').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations

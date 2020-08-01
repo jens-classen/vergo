@@ -1,8 +1,8 @@
 /**
  
-transfinal_thesis
+<module> transfinal_thesis
 
-This file provides predicates for defining a transition semantics for
+This modiles provides predicates defining a transition semantics for
 Golog programs that also serves as a set of rules for constructing the
 characteristic graphs of such programs. Cf.
 
@@ -14,9 +14,12 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 @license GPLv2
 
  **/
+:- module(transfinal_thesis, [step/6, trans/6, trans/4, final/2]).
 
 :- use_module('../logic/cwa').
 :- use_module('program_simplify').
+
+:- multifile user:include_preconditions.
 
 /**
  * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
@@ -43,17 +46,17 @@ trans(Prog1,Act,Prog2,Cond) :-
  * evaluated after variable instantiation.
  **/
 trans(A,A,[],true,[],true) :-
-        not(include_preconditions),
+        not(user:include_preconditions),
         var(A), !.
 trans(A,A,[],true,[],true) :-
-        not(include_preconditions),
+        not(user:include_preconditions),
         nonvar(A),
         (poss(A,_);poss(A,_,_)), !.
 trans(A,A,[],true,[],poss(A)) :-
-        include_preconditions,
+        user:include_preconditions,
         var(A), !.
 trans(A,A,[],true,[],poss(A)) :-
-        include_preconditions,
+        user:include_preconditions,
         nonvar(A),
         (poss(A,_);poss(A,_,_)), !.
 trans(test(_),_,_,_,_,_) :- !, 

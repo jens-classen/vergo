@@ -15,8 +15,8 @@ operators.
 :- use_module('../lib/env').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/fol').
-
-:- ['../transfinal/transfinal_guards'].
+:- use_module('../transfinal/program_simplify').
+:- use_module('../transfinal/transfinal_guards').
 
 :- multifile use_sink_states/0.
 

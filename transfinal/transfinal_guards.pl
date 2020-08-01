@@ -1,8 +1,8 @@
 /**
  
-transfinal_guards
+<module> transfinal_guards
 
-This file provides predicates for defining a transition semantics for
+This module provides predicates defining a transition semantics for
 Golog programs that also serves as a set of rules for constructing the
 characteristic graphs of such programs. This is a new version that
 uses "guards" as transition conditions, i.e. sequences that
@@ -12,11 +12,13 @@ arbitrarily alternate between pick quantifiers and condition formulas.
 @license GPLv2
 
  **/
+:- module(transfinal_guards, [step/4, trans/4, final/2,
+                              guardcond/2, guardcond/3]).
 
 :- use_module('../logic/cwa').
 :- use_module('program_simplify').
 
-:- multifile include_preconditions/0.
+:- multifile user:include_preconditions/0.
 
 /**
  * trans(+Prog1,?Guard,?Action,?Prog2) is nondet
@@ -25,17 +27,17 @@ arbitrarily alternate between pick quantifiers and condition formulas.
  * (possibly non-ground) action Action, guarded by Guard. 
  **/
 trans(A,[],A,[]) :-
-        not(include_preconditions),
+        not(user:include_preconditions),
         var(A), !.
 trans(A,[],A,[]) :-
-        not(include_preconditions),
+        not(user:include_preconditions),
         nonvar(A),
         (poss(A,_);poss(A,_,_)), !.
 trans(A,[test(poss(A))],A,[]) :-
-        include_preconditions,
+        user:include_preconditions,
         var(A), !.
 trans(A,[test(poss(A))],A,[]) :-
-        include_preconditions,
+        user:include_preconditions,
         nonvar(A),
         (poss(A,_);poss(A,_,_)), !.
 trans(test(_),_,_,_) :- !, 

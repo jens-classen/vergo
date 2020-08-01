@@ -15,6 +15,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
  **/
 
 :- use_module('../transfinal/program_simplify').
+:- use_module('../transfinal/transfinal_thesis').
 
 :- multifile use_sink_states/0.
 
