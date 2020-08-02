@@ -13,6 +13,7 @@
                verify/2 as verify_thesis]).
                
 :- use_module('../../lib/utils').
+:- use_module('../../logic/def').
 :- use_module('../../logic/l').
 :- use_module('../../projection/regression').
 
@@ -273,7 +274,7 @@ actual_label(Prog,Prop,I,N,Psi) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 report_equivalence(I,N,Psi1,Psi2) :-
-        regress(Psi1,Psi3), % to macro-expand defined formulas
+        expand_defs(Psi1,Psi3),
         equivalent_l(Psi3,Psi2,true), !,
         report_message(['Label for node ', N, ' in iteration ', I,
                         ' is as expected.']).

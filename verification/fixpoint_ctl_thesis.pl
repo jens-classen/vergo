@@ -18,6 +18,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 :- use_module('../projection/regression').
+:- use_module('../logic/def').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/l_kb').
 :- use_module('../logic/una').
@@ -37,7 +38,6 @@ use_path_labels(false).
 %% To Do List
 %% ----------
 %% - todo: property(propX,somepath(main,always(F)))
-%% - todo: remove defs without call to regress
 %% - todo: pretty print formulas/programs (also using defs)
 %% - todo: full check method
 %% - todo: work directly on BDDs
@@ -182,7 +182,7 @@ check_eg(P,Phi,Result) :-
 check_label(_P,eg(_Phi),-1,_N,false).
 
 check_label(_P,eg(Phi),0,_N,F) :-
-        regress(Phi,PhiR),   % b/c of defs
+        expand_defs(Phi,PhiR),
         simplify_fml(PhiR,F).
 
 check_label(P,eg(Phi),I,N,F) :-
@@ -209,7 +209,7 @@ check_label(_P,eu(_Phi1,_Phi2),-1,_N,true).
 
 check_label(P,eu(_Phi1,Phi2),0,N,F) :-
         path_label(P,N,Path),
-        regress(Phi2,Phi2R),   % b/c of defs
+        expand_defs(Phi2,Phi2R),
         simplify_fml(Phi2R*Path,F).
 
 check_label(P,eu(Phi1,Phi2),I,N,F) :-
@@ -217,7 +217,7 @@ check_label(P,eu(Phi1,Phi2),I,N,F) :-
         I1 is I-1,
         cg_label(P,eu(Phi1,Phi2),I1,N,Old),
         preimage(P,eu(Phi1,Phi2),I1,N,Pre),  
-        regress(Phi1,Phi1R),   % b/c of defs      
+        expand_defs(Phi1,Phi1R),
         simplify_fml(Old+(Phi1R*Pre),F).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -236,7 +236,7 @@ check_post(P,Phi,Result) :-
 check_label(_P,post(_Phi),-1,_N,true).
 
 check_label(P,post(Phi),0,N,F) :-
-        regress(Phi,PhiR),   % b/c if defs
+        expand_defs(Phi,PhiR),
         simplify_fml(PhiR,PhiRS),
         final_label(P,N,PhiRS,F).
 

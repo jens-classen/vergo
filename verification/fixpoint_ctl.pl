@@ -22,6 +22,7 @@ conditions and pick operators.
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 :- use_module('../projection/regression').
+:- use_module('../logic/def').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/l_kb').
 :- use_module('../logic/una').
@@ -41,7 +42,6 @@ conditions and pick operators.
 %% - todo: sink states / path labels?
 %% - todo: characteristic graphs: subprograms as identifiers?
 %% - todo: characteristic graphs: termconds outside of nodes
-%% - todo: remove defs without call to regress
 %% - todo: pretty print formulas/programs (also using defs)
 %% - todo: work directly on BDDs
 %% - todo: CTL*
@@ -170,7 +170,7 @@ labelset_create(Program,Formula,LabelSet) :-
         labelset(Program,Formula1,LabelSet),
         Formula == Formula1, !. % b/c of variables
 labelset_create(Program,Formula,LabelSet) :- !,
-        regress(Formula,FormulaR), % b/c of defs
+        expand_defs(Formula,FormulaR),
         simplify_fml(FormulaR,FormulaS),
         labelset_increment(LabelSet),
         forall(cg_node(Program,_P,_F,NodeID),
