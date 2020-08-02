@@ -650,6 +650,10 @@ regress(concept_assertion(C,N),E,concept_assertion(CR,N)) :- !,
 regress(role_assertion(R,N1,N2),E,R) :- !,
         regress(concept_assertion(some(R,oneof([N2])),N1),E,R).
 
+regress(poss(A),E,R) :-
+        poss(A,F), !,
+        regress(F,E,R).
+
 regress(Atom,E,(Atom+RP)*RN) :-
         regress_pos(Atom,E,RP),
         regress_neg(Atom,E,RN).
