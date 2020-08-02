@@ -23,9 +23,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
-:- use_module('../logic/fobdd').
 :- use_module('../logic/fol').
-:- use_module('../logic/una').
 :- use_module('../transfinal/program_simplify').
 :- use_module('../transfinal/transfinal_thesis').
 
@@ -129,9 +127,9 @@ cg_construction_step(ProgramName) :-
         % whose program has a possible transition
         transition(Program,Action,NewProgram,Condition1,Vars,Condition2),
 
-        simplify_fml(Condition1,SimplifiedCondition1),
+        simplify(Condition1,SimplifiedCondition1),
         SimplifiedCondition1\=false,
-        simplify_fml(Condition2,SimplifiedCondition2),
+        simplify(Condition2,SimplifiedCondition2),
         SimplifiedCondition2\=false,
         simplify_program(NewProgram,NewSimplifiedProgram),
         cg_get_node_id(ProgramName,NewSimplifiedProgram,NewID),
@@ -166,7 +164,7 @@ cg_get_node_id(ProgramName,Program,ID) :-
         NextID is ID+1,
         assert(cg_number_of_nodes(ProgramName,NextID)),
         is_final(Program,Final),
-        simplify_fml(Final,FinalS),
+        simplify(Final,FinalS),
         assert(cg_node(ProgramName,Program,FinalS,ID)).
 
 % print description of characteristic graph to console
@@ -260,9 +258,3 @@ cgraph_file(File,ProgramName) :-
         string_concat('/', ProgramNameS, S),
         string_concat(S, '_cgraph.dot', FileName),
         string_concat(TempDir, FileName, File).
-
-% use fol simplification
-simplify_fml(F,R) :- !,
-        apply_una(F,F2),
-        minimize(F2,F3),
-        apply_una(F3,R).
