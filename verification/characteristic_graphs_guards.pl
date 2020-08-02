@@ -154,9 +154,9 @@ simplify_guard([pick(V),test(F)|G],R) :- %push picks inwards when possible
 simplify_guard([test(F1),test(F2)|G],R) :- !,
         simplify_guard([test(F1*F2)|G],R).
 simplify_guard([test(F)|_],[test(false)]) :-
-        simplify_condition(F,false), !.
+        simplify(F,false), !.
 simplify_guard([test(F)|G],[test(FS)|R]) :- !,
-        simplify_condition(F,FS),
+        simplify(F,FS),
         simplify_guard(G,R).
 simplify_guard([pick(V)|G],[pick(V)|R]) :- !,
         simplify_guard(G,R).
@@ -168,7 +168,7 @@ cg_get_node_id(ProgramName,Program,ID) :-
         NextID is ID+1,
         assert(cg_number_of_nodes(ProgramName,NextID)),
         is_final(Program,Final),
-        simplify_condition(Final,FinalS),
+        simplify(Final,FinalS),
         assert(cg_node(ProgramName,Program,FinalS,ID)).
 
 /**
@@ -284,13 +284,3 @@ cgraph_file(File,ProgramName) :-
         string_concat('/', ProgramNameS, S),
         string_concat(S, '_cgraph.dot', FileName),
         string_concat(TempDir, FileName, File).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Formula Representation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% simple simplifications should be enough here
-simplify_condition(F,R) :- !,
-        simplify(F,R).
