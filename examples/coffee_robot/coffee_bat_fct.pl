@@ -7,6 +7,11 @@
 % verification algorithm to be tested
 :- use_module('../../verification/fixpoint_ctl').
 
+:- use_module('../../verification/fixpoint_ctl_thesis',
+              [construct_characteristic_graph/1 as
+               construct_characteristic_graph_thesis,
+               verify/2 as verify_thesis]).
+               
 :- use_module('../../lib/utils').
 :- use_module('../../logic/l').
 :- use_module('../../projection/regression').
@@ -225,6 +230,48 @@ previous_label_set(Prog,Prop,Labels,Previous) :-
         property(Prop,Prog,somepath(until(_Phi1,_Phi2))), !,
         fixpoint_ctl:labelset(Prog,Previous+_,Labels).
 
+:- end_tests(fixpoint_ctl).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Test of old fixpoint verification method
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- begin_tests(fixpoint_ctl_thesis).
+
+test(checkeu) :-
+        test_prog_prop(main,prop2).
+
+test(checkeg) :-
+        test_prog_prop(main,prop4).
+
+test_prog_prop(Program,Prop) :-
+        construct_characteristic_graph_thesis(Program),
+        fixpoint_ctl_thesis:check(Program,Prop,R),
+        report_message(['Result is: ', R]),
+        check_expected_labels(Program,Prop).
+
+check_expected_labels(Prog,Phi) :-
+        expected_label(Prog,Phi,I,N,Psi1),
+        actual_label(Prog,Phi,I,N,Psi2),
+        report_equivalence(I,N,Psi1,Psi2),
+        fail.
+check_expected_labels(_,_).
+
+actual_label(Prog,Prop,I,N,Psi) :-
+        property(Prop,Prog,somepath(next(Phi))),
+        fixpoint_ctl_thesis:cg_label(Prog,ex(Phi),I,N,Psi).
+actual_label(Prog,Prop,I,N,Psi) :-
+        property(Prop,Prog,somepath(always(Phi))),
+        fixpoint_ctl_thesis:cg_label(Prog,eg(Phi),I,N,Psi).
+actual_label(Prog,Prop,I,N,Psi) :-
+        property(Prop,Prog,somepath(until(Phi1,Phi2))),
+        fixpoint_ctl_thesis:cg_label(Prog,eu(Phi1,Phi2),I,N,Psi).
+
+:- end_tests(fixpoint_ctl_thesis).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Shared code for all tests
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 report_equivalence(I,N,Psi1,Psi2) :-
         regress(Psi1,Psi3), % to macro-expand defined formulas
         equivalent_l(Psi3,Psi2,true), !,
@@ -233,35 +280,3 @@ report_equivalence(I,N,Psi1,Psi2) :-
 report_equivalence(I,N,Psi1,_Psi2) :- !,
         report_message(['Unexpected label for node ', N, ' in iteration ', I,
                         ': ', Psi1]).
-
-:- end_tests(fixpoint_ctl).
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % Test of old fixpoint verification method
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% :- begin_tests(fixpoint_ctl_thesis).
-
-% test(Program,Prop) :-
-%         construct_characteristic_graph(Program),
-%         check(Program,Prop,R),
-%         report_message(['Result is: ', R]),
-%         check_expected_labels(Program,Prop).
-
-% check_expected_labels(Prog,Phi) :-
-%         expected_label(Prog,Phi,I,N,Psi1),
-%         actual_label(Prog,Phi,I,N,Psi2),
-%         report_equivalence(I,N,Psi1,Psi2),
-%         fail.
-% check_expected_labels(_,_).
-
-% actual_label(Prog,Prop,I,N,Psi) :-
-%         property(Prop,Prog,somepath(next(Phi))),
-%         cg_label(Prog,ex(Phi),I,N,Psi).
-% actual_label(Prog,Prop,I,N,Psi) :-
-%         property(Prop,Prog,somepath(always(Phi))),
-%         cg_label(Prog,eg(Phi),I,N,Psi).
-% actual_label(Prog,Prop,I,N,Psi) :-
-%         property(Prop,Prog,somepath(until(Phi1,Phi2))),
-%         cg_label(Prog,eu(Phi1,Phi2),I,N,Psi).
-
-% :- end_tests(fixpoint_ctl_thesis).
