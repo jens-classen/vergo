@@ -18,7 +18,7 @@ arbitrarily alternate between pick quantifiers and condition formulas.
 :- use_module('../logic/cwa').
 :- use_module('program_simplify').
 
-:- multifile user:include_preconditions/0.
+:- multifile user:ignore_preconditions/0.
 
 /**
  * trans(+Prog1,?Guard,?Action,?Prog2) is nondet
@@ -27,17 +27,17 @@ arbitrarily alternate between pick quantifiers and condition formulas.
  * (possibly non-ground) action Action, guarded by Guard. 
  **/
 trans(A,[],A,[]) :-
-        not(user:include_preconditions),
+        user:ignore_preconditions,
         var(A), !.
 trans(A,[],A,[]) :-
-        not(user:include_preconditions),
+        user:ignore_preconditions,
         nonvar(A),
         (poss(A,_);poss(A,_,_)), !.
 trans(A,[test(poss(A))],A,[]) :-
-        user:include_preconditions,
+        not(user:ignore_preconditions),
         var(A), !.
 trans(A,[test(poss(A))],A,[]) :-
-        user:include_preconditions,
+        not(user:ignore_preconditions),
         nonvar(A),
         (poss(A,_);poss(A,_,_)), !.
 trans(test(_),_,_,_) :- !, 

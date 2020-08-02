@@ -25,8 +25,6 @@ poss(b,-p).
 causes_true(b,p,-p).
 causes_false(a,p,p).
 
-include_preconditions.
-
 program(control,loop([a,b])).
 
 property(prop1, 

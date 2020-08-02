@@ -15,7 +15,7 @@ poss(action(_),true).
 
 causes_true(action(Y),predicate(Y),true).
 
-%include_preconditions.
+ignore_preconditions.
 
 /** Footnote 5, page 190 in
 Jens Claßen: Planning and Verification in the Agent Language Golog.

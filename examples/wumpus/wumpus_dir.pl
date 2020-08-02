@@ -13,7 +13,6 @@
 :- discontiguous def/2.
 
 sensing_style(truth).
-include_preconditions.
 progression_style(adl).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

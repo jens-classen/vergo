@@ -19,7 +19,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../logic/cwa').
 :- use_module('program_simplify').
 
-:- multifile user:include_preconditions.
+:- multifile user:ignore_preconditions.
 
 /**
  * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
@@ -46,17 +46,17 @@ trans(Prog1,Act,Prog2,Cond) :-
  * evaluated after variable instantiation.
  **/
 trans(A,A,[],true,[],true) :-
-        not(user:include_preconditions),
+        user:ignore_preconditions,
         var(A), !.
 trans(A,A,[],true,[],true) :-
-        not(user:include_preconditions),
+        user:ignore_preconditions,
         nonvar(A),
         (poss(A,_);poss(A,_,_)), !.
 trans(A,A,[],true,[],poss(A)) :-
-        user:include_preconditions,
+        not(user:ignore_preconditions),
         var(A), !.
 trans(A,A,[],true,[],poss(A)) :-
-        user:include_preconditions,
+        not(user:ignore_preconditions),
         nonvar(A),
         (poss(A,_);poss(A,_,_)), !.
 trans(test(_),_,_,_,_,_) :- !, 

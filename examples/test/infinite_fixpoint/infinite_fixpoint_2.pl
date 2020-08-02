@@ -22,8 +22,6 @@ poss(put_on_table(_),true).
 causes_false(put_on_table(X),onfloor(X),true).
 causes_true(put_on_table(X),ontable(X),true).
 
-%include_preconditions. % no precondition extension
-
 program(main,
         while(some(X,(onfloor(X)*(-ontable(X)))),
                pick(X,[test(onfloor(X)*(-ontable(X))),

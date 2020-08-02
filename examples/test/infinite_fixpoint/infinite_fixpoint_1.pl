@@ -22,8 +22,6 @@ poss(b(_),true).
 causes_true(b(X),f(X),true).
 causes_false(a(X),f(X),true).
 
-%include_preconditions. % no precondition extension
-
 program(main,
         [while(some(X,f(X)),
                pick(X,[test(f(X)),

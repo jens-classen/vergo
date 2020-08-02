@@ -30,7 +30,6 @@
 :- multifile user:exo/2.
 :- multifile user:senses/2.
 :- multifile user:senses/3.
-:- multifile user:include_preconditions/0.
 :- multifile user:sensing_style/1.
 
 % poss if A is a variable => big disjunction over all cases

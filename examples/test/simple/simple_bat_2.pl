@@ -27,8 +27,6 @@ stdname(n).
 causes_true(b,p,true).
 causes_false(a,p,true).
 
-include_preconditions.
-
 program(fin,nondet([a,a],[a,b])).
 
 
