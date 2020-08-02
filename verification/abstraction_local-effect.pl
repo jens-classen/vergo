@@ -653,6 +653,11 @@ regress(role_assertion(R,N1,N2),E,R) :- !,
 regress(poss(A),E,R) :-
         poss(A,F), !,
         regress(F,E,R).
+regress(poss(A),E,R) :-
+        poss(A,T,F1), !,
+        types_cons(T,F2),
+        conjoin([F1|F2],F),
+        regress(F,E,R).
 
 regress(Atom,E,(Atom+RP)*RN) :-
         regress_pos(Atom,E,RP),
