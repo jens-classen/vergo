@@ -1,7 +1,10 @@
+:- ['dish_robot_bat'].
+
+:- use_module('../../lib/utils').
+:- use_module('../../verification/abstraction_local-effect').
+
 :- dynamic(initially/1).
 :- dynamic(domain/2).
-
-:- ['main_abstraction'].
 
 % Runs one experiment, i.e. _all_ 5 properties tested on _one_
 % conbination of rooms, dishes and initial theory. To avoid
@@ -44,9 +47,9 @@ experiment(Rooms,Dishes,InitialTheory,FileName,TimeOutC,TimeOutP) :-
         append_to_csv(FileName,Row).
 
 number_of_nodes(Nodes) :-
-        count(abstract_state(_,_,_,_),Nodes).
+        count('abstraction_local-effect':abstract_state(_,_,_,_),Nodes).
 number_of_edges(Edges) :-
-        count(abstract_trans(_,_,_,_,_,_),Edges).
+        count('abstraction_local-effect':abstract_trans(_,_,_,_,_,_),Edges).
 
 /**
  * assert_domain_atoms(+Domain,+Prefix,+N) is det

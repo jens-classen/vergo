@@ -2,8 +2,9 @@
 :- dynamic(domain/2).
 
 :- use_module('../../lib/utils').
+:- use_module('../../verification/fixpoint_ctl').
 
-:- ['main_cgraphs'].
+:- ['dish_robot_bat'].
 
 % Runs one experiment, i.e. _all_ 5 properties tested on _one_
 % conbination of rooms, dishes and initial theory. To avoid

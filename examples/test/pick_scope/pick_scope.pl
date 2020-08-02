@@ -3,8 +3,7 @@
 % operators in the characteristic graph.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- ['../../../verification/fixpoint_ctl_thesis'].
-
+:- use_module('../../../verification/fixpoint_ctl_thesis').
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.

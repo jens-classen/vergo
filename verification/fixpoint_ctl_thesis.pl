@@ -1,6 +1,6 @@
 /**
  
-fixpoint_ctl_thesis
+<module> fixpoint_ctl_thesis
 
 This file implements a verification algorithm for Golog programs based
 on the methods described in
@@ -13,6 +13,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 @license GPLv2
 
  **/
+:- module(fixpoint_ctl_thesis, [verify/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
@@ -21,6 +22,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../logic/l_kb').
 :- use_module('../logic/una').
 :- use_module('characteristic_graphs_thesis').
+
+:- reexport('characteristic_graphs_thesis').
 
 :- discontiguous(check_label/5).
 :- discontiguous(check/3).
@@ -49,8 +52,18 @@ use_path_labels(false).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * verify(+Program,+Property)
-  **/
+  * verify(+ProgramName,+PropertyName) is det.
+  *
+  * Verifies the property of the given name for the program of the
+  * given name on the previously created characteristic graph.
+  * Verification results (truth value and fixpoint formula) will be
+  * printed to standard output.
+  *
+  * @arg ProgramName  the name of a program, defined by the user via a
+  *                   fact over the predicate program/2
+  * @arg PropertyName the name of a property, defined by the user via a
+  *                   fact over the predicate property/3
+ **/
 verify(Program,Property) :- !,
         report_message(['Verifying property \'', Property,
                         '\' for program \'', Program, '\'...']),

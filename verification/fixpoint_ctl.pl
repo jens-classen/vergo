@@ -1,9 +1,9 @@
 /**
  
-fixpoint_ctl
+<module> fixpoint_ctl
 
-This file implements a verification algorithm for Golog programs based
-on the methods described in
+This module implements a verification algorithm for Golog programs
+based on the methods described in
 
 Jens Claßen: Planning and Verification in the Agent Language Golog.
 PhD Thesis, Department of Computer Science, RWTH Aachen University,
@@ -11,12 +11,13 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 
 with the difference that a new definition of characteristic graphs is
 employed that uses "guards" on edges, i.e. sequences of test
- conditions and pick operators.
+conditions and pick operators.
 
 @author  Jens Claßen
 @license GPLv2
 
  **/
+:- module(fixpoint_ctl, [verify/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
@@ -25,6 +26,8 @@ employed that uses "guards" on edges, i.e. sequences of test
 :- use_module('../logic/l_kb').
 :- use_module('../logic/una').
 :- use_module('characteristic_graphs_guards').
+
+:- reexport('characteristic_graphs_guards').
 
 :- dynamic labelset_maxid/1.
 :- dynamic label/4.
@@ -51,8 +54,18 @@ employed that uses "guards" on edges, i.e. sequences of test
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * verify(+Program,+Property)
-  **/
+  * verify(+ProgramName,+PropertyName) is det.
+  *
+  * Verifies the property of the given name for the program of the
+  * given name on the previously created characteristic graph.
+  * Verification results (truth value and fixpoint formula) will be
+  * printed to standard output.
+  *
+  * @arg ProgramName  the name of a program, defined by the user via a
+  *                   fact over the predicate program/2
+  * @arg PropertyName the name of a property, defined by the user via a
+  *                   fact over the predicate property/3
+ **/
 verify(Program,Property) :- !,
         report_message(['Verifying property \'', Property,
                         '\' for program \'', Program, '\'...']),

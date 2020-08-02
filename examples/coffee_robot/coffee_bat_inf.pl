@@ -5,7 +5,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % verification algorithm to be tested
-:- ['../../verification/fixpoint_ctl'].
+:- use_module('../../verification/fixpoint_ctl').
 
 :- use_module('../../lib/utils').
 :- use_module('../../logic/l').

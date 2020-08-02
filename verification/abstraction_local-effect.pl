@@ -1,9 +1,9 @@
 /**
  
-verify_abstraction
+<module> abstraction_local-effect
 
-This file implements a verification algorithm for Golog programs based
-on the construction described in the papers
+This module implements a verification algorithm for Golog programs
+based on the construction described in the papers
 
 Benjamin Zarrieß and Jens Claßen:
 Verifying CTL* Properties of Golog Programs over Local-Effect Actions.
@@ -28,6 +28,7 @@ CEUR-WS.org, 2015.
 @license GPLv2
 
  **/
+:- module('abstraction_local-effect', [compute_abstraction/1, verify/1]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
@@ -68,6 +69,17 @@ CEUR-WS.org, 2015.
 
 % TODO: include support for closed-world assumption
 
+/**
+  * compute_abstraction(+ProgramName) is det.
+  *
+  * Computes the abstract transition system for the program of the
+  * given name. Nodes and transitions will be generated in the form of
+  * newly created facts for the dynamic predicates abstract_state/4
+  * and abstract_trans/6.
+  *
+  * @arg ProgramName the name of a program, defined by the user via a
+  *                  fact over the predicate program/2
+ **/
 compute_abstraction(ProgramName) :-
         
         retractall(program_to_verify(ProgramName)),
@@ -77,6 +89,18 @@ compute_abstraction(ProgramName) :-
         construct_propositional_mapping,
         translate_to_smv.
 
+/**
+  * verify(+PropertyName) is det.
+  *
+  * Verifies the property of the given name on the previously created
+  * abstract transition system by means of translating the
+  * corresponding propositional mapping to the model checker NuSMV.
+  * Verification results (truth value and counterexample) will be
+  * printed to standard output.
+  *
+  * @arg PropertyName the name of a property, defined by the user via a
+  *                   fact over the predicate property/3
+ **/
 verify(PropertyName) :-
         
        map_property(N,PropertyName,Property),
@@ -107,7 +131,7 @@ init_construction :-
         determine_property_subformulas(ProgramName),
         
         % determine the KB (initial theory)
-        findall(F,initially(F),KB),
+        findall(F,user:initially(F),KB),
         
         % remove old instances of dynamic predicates
         retractall(abstract_state(_,_,_,_)),
@@ -494,7 +518,7 @@ is_inconsistent(Formulas) :- !,
 
 stdnames_axioms(Axioms) :-
         findall(-(X=Y),
-                (stdname(X),stdname(Y),not(X=Y),(X @< Y)),
+                (user:stdname(X),user:stdname(Y),not(X=Y),(X @< Y)),
                 Axioms).
 
 is_entailed(Formulas,Formula) :-
@@ -549,16 +573,16 @@ is_effect(Formulas,Action,Effect) :-
 
 % need this for integrating types
 pos_effect_con(Action,Fluent,Condition) :-
-        rel_fluent(Fluent),
-        causes_true(Action,Fluent,Condition).
+        user:rel_fluent(Fluent),
+        user:causes_true(Action,Fluent,Condition).
 pos_effect_con(Action,Fluent,Condition) :-
-        rel_fluent(Fluent,Types),
-        causes_true(Action,Fluent,EffCon),
+        user:rel_fluent(Fluent,Types),
+        user:causes_true(Action,Fluent,EffCon),
         types_cons(Types,TyCons),
         conjoin([EffCon|TyCons],Condition).
 neg_effect_con(Action,Fluent,Condition) :-
-        rel_fluent(Fluent),
-        causes_false(Action,Fluent,Condition).
+        user:rel_fluent(Fluent),
+        user:causes_false(Action,Fluent,Condition).
 
 apply_effects(Literals,Effects,NewEffects) :- !,
         apply_neg_effects(Literals,Effects,Effects2),
@@ -736,7 +760,7 @@ regress_dl_list([C|Cs],E,[R|Rs]) :- !,
 regress_dl_list([],_E,[]) :- !.
 
 all_individuals(Ind) :- !,
-        findall(N,stdname(N),Ind).
+        findall(N,user:stdname(N),Ind).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -760,7 +784,7 @@ construct_propositional_mapping :-
         
         % determine properties
         findall((Prop,PropName),
-                property(PropName,ProgramName,Prop),
+                user:property(PropName,ProgramName,Prop),
                 Properties),
         memorize_properties(Properties,0),
         

@@ -1,10 +1,13 @@
 % verification algorithm
-:- ['../../verification/abstraction_local-effect'].
+:- use_module('../../verification/abstraction_local-effect').
+
+% DL reasoning
+:- use_module('../../reasoners/konclude', [consistent/1 as dl_consistent,
+                                        inconsistent/1 as dl_inconsistent]).
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 :- discontiguous rigid_r/1.
-
 
 % TBox
 initially(subsumedBy(fault,or([crit_fault,uncrit_fault]))).

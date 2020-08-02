@@ -8,6 +8,7 @@
 :- use_module('cwa').
 :- use_module('def').
 :- use_module('l').
+:- use_module('una').
 :- use_module('../lib/utils').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

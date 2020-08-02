@@ -5,7 +5,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % verification algorithm to be tested
-:- ['../../verification/fixpoint_ctl'].
+:- use_module('../../verification/fixpoint_ctl').
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.

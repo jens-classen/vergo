@@ -5,7 +5,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % verification algorithm to be tested
-:- ['../../verification/fixpoint_ctl'].
+:- use_module('../../verification/fixpoint_ctl').
 
 :- use_module('../../lib/utils').
 :- use_module('../../logic/l').
@@ -192,7 +192,7 @@ test(checkeg) :-
 
 test_prog_prop(Program,Prop) :-
         construct_characteristic_graph(Program),
-        check_ctl(Program,Prop,LabelSet), !,
+        fixpoint_ctl:check_ctl(Program,Prop,LabelSet), !,
         check_expected_labels(Program,Prop,LabelSet).
 
 check_expected_labels(Prog,Prop,LabelSet) :-
@@ -213,17 +213,17 @@ check_expected_labels_by_nodes(Prog,Prop,Iter,LabelSet) :-
 check_expected_labels_by_nodes(_Prog,_Prop,N,N,_Iter,_LabelSet) :- !.
 check_expected_labels_by_nodes(Prog,Prop,J,N,Iter,LabelSet) :- !,
         expected_label(Prog,Prop,Iter,J,Psi1),
-        label(Prog,J,Psi2,LabelSet),
+        fixpoint_ctl:label(Prog,J,Psi2,LabelSet),
         report_equivalence(Iter,J,Psi1,Psi2),
         J1 is J+1,
         check_expected_labels_by_nodes(Prog,Prop,J1,N,Iter,LabelSet).
 
 previous_label_set(Prog,Prop,Labels,Previous) :-
         property(Prop,Prog,somepath(always(_Phi))), !,
-        labelset(Prog,Previous*_,Labels).
+        fixpoint_ctl:labelset(Prog,Previous*_,Labels).
 previous_label_set(Prog,Prop,Labels,Previous) :-
         property(Prop,Prog,somepath(until(_Phi1,_Phi2))), !,
-        labelset(Prog,Previous+_,Labels).
+        fixpoint_ctl:labelset(Prog,Previous+_,Labels).
 
 report_equivalence(I,N,Psi1,Psi2) :-
         regress(Psi1,Psi3), % to macro-expand defined formulas
