@@ -216,19 +216,19 @@ check_expected_labels_by_nodes(Prog,Prop,Iter,LabelSet) :-
         cg_number_of_nodes(Prog,N), !,
         check_expected_labels_by_nodes(Prog,Prop,0,N,Iter,LabelSet).
 check_expected_labels_by_nodes(_Prog,_Prop,N,N,_Iter,_LabelSet) :- !.
-check_expected_labels_by_nodes(Prog,Prop,J,N,Iter,LabelSet) :- !,
+check_expected_labels_by_nodes(Prog,Prop,J,N,Iter,LabelSet) :-
         expected_label(Prog,Prop,Iter,J,Psi1),
-        fixpoint_ctl:label(Prog,J,Psi2,LabelSet),
+        fixpoint_ctl:label(Prog,J,Psi2,LabelSet), !,
         report_equivalence(Iter,J,Psi1,Psi2),
         J1 is J+1,
         check_expected_labels_by_nodes(Prog,Prop,J1,N,Iter,LabelSet).
 
 previous_label_set(Prog,Prop,Labels,Previous) :-
-        property(Prop,Prog,somepath(always(_Phi))), !,
-        fixpoint_ctl:labelset(Prog,Previous*_,Labels).
+        property(Prop,Prog,somepath(always(_Phi))),
+        fixpoint_ctl:labelset(Prog,Previous*_,Labels), !.
 previous_label_set(Prog,Prop,Labels,Previous) :-
-        property(Prop,Prog,somepath(until(_Phi1,_Phi2))), !,
-        fixpoint_ctl:labelset(Prog,Previous+_,Labels).
+        property(Prop,Prog,somepath(until(_Phi1,_Phi2))),
+        fixpoint_ctl:labelset(Prog,Previous+_,Labels), !.
 
 :- end_tests(fixpoint_ctl).
 
