@@ -2,7 +2,7 @@
 % Wumpus World (version with direction)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- ['../../agents/kbagent_r'].
+:- use_module('../../agents/kbagent').
 
 % todo: nested functional fluents
 % todo: definitions (grid, adjacency)

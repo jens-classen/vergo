@@ -1,5 +1,5 @@
-:- ['../../agents/kbagent_r'].
-
+:- use_module('../../agents/kbagent').
+:- use_module('../../logic/fol').
 :- use_module('../../lib/utils').
 
 rel_rigid(teach(_,_)).
@@ -62,7 +62,7 @@ test(lkb_teacher_ask_fo2solver) :-
                test_query(N)).
 
 test_setup :-
-        init,
+        init(regression),
         report_message(['KB:']),
         print_kb,
         report_message(['\n']).

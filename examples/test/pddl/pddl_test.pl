@@ -8,7 +8,7 @@
 % 4. Validate the plan/sequence in Golog
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- ['../../../agents/kbagent_r'].
+:- use_module('../../../agents/kbagent').
 :- use_module('../../../lib/utils').
 :- use_module('../../../planning/pddl_parser').
 :- use_module('../../../planning/pddl_planner').
@@ -90,7 +90,7 @@ check(Dom,Pro) :-
         length(Plan,N),
         report_message(['Found plan of length ',N,'.']),
         
-        init,
+        init(regression),
         validate(Plan,Goal),
         report_message(['Successfully validated plan.']).
 

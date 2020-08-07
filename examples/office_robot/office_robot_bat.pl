@@ -8,7 +8,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- ['../../agents/kbagent_r'].
+:- use_module('../../agents/kbagent').
 
 :- use_module('../../lib/utils').
 
@@ -89,7 +89,7 @@ check(History, Query, Outcome) :-
 :- begin_tests(regression).
 
 test(all) :-
-        init,
+        init(regression),
         forall(expect(_P,H,Q,O),check(H,Q,O)).
 
 :- end_tests(regression).

@@ -3,7 +3,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % agent
-:- ['../../agents/kbagent_p'].
+:- use_module('../../agents/kbagent').
 
 % simulator
 :- ['wumpus_sim'].
@@ -115,14 +115,14 @@ initialize :-
 initialize(GridSize) :-
         retractall(grid_size(_)),
         assert(grid_size(GridSize)),
-        create, % wumpus_sim
-        init.   % kbagent_r
+        create,             % wumpus_sim
+        init(progression).  % kbagent
 
 % todo: what if action not possible? (Java exception, sensing result?)
 perform(Action) :-
         ask(poss(Action),true),
         do_action(Action,SensingResult),  % wumpus_sim
-        execute(Action,SensingResult).    % kbagent_r
+        execute(Action,SensingResult).    % kbagent
 
 finalize :-
         destroy.

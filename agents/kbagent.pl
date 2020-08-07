@@ -1,12 +1,13 @@
 /**
 
-kbagent_p
+<module> kbagent
 
-This file presents an interface to a knowledge-based agent in a
-dynamic environment, where projection is handled by regression, while
-update is done through progression, and reasoning about knowledge is
-reduced to first-order theorem proving according to the representation
-theorem from
+This module presents an interface to a knowledge-based agent in a
+dynamic environment, where projection is handled using regression,
+updates are done either by progression or regression (i.e., memorizing
+the action history and regressing queries accordingly), and reasoning
+about knowledge is reduced to first-order theorem proving according to
+the representation theorem from
 
 Hector J. Levesque and Gerhard Lakemeyer: The Logic of Knowledge
 Bases. MIT Press, 2001.
@@ -14,71 +15,100 @@ Bases. MIT Press, 2001.
 We thus follow Levesque's functional view on knowlede-based
 systems. Details are described in
 
+Jens Claßen and Gerhard Lakemeyer: Foundations for Knowledge-Based
+Programs using ES. In Proceedings of the 10th Conference on Principles
+of Knowledge Representation and Reasoning (KR 2006), pages 318-328,
+AAAI Press, 2006.
+
 Jens Claßen: Planning and Verification in the Agent Language Golog.
 PhD Thesis, Department of Computer Science, RWTH Aachen University,
 2013.
+
+The code herein (and the imported files) represents a complete
+re-implementation, but builds upon the lessons learnt from
+
+Marius Grysla. Implementation and Evaluation of an ES-based Golog
+System. Bachelor's Thesis, Department of Computer Science, RWTH Aachen
+University, May 2010.
+
+and an even earlier implementation of a propositional fragment due to
+Yuxiao Hu (2006). The most important improvement is the usage of a
+first-order extension of binary decision diagrams (BDDs) for keeping
+the size of regressed formulas manageable (cf. the 'fobdd' module).
 
 @author  Jens Claßen
 @license GPLv2
 
  **/
+:- module(kbagent, [init/1, init/2, ask/2, tell/1, execute/2,
+                    next_action/1, ask4/2, wh_ask/2]).
 
 :- dynamic(history/1).
 :- dynamic(program/1).
+:- dynamic(update/1).
 
+:- use_module('../projection/progression').
 :- use_module('../projection/reduction').
 :- use_module('../projection/regression').
-:- use_module('../projection/progression').
 :- use_module('../logic/cwa').
 :- use_module('../logic/l_kb').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/una').
 :- use_module('../transfinal/transfinal_guards').
 
+:- reexport('../logic/fol', [op(1130, xfy, <=>),
+                             op(1110, xfy, <=),
+                             op(1110, xfy, =>)]).
+
+:- reexport('../logic/l_kb', [print_kb/0]).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-init :- !,
+init(Update) :- !,
+        init(Update,'__undef').
+init(Update,Program) :- !,
         initialize_kb,
         retractall(history(_)),
         retractall(program(_)),
+        retractall(update(_)),
         assert(history([])),
-        assert(program('__undef')).
+        assert(program(Program)),
+        assert(update(Update)).
 
 ask(Fml,Truth) :- !,
-        regress_s([],Fml,Fml2),
+        history(H),
+        regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
         entails_initially(Result,Truth).
 
 tell(Fml) :- !,
-        regress_s([],Fml,Fml2),
+        history(H),
+        regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
         extend_initial_kb_by(Result).
 
-execute(Action,SenseResult) :- !,
+execute(Action,SenseResult) :-
+        update(regression), !,
+        retract(history(H)),
+        senseresult2fml(SenseResult,Action,Fml),
+        regress_s(H,Fml,Fml2),
+        reduce_s(Fml2,Result),
+        update_program(Action),
+        assert(history([Action|H])),
+        extend_initial_kb_by(Result).
+
+execute(Action,SenseResult) :-
+        update(progression), !,
         senseresult2fml(SenseResult,Action,Fml),
         regress_s([],Fml,Fml2),
         reduce_s(Fml2,Result),
         extend_initial_kb_by(Result),
         progress(Action),
-        update_program(Action),
-        retract(history(H)),
-        assert(history([Action|H])).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Program Operations
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-init(Program) :- !,
-        initialize_kb,
-        assert(history([])),
-        assert(program(Program)).
-
-next_action(Action) :- !,
-        program(Program),
-        trans_s(Program,Action,Condition),
-        ask(Condition,true).        
+        update_program(Action).
+        %retract(history(H)),
+        %assert(history([Action|H])).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Derived Operations
@@ -98,6 +128,11 @@ wh_ask(Fml,Result) :- !,
         history(H),
         regress_s(H,Fml,Fml2),
         reduce_s(know(Fml2),Result).
+
+next_action(Action) :- !,
+        program(Program),
+        trans_s(Program,Action,Condition),
+        ask(Condition,true).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper Predicates
