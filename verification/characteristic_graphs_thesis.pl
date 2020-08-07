@@ -24,8 +24,8 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 :- use_module('../logic/fol').
-:- use_module('../transfinal/program_simplify').
-:- use_module('../transfinal/transfinal_thesis').
+:- use_module('../golog/program_simplify').
+:- use_module('../golog/transfinal_thesis').
 
 :- multifile use_sink_states/0.
 

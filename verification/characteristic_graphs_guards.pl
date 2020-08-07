@@ -18,14 +18,14 @@ operators.
            cg_edge/5,
            cg_number_of_nodes/2]).
 
-:- reexport('../transfinal/transfinal_guards',
+:- reexport('../golog/transfinal_guards',
             [guardcond/2, guardcond/3]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 :- use_module('../logic/fol').
-:- use_module('../transfinal/program_simplify').
-:- use_module('../transfinal/transfinal_guards').
+:- use_module('../golog/program_simplify').
+:- use_module('../golog/transfinal_guards').
 
 :- multifile use_sink_states/0.
 

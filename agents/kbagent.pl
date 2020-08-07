@@ -55,7 +55,7 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 :- use_module('../logic/l_kb').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/una').
-:- use_module('../transfinal/transfinal_guards').
+:- use_module('../golog/transfinal_guards').
 
 :- reexport('../logic/fol', [op(1130, xfy, <=>),
                              op(1110, xfy, <=),
