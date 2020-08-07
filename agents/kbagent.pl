@@ -43,7 +43,8 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 :- module(kbagent, [init/1, init/2, ask/2, tell/1, execute/2,
                     next_action/1, ask4/2, wh_ask/2]).
 
-:- dynamic(history/1).
+:- dynamic(history_p/1).
+:- dynamic(history_r/1).
 :- dynamic(program/1).
 :- dynamic(update/1).
 
@@ -70,45 +71,36 @@ init(Update) :- !,
         init(Update,'__undef').
 init(Update,Program) :- !,
         initialize_kb,
-        retractall(history(_)),
+        retractall(history_p(_)),
+        retractall(history_r(_)),
         retractall(program(_)),
         retractall(update(_)),
-        assert(history([])),
+        assert(history_p([])),
+        assert(history_r([])),
         assert(program(Program)),
         assert(update(Update)).
 
 ask(Fml,Truth) :- !,
-        history(H),
+        history_r(H),
         regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
         entails_initially(Result,Truth).
 
 tell(Fml) :- !,
-        history(H),
+        history_r(H),
         regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
         extend_initial_kb_by(Result).
 
 execute(Action,SenseResult) :-
-        update(regression), !,
-        retract(history(H)),
         senseresult2fml(SenseResult,Action,Fml),
+        history_r(H),
         regress_s(H,Fml,Fml2),
-        reduce_s(Fml2,Result),
-        update_program(Action),
-        assert(history([Action|H])),
-        extend_initial_kb_by(Result).
-
-execute(Action,SenseResult) :-
-        update(progression), !,
-        senseresult2fml(SenseResult,Action,Fml),
-        regress_s([],Fml,Fml2),
         reduce_s(Fml2,Result),
         extend_initial_kb_by(Result),
-        progress(Action),
-        update_program(Action).
-        %retract(history(H)),
-        %assert(history([Action|H])).
+        (update(progression) -> progress(Action);true),
+        update_program(Action),
+        update_history(Action).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Derived Operations
@@ -177,3 +169,13 @@ update_program(Action) :-
         retract(program(P)),
         new_program(P,Action,Q),
         assert(program(Q)).
+
+update_history(Action) :-
+        update(regression), !,
+        retract(history_r(H)),
+        assert(history_r([Action|H])).
+
+update_history(Action) :-
+        update(progression), !,
+        retract(history_p(H)),
+        assert(history_p([Action|H])).
