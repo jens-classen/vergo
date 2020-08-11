@@ -21,7 +21,6 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../logic/def').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/l_kb').
-:- use_module('../logic/una').
 :- use_module('characteristic_graphs_thesis').
 
 :- reexport('characteristic_graphs_thesis').
@@ -367,13 +366,9 @@ cg_label(P,Phi,I,M,Psi) :-
         assert(cached_label(P,Phi,I,M,Psi)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Formula Representation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Formula Simplification
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% use fol simplification
+% use FOBDD simplification
 simplify_fml(F,R) :- !,
-        apply_una(F,F2),
-        minimize(F2,F3),
-        apply_una(F3,R).
+        minimize(F,R).

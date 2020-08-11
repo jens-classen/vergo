@@ -25,7 +25,6 @@ conditions and pick operators.
 :- use_module('../logic/def').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/l_kb').
-:- use_module('../logic/una').
 :- use_module('characteristic_graphs_guards').
 
 :- reexport('characteristic_graphs_guards').
@@ -402,13 +401,9 @@ labelsets2fmls(Program,[L|Ls],[Fml|Fmls]) :-
         labelsets2fmls(Program,Ls,Fmls).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Formula Representation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Formula Simplification
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% use fol simplification
+% use FOBDD simplification
 simplify_fml(F,R) :- !,
-        apply_una(F,F2),
-        minimize(F2,F3),
-        apply_una(F3,R).
+        minimize(F,R).
