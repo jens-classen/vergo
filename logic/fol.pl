@@ -295,6 +295,24 @@ simplify_all(_Xs,true,true) :- !.
 simplify_all(Xs,F,F) :-  Xs==[], !.
 simplify_all(Xs,F,all(Xs,F)).
 
+% typed quantification
+simplify(some_t(Xs,F1),R) :- !,
+        simplify(F1,R1),
+        simplify_some_t(Xs,R1,R).
+simplify(all_t(Xs,F1),R) :- !,
+        simplify(F1,R1),
+        simplify_all_t(Xs,R1,R).
+
+simplify_some_t(_Xs,false,false) :- !.
+simplify_some_t(_Xs,true,true) :- !.
+simplify_some_t(Xs,F,F) :- Xs==[], !.
+simplify_some_t(Xs,F,some_t(Xs,F)).
+
+simplify_all_t(_Xs,false,false) :- !.
+simplify_all_t(_Xs,true,true) :- !.
+simplify_all_t(Xs,F,F) :-  Xs==[], !.
+simplify_all_t(Xs,F,all_t(Xs,F)).
+
 % equality
 simplify(X=Y,true) :- 
         X==Y, !.
