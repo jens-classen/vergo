@@ -372,13 +372,17 @@ untype(F1=>F2,F3=>F4) :- !,
 untype(F1<=F2,F3<=F4) :- !,
         untype(F1,F3),
         untype(F2,F4).
-untype(some([],F1),F2) :- !,
+untype(some(Vars,F1),F2) :-
+        Vars == [], !,
         untype(F1,F2).
-untype(all([],F1),F2) :- !,
+untype(all(Vars,F1),F2) :-
+        Vars == [], !,
         untype(F1,F2).
-untype(some_t([],F1),F2) :- !,
+untype(some_t(Vars,F1),F2) :-
+        Vars == [], !,
         untype(F1,F2).
-untype(all_t([],F1),F2) :- !,
+untype(all_t(Vars,F1),F2) :-
+        Vars == [], !,
         untype(F1,F2).
 untype(some(Vars,F1),some(Vars,F2)) :- !,
         untype(F1,F2).
