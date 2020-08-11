@@ -65,16 +65,16 @@ References:
   * file. Similarly, Golog axioms can be returned in the form of a
   * Prolog term containing lists with axioms of the different types
   * (that can then be asserted to the current DB), or written to a
-  * file. Additionally, a "symbol table" is returned, i.e. a term that
-  * holds the domain name and information (names, arities, types)
-  * about types, predicates, functions, and constants. The symbol
-  * table of the associated domain is to be provided when parsing a
-  * PDDL problem description.
+  * file, or asserted directly into user space. Additionally, a
+  * "symbol table" is returned, i.e. a term that holds the domain name
+  * and information (names, arities, types) about types, predicates,
+  * functions, and constants. The symbol table of the associated
+  * domain is to be provided when parsing a PDDL problem description.
   *
   * @arg From        a term of the form string(String), or
   *                  a term of the form file(FileName)
   * @arg To          a term of the form axioms(Axioms), or
-  *                  a term of the form file(File)
+  *                  a term of the form file(File), or 'userdb'
   * @arg SymbolTable a term of the form dom(D,T,C,P,F,FT)
   */
 parse_pddl_domain(string(String),To,Symbols) :- !,
@@ -94,15 +94,16 @@ parse_pddl_domain(file(File),To,Symbols) :- !,
   * file. Similarly, Golog axioms can be returned in the form of a
   * Prolog term containing lists with axioms of the different types
   * (that can then be asserted to the current DB), or written to a
-  * file. Additionally, a "symbol table" needs to be provided, i.e. a
-  * term that holds the domain name and information (names, arities,
-  * types) about types, predicates, functions, and constants, and is
-  * the result of parsing a PDDL domain description.
+  * file, or asserted directly into user space. Additionally, a
+  * "symbol table" needs to be provided, i.e. a term that holds the
+  * domain name and information (names, arities, types) about types,
+  * predicates, functions, and constants, and is the result of parsing
+  * a PDDL domain description.
   *
   * @arg From        a term of the form string(String), or
   *                  a term of the form file(FileName)
   * @arg To          a term of the form axioms(Axioms), or
-  *                  a term of the form file(File)
+  *                  a term of the form file(File), or 'userdb'
   * @arg SymbolTable a term of the form dom(D,T,C,P,F,FT)
   */
 parse_pddl_problem(string(String),To,Symbols) :- !,
@@ -143,6 +144,14 @@ parse_pddl_result(Axioms,file(File)) :-
         write_rules(Stream, GoalAxioms, "Goal"),
         write_rules(Stream, MetricAxioms, "Metric"),
         close(Stream).
+parse_pddl_result(AxiomsT,userdb) :-
+        AxiomsT =.. [domax,_Domain|AxiomsL], !,
+        flatten(AxiomsL,Axioms),
+        forall(member(Axiom,Axioms),assert(user:Axiom)).
+parse_pddl_result(AxiomsT,userdb) :-
+        AxiomsT =.. [proax,_Problem,_Domain|AxiomsL], !,
+        flatten(AxiomsL,Axioms),
+        forall(member(Axiom,Axioms),assert(user:Axiom)).
 
 write_directives(Stream) :- !,
         forall(member(X,["type/1",

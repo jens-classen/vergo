@@ -76,20 +76,22 @@ pddl_problem(citycar,p3,'citycar-opt14-adl_problem_3.pddl').
 
 check(Dom,Pro) :-
         clear,
-        
-        load_pddl_domain_file(Dom,Symbols),
+
+        pddl_domain(Dom,DFile), !,
+        parse_pddl_domain(file(DFile),userdb,Symbols),
         report_message(['Done loading domain ',Dom,'.']),
-        
-        load_pddl_problem_file(Dom,Pro,Symbols),
+
+        pddl_problem(Dom,Pro,PFile), !,
+        parse_pddl_problem(file(PFile),userdb,Symbols),
         report_message(['Done loading problem ',Pro,'.']),
-        
+
         goal(_,Goal),
         (metric(_,MetricD) -> Metric=MetricD; Metric=none),
 
         get_plan(Goal,Metric,Plan),
         length(Plan,N),
         report_message(['Found plan of length ',N,'.']),
-        
+
         init(regression),
         validate(Plan,Goal),
         report_message(['Successfully validated plan.']).
@@ -108,16 +110,6 @@ clear :-
         retractall(initially(_)),
         retractall(goal(_,_)),
         retractall(metric(_,_)).
-
-load_pddl_domain_file(Domain,Symbols) :-
-        pddl_domain(Domain,File), !,
-        parse_pddl_domain(file(File),axioms(Axioms),Symbols),
-        forall(member(Axiom,Axioms),assert(Axiom)).
-
-load_pddl_problem_file(Domain,Problem,Symbols) :-
-        pddl_problem(Domain,Problem,File), !,
-        parse_pddl_problem(file(File),axioms(Axioms),Symbols),
-        forall(member(Axiom,Axioms),assert(Axiom)).
 
 validate(fail,Goal) :- !,
         ask(Goal,false).               % no plan => Goal shouldn't hold
