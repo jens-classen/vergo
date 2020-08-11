@@ -1542,8 +1542,9 @@ check_constant(D,_,_,_,Constant,Type) :-
         atom(Constant),
         D = dom(_,_,Constants,_,_,_),
         member(ConstantDef,Constants),
-        ConstantDef =.. [CType,ConstantList],
-        member(Constant,ConstantList), !,
+        ((ConstantDef =.. [CType,ConstantList],
+          member(Constant,ConstantList));
+         (ConstantDef = Constant, CType = object)),
         check_subtype(D,CType,Type).
 check_variable(D,_V,T,PV,Variable,Type) :-
         nth02(I,PV,Variable), !, % check term equality (Prolog var)
