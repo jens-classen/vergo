@@ -64,6 +64,12 @@ apply_una((F1=>F2),(F3=>F4)) :- !,
 apply_una((F1<=F2),(F3<=F4)) :- !,
         apply_una(F1,F3),
         apply_una(F2,F4).
+apply_una(some(A,F),R) :-
+        var(A), !,
+        apply_una(some([A],F),R).
+apply_una(all(A,F),R) :-
+        var(A), !,
+        apply_una(all([A],F),R).
 % ?[A]:(?[X]:(A=f(X))&F) --> ?[X]:F with A replaced by f(X)
 apply_una(some([A],F1),some(Vars,F4)) :- % (*)
         action_equality_conjunct(A,Act,F1,F2,Vars), !,
