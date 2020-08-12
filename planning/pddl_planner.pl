@@ -210,7 +210,8 @@ is_effect(A,(A,QArgTypes,Cond,AddOrDel,F)) :-
         F =.. [_FName|FArgs],
         A =.. [_AName|AArgs],
         setminus2(FArgs,AArgs,NArgs),
-        get_types(NArgs,FArgTypes,QArgTypes).
+        term_variables(NArgs,NArgVars),
+        get_types(NArgVars,FArgTypes,QArgTypes).
 
 is_effect(A,(A,QArgTypes,Cond,Op,F)) :-
         assign_op(A,F,Cond,Op),
@@ -219,7 +220,8 @@ is_effect(A,(A,QArgTypes,Cond,Op,F)) :-
         F =.. [_FName|FArgs],
         A =.. [_AName|AArgs],
         setminus2(FArgs,AArgs,NArgs),
-        get_types(NArgs,FArgTypes,QArgTypes).
+        term_variables(NArgs,NArgVars),
+        get_types(NArgVars,FArgTypes,QArgTypes).
 
 add_or_del(A,F,Cond,add) :-
         user:causes_true(A,F,Cond).

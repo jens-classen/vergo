@@ -118,13 +118,24 @@ condition(Pattern,Phi,B,A,Condition) :- !,
 
 construct_disjuncts([],[],_,_) :- !.
 construct_disjuncts([E|D1],[Cond|D2],A,FreeVars) :-
-        E = (FreeVars,[],((_C=B)*Phi)), !,
-        Cond = ((A=B)*Phi),
+        E = (FreeVarsE,[],((_C=B)*Phi)), !,
+        unifiable(FreeVars,FreeVarsE,Unifier),
+        apply_subst(Unifier,((A=B)*Phi),Cond),
         construct_disjuncts(D1,D2,A,FreeVars).
 construct_disjuncts([E|D1],[Cond|D2],A,FreeVars) :-
-        E = (FreeVars,Vars,((_C=B)*Phi)), !,
-        Cond = some(Vars,((A=B)*Phi)),
+        E = (FreeVarsE,Vars,((_C=B)*Phi)), !,
+        unifiable(FreeVars,FreeVarsE,Unifier),
+        apply_subst(Unifier,some(Vars,((A=B)*Phi)),Cond),
         construct_disjuncts(D1,D2,A,FreeVars).
+
+apply_subst([],F,F) :- !.
+apply_subst([X=Y|Subs],F,R) :-
+        var(X), var(Y), !,
+        X=Y,
+        apply_subst(Subs,F,R).
+apply_subst([X=Y|Subs],F,R) :- !,
+        apply_subst(Subs,F,F2),
+        R = F2*(X=Y).
 
 % non-typed action precondition declaration
 action_precond(Action,Precond) :-
