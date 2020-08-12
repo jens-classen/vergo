@@ -388,5 +388,19 @@ free_variables(some(Vars2,Fml),Vars) :- !,
 free_variables(all(Vars2,Fml),Vars) :- !,
         free_variables(Fml,Vars3),
         setminus2(Vars3,Vars2,Vars).
+free_variables(some_t(X,Fml),Vars) :-
+        X =@= _-_, !,
+        free_variables(some_t([X],Fml),Vars).
+free_variables(all_t(X,Fml),Vars) :-
+        X =@= _-_, !,
+        free_variables(all_t([X],Fml),Vars).
+free_variables(some_t(VTs,Fml),Vars) :- !,
+        term_variables(VTs,Vars2),
+        free_variables(Fml,Vars3),
+        setminus2(Vars3,Vars2,Vars).
+free_variables(all_t(VTs,Fml),Vars) :- !,
+        term_variables(VTs,Vars2),
+        free_variables(Fml,Vars3),
+        setminus2(Vars3,Vars2,Vars).
 free_variables(Fml,Vars) :- !,
         term_variables(Fml,Vars).
