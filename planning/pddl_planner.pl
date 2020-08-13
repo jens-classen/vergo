@@ -35,9 +35,9 @@ References:
 
 :- module(pddl_planner, [get_plan/2,
                          get_plan/3,
-                         generate_domain/4,
+                         generate_domain/5,
                          generate_problem/2,
-                         write_domain/6,
+                         write_domain/7,
                          write_problem/7,
                          fastdownward/3,
                          read_plan/2]).
@@ -111,9 +111,9 @@ get_plan(Goal,Metric,Plan) :-
         temp_plan_file(PlaF),
         temp_domain_name(Dom),
         temp_problem_name(Pro),
-        generate_domain(Typ,Pre,Fun,Act),
+        generate_domain(Typ,Con,Pre,Fun,Act),
         generate_problem(Obj,Ini),
-        write_domain(DomF,Dom,Typ,Pre,Fun,Act),
+        write_domain(DomF,Dom,Typ,Con,Pre,Fun,Act),
         write_problem(ProF,Pro,Dom,Obj,Ini,GoalF,MetricF),
         fastdownward(DomF,ProF,PlaF),
         read_plan(PlaF,Plan).
@@ -145,8 +145,9 @@ temp_problem_name(tmppro).
 % Domains
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-generate_domain(Types,Predicates,Functions,Actions) :- !,
+generate_domain(Types,Constants,Predicates,Functions,Actions) :- !,
         collect_types(Types),
+        collect_constants(Constants),
         collect_predicates(Predicates),
         collect_functions(Functions),
         collect_actions(Actions).
@@ -163,6 +164,37 @@ collect_types(Types) :- !,
                  not(user:subtype(_,Type))),
                 Types2),
         append(Types1,Types2,Types).
+
+collect_constants(Constants) :- !,
+        findall(C-T,
+                (is_constant(C),
+                 user:domain(T,C),
+                 is_type(T)),
+                Constants1),
+        sort(Constants1,Constants). % remove duplicates
+
+is_constant(O) :-
+        (causes_true(A,F,C);
+         causes_false(A,F,C);
+         causes(A,F,Y,C)),
+        (mentions(A,O);
+         mentions(F,O);
+         mentions(C,O);
+         mentions(Y,O)).
+
+mentions(X,O) :-
+        atom(X), !,
+        O = X.
+mentions(L,O) :-
+        is_list(L), !,
+        mentions_list(L,O).
+mentions(X,O) :-
+        nonvar(X),
+        X =.. [_|R],
+        mentions(R,O).
+mentions_list([X|L],O) :-
+        mentions(X,O);
+        mentions_list(L,O).
 
 collect_predicates(Predicates) :- !,
         findall(predicate(Name,Args),
@@ -259,8 +291,9 @@ instantiate_effects(A,[Effect|Effects],[IEffect|IEffects]) :- !,
         IEffect = eff(QArgTypes,Cond,AddDelOp,F),
         instantiate_effects(A,Effects,IEffects).
 
-write_domain(File,Name,Types,Predicates,Functions,Actions) :-
-        construct_domain(Desc,Name,Types,Predicates,Functions,Actions),
+write_domain(File,Name,Types,Constants,Predicates,Functions,Actions) :-
+        construct_domain(Desc,Name,Types,Constants,Predicates,
+                         Functions,Actions),
         write_description(Desc,File).
 
 % Constructs PDDL domain description as a list consisting of atoms and
@@ -268,15 +301,17 @@ write_domain(File,Name,Types,Predicates,Functions,Actions) :-
 % just before writing to file to avoid problems with Prolog's internal
 % variable representation (an internal name such as "_123456" may
 % change while writing to a file).
-construct_domain(Domain,Name,Types,Predicates,Functions,Actions) :- !,
+construct_domain(Domain,Name,Types,Constants,Predicates,Functions,
+                 Actions) :- !,
         construct_domain_header(D1,Name),
         construct_requirements(D2,Functions),
         construct_types(D3,Types),
-        construct_predicates(D4,Predicates),
-        construct_functions(D5,Functions),
-        construct_actions(D6,Actions),
-        construct_domain_footer(D7),
-        append([D1,D2,D3,D4,D5,D6,D7],Domain).
+        construct_constants(D4,Constants),
+        construct_predicates(D5,Predicates),
+        construct_functions(D6,Functions),
+        construct_actions(D7,Actions),
+        construct_domain_footer(D8),
+        append([D1,D2,D3,D4,D5,D6,D7,D8],Domain).
 
 construct_types(D,Types) :- !,
         construct_types2(DT,Types),
@@ -294,6 +329,10 @@ construct_subtypes([],[]) :- !.
 construct_subtypes(D,[Type|Types]) :- !,
         construct_subtypes(DS,Types),
         append([[' ',Type],DS],D).
+
+construct_constants(D,Constants) :- !,
+        construct_objects2(DC,Constants),
+        append([['(:constants\n'],DC,[')\n']],D).
 
 construct_predicates(D,Predicates) :- !,
         construct_predicates2(DP,Predicates),
@@ -419,10 +458,12 @@ generate_problem(Objects,Init) :- !,
         collect_init(Init).
 
 collect_objects(Objects) :- !,
+        collect_constants(Constants),
         findall(O-T,
                 (user:domain(T,O),
                  is_type(T)),
-                Objects).
+                ObjectsConstants),
+        setminus2(ObjectsConstants,Constants,Objects).
 
 collect_init(Init) :- !,
         findall(Atom,
