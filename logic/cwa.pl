@@ -22,7 +22,8 @@ treated similarly by the above mentioned procedures.
 
 is_type/1 unifies its argument with anything that is a type.
 is_type_element/2 unifies its two arguments with pairs of type and
-type element. types_cons/2 turns a list of typed variables into an
+type element. is_instance/2 instantiates a term for a given list of
+typed variables. types_cons/2 turns a list of typed variables into an
 equivalent list of type constraint formulas, where types are
 represented as unary predicates. untype/2 removes typed quantifiers by
 re-writing them using standard first order syntax (treating types as
@@ -34,7 +35,7 @@ list of typed variables.
 
  **/
 :- module(cwa, [apply_cwa/2, eval_cwa/1,
-                is_type/1, is_type_element/2,
+                is_type/1, is_type_element/2, is_instance/2,
                 untype/2, types_cons/2,
                 get_types/3]).
 
@@ -342,6 +343,21 @@ is_type_element(T,E) :-
         nonvar(T),
         T = either([_|Ts]),
         is_type_element(either(Ts),E).
+
+/**
+  * is_instance(+TypedVarList, ?Term) is nondet.
+  *
+  * Unifies Term with a variant where all typed variables from
+  * TypedVarList have been instantiated using is_type_element/2.
+  *
+  * @arg TypedVarList a list of typed variables
+  * @arg Term         a term, all of whose variables that appear in
+  *                   TypedVarList will be instantiated
+  **/
+is_instance([],_).
+is_instance([V-T|VTs],X) :-
+        is_type_element(T,V),
+        is_instance(VTs,X).
 
 /**
   * untype(+Formula,-Result) is det.
