@@ -640,6 +640,7 @@ construct_pterm(D,T) :-
         var(T), !,
         D = ['?',T].
 construct_pterm(D,T) :-
+        atom(T),
         atom_concat('#',Name,T), !,  % remove "#" from std.name
         D = [Name].
 construct_pterm(D,Num) :-
