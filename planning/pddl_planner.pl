@@ -437,7 +437,8 @@ construct_requirements2(D,Functions) :- !,
         construct_requirements3(D,Functions).
 construct_requirements3(D,Functions) :-
         member(function(F,number,_),Functions),
-        F \= 'total-cost', !,
+        F \= 'total-cost',
+        causes(_,F,_,_), !, % otherwise, ":action-costs" suffice
         construct_requirements4(DReq,Functions),
         append([[' :numeric-fluents'],DReq],D).
 construct_requirements3(D,Functions) :- !,
