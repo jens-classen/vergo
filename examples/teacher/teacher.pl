@@ -55,11 +55,12 @@ test(lkb_teacher_ask_vampire) :-
         forall(query(N,_,_),
                test_query(N)).
 
-test(lkb_teacher_ask_fo2solver) :-
-        report_message(['Testing with FO2Solver...\n']),
-        set_reasoner(fo2solver),
-        forall(query(N,_,_),
-               test_query(N)).
+% % too slow for regular testing...
+% test(lkb_teacher_ask_fo2solver) :-
+%         report_message(['Testing with FO2Solver...\n']),
+%         set_reasoner(fo2solver),
+%         forall(query(N,_,_),
+%                test_query(N)).
 
 test_setup :-
         init(regression),
