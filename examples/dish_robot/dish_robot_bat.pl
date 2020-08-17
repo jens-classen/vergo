@@ -1,3 +1,8 @@
+:- use_module('../../verification/abstraction_local-effect',
+              [compute_abstraction/1,
+               verify/2 as verify_abstraction]).
+:- use_module('../../lib/utils').
+
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 
@@ -27,8 +32,7 @@ causes_false(unload(X),onRobot(X),true).
 type(dish).
 type(room).
 
-domain(dish,'#d1').
-domain(dish,'#d2').
+domain(dish,'#d1'). %only one dish for testing
 domain(room,'#r1').
 domain(room,'#r2').
 
@@ -74,3 +78,36 @@ property(prop5,
 % property(prop6,
 %         main,
 %         some([X,Y],somepath(always(dirtyDish(X,Y))))).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Testing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+expected_outcome(prop1,false).
+expected_outcome(prop2,true).
+expected_outcome(prop3,false).
+expected_outcome(prop4,true).
+expected_outcome(prop5,false).
+
+:- begin_tests('abstraction_local-effect').
+
+test(abstraction) :- !,
+        compute_abstraction(main),
+        check_prop(prop1),
+        check_prop(prop2),
+        check_prop(prop3),
+        check_prop(prop4),
+        check_prop(prop5).
+
+check_prop(P) :-
+        verify_abstraction(P,T),
+        check_result(P,T), !.
+
+check_result(P,T) :-
+        expected_outcome(P,T), !,
+        report_message(info,['Outcome for ',P,' is as expected!']).
+check_result(P,_T) :- !,
+        report_message(info,['Outcome for ',P,
+                             ' is different from what expected!']).
+
+:- end_tests('abstraction_local-effect').
