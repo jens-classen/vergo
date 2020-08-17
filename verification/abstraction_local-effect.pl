@@ -28,7 +28,8 @@ CEUR-WS.org, 2015.
 @license GPLv2
 
  **/
-:- module('abstraction_local-effect', [compute_abstraction/1, verify/1]).
+:- module('abstraction_local-effect', [compute_abstraction/1,
+                                       verify/1, verify/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
@@ -102,7 +103,21 @@ compute_abstraction(ProgramName) :-
   *                   fact over the predicate property/3
  **/
 verify(PropertyName) :-
-        
+        verify(PropertyName,_).
+
+/**
+  * verify(+PropertyName,-TruthValue) is det.
+  *
+  * Same as verify/1, but additionally returns the truth value of
+  * whether the program for which the abstract transition system was
+  * constructed satisfies the property (true) or not (false).
+  *
+  * @arg PropertyName the name of a property, defined by the user via a
+  *                   fact over the predicate property/3
+  * @arg TruthValue   'true' if the property is satisfied,
+  *                   'false' if not
+ **/
+verify(PropertyName,TruthValue) :-
        map_property(N,PropertyName,Property),
        call_smv(N, TruthValue, Type, Actions),
        report_message(['Verified: \n',
