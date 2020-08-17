@@ -8,8 +8,8 @@
                              op(1150, xfy, ~>)]).
 
 :- use_module('../logic/def').
-:- use_module('../logic/rational_closure').
-:- use_module('../logic/system_z').
+:- use_module('../reasoners/rational_closure').
+:- use_module('../reasoners/system_z').
 :- use_module('../lib/utils').
 
 :- dynamic(reasoner/1).
