@@ -87,7 +87,7 @@ compute_abstraction(ProgramName) :-
         
         construct_abstract_transition_system,
         construct_propositional_mapping,
-        translate_to_smv.
+        translate_to_smv, !.
 
 /**
   * verify(+PropertyName) is det.
@@ -1066,10 +1066,10 @@ read_lines(Codes, Stream, [Line|Lines]) :-
         read_lines(Line2, Stream, Lines).
 
 get_truth_value([Line|_], true) :-
-        sub_string(Line,_,_,_,'is true').
+        sub_string(Line,_,_,_,'is true'), !.
 get_truth_value([Line|_], false) :-
-        sub_string(Line,_,_,_,'is false').
-get_truth_value([_|Lines], Value) :-
+        sub_string(Line,_,_,_,'is false'), !.
+get_truth_value([_|Lines], Value) :- !,
         get_truth_value(Lines, Value).
 
 get_counterexample(_Lines, true, nil, nil).
