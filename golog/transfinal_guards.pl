@@ -15,6 +15,7 @@ arbitrarily alternate between pick quantifiers and condition formulas.
 :- module(transfinal_guards, [step/4, trans/4, final/2,
                               guardcond/2, guardcond/3]).
 
+:- use_module('../lib/utils').
 :- use_module('../logic/cwa').
 :- use_module('program_simplify').
 
