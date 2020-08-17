@@ -5,8 +5,8 @@
 :- module(reduction, [reduce/2,
                       resolve/3]).
 
+:- use_module('../kbs/l_kb').
 :- use_module('../lib/utils').
-:- use_module('../logic/l_kb').
 
 :- multifile user:def/2.
 

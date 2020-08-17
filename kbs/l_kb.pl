@@ -3,12 +3,12 @@
                  extend_initial_kb_by/1,
                  print_kb/0]).
 
-:- reexport(['l']).
+:- reexport(['../logic/l']).
 
-:- use_module('cwa').
-:- use_module('def').
-:- use_module('l').
-:- use_module('una').
+:- use_module('../logic/cwa').
+:- use_module('../logic/def').
+:- use_module('../logic/l').
+:- use_module('../logic/una').
 :- use_module('../lib/utils').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

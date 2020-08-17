@@ -51,8 +51,8 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 :- use_module('../projection/progression').
 :- use_module('../projection/reduction').
 :- use_module('../projection/regression').
+:- use_module('../kbs/l_kb').
 :- use_module('../logic/cwa').
-:- use_module('../logic/l_kb').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/una').
 :- use_module('../golog/transfinal_guards').
@@ -61,7 +61,7 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
                              op(1110, xfy, <=),
                              op(1110, xfy, =>)]).
 
-:- reexport('../logic/l_kb', [print_kb/0]).
+:- reexport('../kbs/l_kb', [print_kb/0]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations

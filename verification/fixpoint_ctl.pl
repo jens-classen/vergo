@@ -22,9 +22,9 @@ conditions and pick operators.
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
 :- use_module('../projection/regression').
+:- use_module('../kbs/l_kb').
 :- use_module('../logic/def').
 :- use_module('../logic/fobdd').
-:- use_module('../logic/l_kb').
 :- use_module('characteristic_graphs_guards').
 
 :- reexport('characteristic_graphs_guards').
