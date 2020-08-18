@@ -1,6 +1,6 @@
 /**
 
-Closed-World Assumption
+<module> Closed-World Assumption
 
 This module provides predicates for including the closed-world
 assumption (CWA) into an action theory. For this purpose, fluent and
