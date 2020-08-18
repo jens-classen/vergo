@@ -45,7 +45,7 @@ reduce(know(Fml),Result) :- !,
 reduce(Fml,Fml) :- !.                             
                              
 resolve(Fml,[],Result) :- !,
-        entails_initially(Fml,Result).
+        entails_kb(Fml,Result).
 resolve(Fml,[Var|Vars],Result) :- !,
         get_ini_std_names(KNames),
         get_fml_std_names(Fml,FNames),
