@@ -101,9 +101,9 @@ This verification method additionally requires a model checker (see
 consider the `dish_robot` domain in the `examples` directory. Look at
 the file `dish_robot_bat.pl` and how actions, fluents, programs and
 temporal properties are defined in it. From within the directory, call
-SWI-Prolog and consult the main file:
+SWI-Prolog and consult the file containing the action theory:
 
-    ?- [main_abstraction].
+    ?- [dish_robot_bat].
 
 Next, start the construction of the abstract transition system via
 
@@ -127,14 +127,24 @@ The code is divided into the following subdirectories:
 
   Example domain definitions for agents.
 
+- golog:
+
+  Contains code related to Golog programs, e.g. transition semantics.
+
+- kbs:
+
+  Modules implementing a knowledge base given a certain base logic,
+  most importantly L (FOL with standard names).
+
 - lib:
 
   Various libraries (utilities, environment variables).
 
 - logic:
 
-  Contains code for representing and manipulating formulas in
-  different base logics (propositional logic, FOL, L).
+  Various modules for representing and manipulating logical formulas,
+  e.g. (first-order) BDD representation and the closed-world and
+  unique names assumptions.
 
 - planning:
 
@@ -147,15 +157,11 @@ The code is divided into the following subdirectories:
 - reasoners:
 
   Contains different implementations and interfaces for backend
-  reasoners (FOL, FO^2, Description Logics).
+  reasoners (FOL, FO^2, Description Logics, System Z).
 
 - temp:
 
   Temporary files are put here.
-
-- transfinal:
-
-  Contains various definitions for Golog program semantics.
 
 - verification:
 
