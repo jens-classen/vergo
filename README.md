@@ -101,13 +101,13 @@ This verification method additionally requires a model checker (see
 consider the `dish_robot` domain in the `examples` directory. Look at
 the file `dish_robot_bat.pl` and how actions, fluents, programs and
 temporal properties are defined in it. From within the directory, call
-SWI-Prolog and consult the file containing the action theory:
+SWI-Prolog, and consult the file containing the action theory:
 
     ?- [dish_robot_bat].
 
 Next, start the construction of the abstract transition system via
 
-    ?- compute_abstraction(main)
+    ?- compute_abstraction(main).
 
 and observe the output (this may take some time). To actually verify a
 property by the model checker, call then e.g.
@@ -143,7 +143,7 @@ The code is divided into the following subdirectories:
 - logic:
 
   Various modules for representing and manipulating logical formulas,
-  e.g. (first-order) BDD representation and the closed-world and
+  e.g. (first-order) BDD representation, and the closed-world and
   unique names assumptions.
 
 - planning:
