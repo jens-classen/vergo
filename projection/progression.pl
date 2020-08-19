@@ -2,10 +2,11 @@
 % Progression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- module(progression, [progress/1,
-                        progress/2]).
+:- module(progression, [progress/3,
+                        progress/4]).
 
 :- use_module('regression').
+:- use_module('../kbs/l_kb').
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
 :- use_module('../logic/fol').
@@ -17,11 +18,9 @@
 
 :- discontiguous progress/2.
 
-:- dynamic user:initially/1.
-
-progress(Action) :-
+progress(KB1,Action,KB2) :-
         user:progression_style(Style),
-        progress(Action,Style).
+        progress(Style,KB1,Action,KB2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Closed-World STRIPS progression
@@ -30,22 +29,12 @@ progress(Action) :-
 % todo: make sure CWA applies to fluents and all actions are STRIPS
 %       (produce warning when not)
 
-progress(Action,strips(closed)) :-
+progress(strips(closed),KB1,Action,KB2) :-
         ground(Action), !,
-        findall(Fluent,user:causes_false(Action,Fluent,true),Dels),
-        findall(Fluent,user:causes_true(Action,Fluent,true),Adds),
-        del_facts_closed(Dels),
-        add_facts_closed(Adds).
-
-del_facts_closed([Fact|Facts]) :- 
-        retractall(user:initially(Fact)),
-        del_facts_closed(Facts).
-del_facts_closed([]).
-
-add_facts_closed([Fact|Facts]) :- 
-        assert(user:initially(Fact)),
-        add_facts_closed(Facts).
-add_facts_closed([]).
+        findall(del(Fluent),user:causes_false(Action,Fluent,true),Dels),
+        findall(add(Fluent),user:causes_true(Action,Fluent,true),Adds),
+        append([Dels,Adds],Mods),
+        update_kb(KB1,Mods,KB2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Open-World STRIPS progression
@@ -54,24 +43,14 @@ add_facts_closed([]).
 % todo: make sure CWA applies to fluents and all actions are STRIPS
 %       (produce warning when not)
 
-progress(Action,strips(open)) :-
+progress(strips(open),KB1,Action,KB2) :-
         ground(Action), !,
-        findall(Fluent,user:causes_false(Action,Fluent,true),Dels),
-        findall(Fluent,user:causes_true(Action,Fluent,true),Adds),
-        del_facts_open(Dels),
-        add_facts_open(Adds).
-
-del_facts_open([Fact|Facts]) :- 
-        retractall(user:initially(Fact)),
-        assert(user:initially(-Fact)),
-        del_facts_open(Facts).
-del_facts_open([]).
-
-add_facts_open([Fact|Facts]) :-
-        retractall(user:initially(-Fact)),
-        assert(user:initially(Fact)),
-        add_facts_open(Facts).
-add_facts_open([]).
+        findall(del(Fluent),user:causes_false(Action,Fluent,true),DelsF),
+        findall(add(-Fluent),user:causes_false(Action,Fluent,true),AddsF),
+        findall(add(Fluent),user:causes_true(Action,Fluent,true),AddsA),
+        findall(del(-Fluent),user:causes_true(Action,Fluent,true),DelsA),
+        append([DelsF,DelsA,AddsF,AddsA],Mods),
+        update_kb(KB1,Mods,KB2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ADL (PDDL subset, i.e. CWA + domain closure)
@@ -81,14 +60,14 @@ add_facts_open([]).
 %       just-in-time CWA (produce warning when not)
 %       e.g. shoot action in Wumpus world
 
-progress(Action,adl) :-
+progress(adl,KB1,Action,KB2) :-
         ground(Action), !,
-        findall(Fluent,(user:causes_false(Action,Fluent,Cond),
+        findall(del(Fluent),(user:causes_false(Action,Fluent,Cond),
                         eval_cwa(Cond)),Dels),
-        findall(Fluent,(user:causes_true(Action,Fluent,Cond),
+        findall(add(Fluent),(user:causes_true(Action,Fluent,Cond),
                         eval_cwa(Cond)),Adds),
-        del_facts_closed(Dels),
-        add_facts_closed(Adds).
+        append([Dels,Adds],Mods),
+        update_kb(KB1,Mods,KB2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Progression for local-effect theories

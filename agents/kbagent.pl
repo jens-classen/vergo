@@ -41,7 +41,7 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 
  **/
 :- module(kbagent, [init/1, init/2, ask/2, tell/1, execute/2,
-                    next_action/1, ask4/2, wh_ask/2]).
+                    next_action/1, ask4/2, wh_ask/2, print_kb/0]).
 
 :- dynamic(history_p/1).
 :- dynamic(history_r/1).
@@ -61,8 +61,6 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
                              op(1110, xfy, <=),
                              op(1110, xfy, =>)]).
 
-:- reexport('../kbs/l_kb', [print_kb/0]).
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,7 +68,7 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 init(Update) :- !,
         init(Update,'__undef').
 init(Update,Program) :- !,
-        initialize_kb,
+        initialize_kb(kb),
         retractall(history_p(_)),
         retractall(history_r(_)),
         retractall(program(_)),
@@ -84,21 +82,22 @@ ask(Fml,Truth) :- !,
         history_r(H),
         regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
-        entails_kb(Result,Truth).
+        entails_kb(kb,Result,Truth).
 
 tell(Fml) :- !,
         history_r(H),
         regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
-        extend_initial_kb_by(Result).
+        extend_kb_by(kb,Result).
 
 execute(Action,SenseResult) :-
         senseresult2fml(SenseResult,Action,Fml),
         history_r(H),
         regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
-        extend_initial_kb_by(Result),
-        (update(progression) -> progress(Action);true),
+        extend_kb_by(kb,Result),
+        (update(progression) ->
+            progress(kb,Action,kb);true),
         update_program(Action),
         update_history(Action).
 
@@ -130,6 +129,9 @@ next_action(Action) :- !,
 % Helper Predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+print_kb :-
+        l_kb:print_kb(kb).
+
 senseresult2fml(Result,Action,Fml) :-
         sensing_style(truth),
         Result=true, !,
@@ -149,8 +151,8 @@ regress_s(H,Fml1,Fml2) :- !,
         % No minimize here since may contain 'know'!
         
 reduce_s(Fml1,Fml2) :- !,
-        reduce(Fml1,Fml3),
-        apply_cwa(Fml3,Fml4),
+        reduce(kb,Fml1,Fml3),
+        apply_cwa(kb,Fml3,Fml4),
         minimize(Fml4,Fml2).
 
 trans_s(Program,Action,Condition) :-

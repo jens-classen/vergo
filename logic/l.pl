@@ -24,7 +24,6 @@ e.g. '#1', '#2', '#bob'.
               equivalent_l/3,
               is_stdname/1,
               get_fml_std_names/2,
-              get_ini_std_names/1,
               get_new_std_name/2]).
 
 :- reexport('../logic/fol', [get_reasoner/1,
@@ -115,17 +114,6 @@ equivalent_l(_Formula1,_Formula2,Truth) :- !,
 get_fml_std_names(Fml,Names) :- !,
         collect_names(Fml,Names2),
         sort(Names2,Names).
-get_ini_std_names(Names) :- !,
-        findall(Names2,
-                (initially(Fml),
-                 collect_names(Fml,Names2)),
-                Names3),
-        flatten(Names3,Names4),
-        findall(DName,
-                (is_type_element(_Type,DName)),
-                Names5),
-        append(Names4,Names5,Names6),
-        sort(Names6,Names).
 get_new_std_name(Names,New) :- !,
         create_new_names(Names,1,[New]).
 

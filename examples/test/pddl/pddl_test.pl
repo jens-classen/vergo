@@ -88,7 +88,7 @@ check(Dom,Pro) :-
         goal(_,Goal),
         (metric(_,MetricD) -> Metric=MetricD; Metric=none),
 
-        get_plan(Goal,Metric,Plan),
+        get_plan(userdb,Goal,Metric,Plan),
         length(Plan,N),
         report_message(['Found plan of length ',N,'.']),
 

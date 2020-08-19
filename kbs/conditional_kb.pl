@@ -1,8 +1,22 @@
-:- module('conditional_kb', [initialize_kb/0,
-                             entails_kb/2,
-                             print_kb/0,
-                             extend_initial_kb_by/1,
-                             rank/2,
+/**
+
+<module> Knowledge Base under Conditional Base Logic
+
+This module encapsulates a data structure for managing and accessing a
+single or multiple knowledge bases whose formulas are conditionals
+(Pearl's System Z, Lehmann and Magidor's Rational Closure).
+
+Knowledge bases are identified through a unique identifier that be can
+be any fully grounded Prolog term, e.g. a name such as 'kb1'.
+
+@author  Jens Claßen
+@license GPLv2
+
+*/
+:- module('conditional_kb', [initialize_kb/1,
+                             entails_kb/3,
+                             print_kb/1,
+                             rank/3,
                              get_reasoner/1,
                              set_reasoner/1,
                              op(1150, xfy, ~>)]).
@@ -13,6 +27,7 @@
 :- use_module('../lib/utils').
 
 :- dynamic(reasoner/1).
+:- dynamic user:initially/1.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Reasoner
@@ -34,10 +49,21 @@ get_reasoner(X) :-
 % Initialize
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-initialize_kb :-
-        reasoner(rational_closure),
+/**
+  * initialize_kb(++KBID) is det.
+  *
+  * Initializes a new knowledge base from facts provided by means of
+  * the initially/1 predicate in user space, usually as part of a
+  * basic action theory. If a knowledge base with the specified
+  * identifier already exists, it will be overwritten.
+  *
+  * @arg KBID the identifier (handle) to be used for the KB, must be a
+  *           ground term
+ **/
+initialize_kb(KBID) :-
+        reasoner(rational_closure), !,
         findall((BP~>HP),
-                (initially(B~>H),
+                (user:initially(B~>H),
                  expand_defs(B,BP),
                  expand_defs(H,HP)),
                 KBCond),
@@ -47,12 +73,12 @@ initialize_kb :-
                  expand_defs(Fml,FmlP)),
                 KBNonCond),
         append(KBCond,KBNonCond,KB),
-        construct_ranking(KB).
+        construct_ranking(KBID,KB).
 
-initialize_kb :-
-        reasoner(system_z),
+initialize_kb(KBID) :-
+        reasoner(system_z), !,
         findall((BP~>HP),
-                (initially(B~>H),
+                (user:initially(B~>H),
                  expand_defs(B,BP),
                  expand_defs(H,HP)),
                 KBCond),
@@ -62,68 +88,87 @@ initialize_kb :-
                  expand_defs(Fml,FmlP)),
                 KBNonCond),
         append(KBCond,KBNonCond,KB),
-        construct_partition(KB).
+        construct_partition(KBID,KB).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check formula against initial theory
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-entails_kb((B~>H),Truth) :-
+/**
+  * entails_kb(++KBID,+Fml,-Truth) is det.
+  *
+  * Returns the truth value of whether the provided formula is
+  * entailed in conditional logic by the given knowledge base.
+  *
+  * @arg KBID  the identifier (handle) of the KB in question, must be
+  *            a ground term
+  * @arg Fml   a term representing a formula (may be a conditional)
+  * @arg Truth 'true' if the formula is entailed, 'false' if not
+ **/
+entails_kb(KB,(B~>H),Truth) :-
         reasoner(rational_closure),
         expand_defs(B,BP),
         expand_defs(H,HP),
-        rc_entails(BP,HP,Truth), !.
+        rc_entails(KB,BP,HP,Truth), !.
 
-entails_kb(Fml,Truth) :-
+entails_kb(KB,Fml,Truth) :-
         reasoner(rational_closure),
         Fml \= (_~>_),
         expand_defs(Fml,FmlP),
-        rc_entails(true,FmlP,Truth), !.
+        rc_entails(KB,true,FmlP,Truth), !.
 
-entails_kb((B~>H),Truth) :-
+entails_kb(KB,(B~>H),Truth) :-
         reasoner(system_z),
         expand_defs(B,BP),
         expand_defs(H,HP),
-        one_entails(BP,HP,Truth), !.
+        one_entails(KB,BP,HP,Truth), !.
 
-entails_kb(Fml,Truth) :-
+entails_kb(KB,Fml,Truth) :-
         reasoner(system_z),
         Fml \= (_~>_),
         expand_defs(Fml,FmlP),
-        one_entails(true,FmlP,Truth), !.
+        one_entails(KB,true,FmlP,Truth), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Rank of a formula
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-rank(Fml,R) :-
+/**
+  * rank(++KBID,+Fml,-Rank) is det.
+  *
+  * Returns the rank of the provided formula for the specified
+  * knowledge base.
+  *
+  * @arg KBID the identifier (handle) of the KB in question, must be
+  *           a ground term
+  * @arg Fml  a term representing a formula
+  * @arg Rank a numerical rank
+ **/
+rank(KB,Fml,R) :-
         reasoner(rational_closure),
-        rc_rank(Fml,R).
+        rc_rank(KB,Fml,R).
 
-rank(Fml,R) :-
+rank(KB,Fml,R) :-
         reasoner(system_z),
-        z_rank(Fml,R).
+        z_rank(KB,Fml,R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Pretty-print KB
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-print_kb :-
+/**
+  * print_kb(++KBID) is det.
+  *
+  * Pretty-prints the knowledge base with the given identifier to
+  * standard output.
+  *
+  * @arg KBID the identifier (handle) of the KB in question, must be
+  *           a ground term
+ **/
+print_kb(KB) :-
         reasoner(rational_closure), !,
-        print_ranking.
+        print_ranking(KB).
 
-print_kb :-
+print_kb(KB) :-
         reasoner(system_z), !,
-        print_partition.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Extend initial theory by new formula
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% todo: make this optional, may be costly
-extend_initial_kb_by(Fml) :-
-        entails_kb(Fml,true), !.
-% we need to reconstruct the partition/ranking
-extend_initial_kb_by(Fml) :- !,
-        assert(initially(Fml)),
-        initialize_kb.
+        print_partition(KB).

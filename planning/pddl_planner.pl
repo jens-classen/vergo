@@ -33,15 +33,16 @@ References:
 
 **/
 
-:- module(pddl_planner, [get_plan/2,
-                         get_plan/3,
+:- module(pddl_planner, [get_plan/3,
+                         get_plan/4,
                          generate_domain/5,
-                         generate_problem/2,
+                         generate_problem/3,
                          write_domain/7,
                          write_problem/7,
                          fastdownward/3,
                          read_plan/2]).
 
+:- use_module('../kbs/l_kb').
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
@@ -70,7 +71,7 @@ References:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * get_plan(+Goal,-Plan) is det.
+  * get_plan(++KB,+Goal,-Plan) is det.
   *
   * This predicate (1) generates a PDDL domain and problem from the
   * current state of the BAT, using all typed fluents (relational and
@@ -82,19 +83,25 @@ References:
   * solution plan, or Fast Downward did not find any, 'fail' is
   * returned.
   *
+  * @arg KB   the identifier (handle) of the KB containing facts to
+  *           be used for the initial state; use 'userdb' to work on
+  *           facts given by user:initially/1
   * @arg Goal a goal, either in the form of a formula, or the name of
   *           a goal formula defined through goal/2 or def/2
   * @arg Plan a sequence (list) of actions representing a solution
   *           plan, or 'fail'
   */
-get_plan(Goal,Plan) :-
-        get_plan(Goal,none,Plan).
+get_plan(KB,Goal,Plan) :-
+        get_plan(KB,Goal,none,Plan).
 
 /**
-  * get_plan(+Goal,+Metric,-Plan) is det.
+  * get_plan(++KB,+Goal,+Metric,-Plan) is det.
   *
   * Similar as get_plan/2, but additionally uses a plan metric.
   *
+  * @arg KB     the identifier (handle) of the KB containing facts to
+  *             be used for the initial state; use 'userdb' to work on
+  *             facts given by user:initially/1
   * @arg Goal   a goal, either in the form of a formula, or the name
   *             of a goal formula defined through goal/2 or def/2
   * @arg Metric a metric, either in the form of a term minimize(Exp)
@@ -103,7 +110,7 @@ get_plan(Goal,Plan) :-
   * @arg Plan   a sequence (list) of actions representing a solution
   *             plan, or 'fail'
   */
-get_plan(Goal,Metric,Plan) :-
+get_plan(KB,Goal,Metric,Plan) :-
         goal_fml(Goal,GoalF),
         metric_def(Metric,MetricF),
         temp_domain_file(DomF),
@@ -112,7 +119,7 @@ get_plan(Goal,Metric,Plan) :-
         temp_domain_name(Dom),
         temp_problem_name(Pro),
         generate_domain(Typ,Con,Pre,Fun,Act),
-        generate_problem(Obj,Ini),
+        generate_problem(KB,Obj,Ini),
         write_domain(DomF,Dom,Typ,Con,Pre,Fun,Act),
         write_problem(ProF,Pro,Dom,Obj,Ini,GoalF,MetricF),
         fastdownward(DomF,ProF,PlaF),
@@ -454,9 +461,9 @@ construct_requirements4(D,_Functions) :- !,
 % Problems
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-generate_problem(Objects,Init) :- !,
+generate_problem(KB,Objects,Init) :- !,
         collect_objects(Objects),
-        collect_init(Init).
+        collect_init(KB,Init).
 
 collect_objects(Objects) :- !,
         collect_constants(Constants),
@@ -466,9 +473,9 @@ collect_objects(Objects) :- !,
                 ObjectsConstants),
         setminus2(ObjectsConstants,Constants,Objects).
 
-collect_init(Init) :- !,
+collect_init(KB,Init) :- !,
         findall(Atom,
-                (initially(Atom),
+                (kb_axiom(KB,Atom),
                  cwa(Atom)),
                 Init).
 

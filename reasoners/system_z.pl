@@ -19,10 +19,10 @@ discourse, of which propositional logic is a subset.
 
  **/
 
-:- module(system_z, [one_entails/3,
-                     construct_partition/1,
-                     print_partition/0,
-                     z_rank/2,
+:- module(system_z, [one_entails/4,
+                     construct_partition/2,
+                     print_partition/1,
+                     z_rank/3,
                      op(1150, xfy, ~>)]).
 
 /* In addition to the symbols from module 'fol', we introduce a new
@@ -33,8 +33,8 @@ discourse, of which propositional logic is a subset.
 :- use_module('../logic/l').
 :- use_module('../lib/utils').
 
-:- dynamic(zpart/2).
-:- dynamic(zmax/1).
+:- dynamic(zpart/3).
+:- dynamic(zmax/2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % System Z
@@ -43,59 +43,59 @@ discourse, of which propositional logic is a subset.
 %TODO: zero-entailment
 
 /**
- * one_entails(+Left,+Right,-Result) is det
+ * one_entails(++KBID,+Left,+Right,-Result) is det
  *
  * Returns the truth value Result of whether the conditional
- * 'Left~>Right' is 1-entailed by the conditional KB.
+ * 'Left~>Right' is 1-entailed by the specified conditional KB.
  */
-one_entails(Left,Right,true) :-
-        z_rank(Left*Right,I1),
-        z_rank(Left*(-Right),I2),
+one_entails(KB,Left,Right,true) :-
+        z_rank(KB,Left*Right,I1),
+        z_rank(KB,Left*(-Right),I2),
         I1 < I2, !.
-one_entails(_,_,false).
+one_entails(_,_,_,false).
 
 /**
- * z_rank(+Fml,-Rank) is det
+ * z_rank(++KBID,+Fml,-Rank) is det
  *
  * Returns the numeric rank Rank of a formula Fml according to the
- * partition induced by the conditional KB. Returns 'inf' (positive
- * infinity) in case the formula has no rank.
+ * partition induced by the specified conditional KB. Returns 'inf'
+ * (positive infinity) in case the formula has no rank.
  */
-z_rank(Fml,I) :- !,
-        zmax(N),
-        z_rank(Fml,I,N,[]).
-z_rank(Fml,I,N,RuleSet1) :-
-        zpart(N,RuleSetN),
+z_rank(KB,Fml,I) :- !,
+        zmax(KB,N),
+        z_rank(KB,Fml,I,N,[]).
+z_rank(KB,Fml,I,N,RuleSet1) :-
+        zpart(KB,N,RuleSetN),
         append(RuleSet1,RuleSetN,RuleSet),
         tolerates(RuleSet,Fml), !,
         N1 is N-1,
-        z_rank(Fml,I,N1,RuleSet).
-z_rank(_Fml,I,N,_RuleSet) :-
-        zmax(N), !,
+        z_rank(KB,Fml,I,N1,RuleSet).
+z_rank(KB,_Fml,I,N,_RuleSet) :-
+        zmax(KB,N), !,
         I is inf. % infinity instead of zmax+1
-z_rank(_Fml,I,N,_RuleSet) :- !,
+z_rank(_KB,_Fml,I,N,_RuleSet) :- !,
         I is N+1.
 
 /**
- * construct_partition(+RuleSet) is det
+ * construct_partition(++KBID,+RuleSet) is det
  *
  * Given a list of conditionals RuleSet as KB, constructs an internal
  * representation (through dynamic predicates) of a partition according
  * to System Z. Prints a warning to standard output in case the
  * RuleSet does not satisfy Pearl's consistency criterion.
  */
-construct_partition(RuleSet) :- !,
-        retractall(zpart(_,_)),
-        retractall(zmax(_)),
+construct_partition(KB,RuleSet) :- !,
+        retractall(zpart(KB,_,_)),
+        retractall(zmax(KB,_)),
         materialize(RuleSet,RuleSetM),
         partition(RuleSetM,Partition),
-        assert_partition(Partition).
-assert_partition([]).
-assert_partition([(I,Rules)|Partition]) :-
-        assert(zpart(I,Rules)),
-        retractall(zmax(_)),
-        assert(zmax(I)),
-        assert_partition(Partition).
+        assert_partition(KB,Partition).
+assert_partition(_,[]) :- !.
+assert_partition(KB,[(I,Rules)|Partition]) :- !,
+        assert(zpart(KB,I,Rules)),
+        retractall(zmax(KB,_)),
+        assert(zmax(KB,I)),
+        assert_partition(KB,Partition).
 
 partition(RuleSet,Partition) :-
         partition(RuleSet,0,Partition).
@@ -131,13 +131,13 @@ materialize([(B~>H)|Rules],[(B=>H)|RulesM]) :-
         materialize(Rules,RulesM).
 
 /**
- * print_partition is det
+ * print_partition(++KBID) is det
  *
  * Prints a presentation of the internal representation of the KB to
  * standard output.
  */
-print_partition :- !,
-        zpart(I,Rules),
+print_partition(KB) :- !,
+        zpart(KB,I,Rules),
         write(I),
         write(':\n'),
         write_readable(Rules),
