@@ -63,9 +63,9 @@ progress(strips(open),KB1,Action,KB2) :-
 progress(adl,KB1,Action,KB2) :-
         ground(Action), !,
         findall(del(Fluent),(user:causes_false(Action,Fluent,Cond),
-                        eval_cwa(Cond)),Dels),
+                        eval_cwa(KB1,Cond)),Dels),
         findall(add(Fluent),(user:causes_true(Action,Fluent,Cond),
-                        eval_cwa(Cond)),Adds),
+                        eval_cwa(KB1,Cond)),Adds),
         append([Dels,Adds],Mods),
         update_kb(KB1,Mods,KB2).
 
