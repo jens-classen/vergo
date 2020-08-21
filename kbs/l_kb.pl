@@ -31,7 +31,8 @@ facts of the dynamic predicate kb_axiom/2.
                  print_kb/1,
                  get_kb_std_names/2,
                  update_kb/3,
-                 delete_kb/1]).
+                 delete_kb/1,
+                 copy_kb/2]).
 
 :- reexport(['../logic/l']).
 
@@ -246,6 +247,14 @@ delete_kb(userdb) :- !,
 delete_kb(KB) :- !,
         retractall(kb_axiom(KB,_)).
 
+/**
+  * copy_kb(++KB1,++KB2) is det.
+  *
+  * Creates a copy of KBID1 with identifier KBID2. If KBID2 already
+  * exists, it will be overwritten.
+  *
+  * @arg KBID  the identifier (handle) of the KB to be deleted
+ **/
 copy_kb(KB1,KB2) :-
         delete_kb(KB2),
         forall(kb_axiom(KB1,Fml),
