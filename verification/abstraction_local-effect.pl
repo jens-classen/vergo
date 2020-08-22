@@ -736,7 +736,7 @@ regress_dl(not(C),E,not(D)) :- !,
         regress_dl(C,E,D).
 regress_dl(and(Cs),E,and(Rs)) :- !,
         regress_dl_list(Cs,E,Rs).
-regress_dl(or(Cs),E,and(Rs)) :- !,
+regress_dl(or(Cs),E,or(Rs)) :- !,
         regress_dl_list(Cs,E,Rs).
 regress_dl(oneof(Ns),_E,oneof(Ns)) :- !.
 regress_dl(some(R,C),E,Result) :- !,
