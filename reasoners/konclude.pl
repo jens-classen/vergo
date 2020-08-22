@@ -217,7 +217,7 @@ write_concept(Stream, Indent, some(Role,Concept)) :- !,
         write_concept(Stream, IndentN, Concept),
         write_indent(Stream,Indent),
         write(Stream, ')\n').
-write_concept(Stream, Indent, all(Role,Concept)) :- !,
+write_concept(Stream, Indent, only(Role,Concept)) :- !,
         write_indent(Stream,Indent),
         write(Stream, 'ObjectAllValuesFrom(\n'),
         IndentN = Indent + 1,
