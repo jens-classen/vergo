@@ -13,7 +13,6 @@
 :- discontiguous def/2.
 
 sensing_style(truth).
-progression_style(adl).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Basic Action Theory

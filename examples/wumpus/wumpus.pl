@@ -18,7 +18,6 @@
 grid_size(3). % default for testing, overwritten in main file
 
 sensing_style(truth).
-progression_style(adl).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Basic Action Theory
