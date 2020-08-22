@@ -37,7 +37,7 @@ list of typed variables.
 @license GPLv2
 
  **/
-:- module(cwa, [apply_cwa/3, eval_cwa/2,
+:- module(cwa, [apply_cwa/3, eval_cwa/2, cwa_fml/1,
                 is_type/1, is_type_element/2, is_instance/2,
                 untype/2, types_cons/2,
                 get_types/3]).
@@ -53,7 +53,7 @@ list of typed variables.
 :- multifile user:domain/2.
 
 /**
-  * apply_cwa(++KB,+Formula,-Result) is det
+  * apply_cwa(++KBID,+Formula,-Result) is det.
   *
   * Result is the result of applying the closed-world assumption to
   * the Formula, i.e. ground atoms over fluents and rigids which have
@@ -239,7 +239,7 @@ describe_instance(Vars,[E|Es],E*R) :-
         describe_instance(Vars,Es,R).
 
 /**
-  * eval_cwa(?Formula) is nondet
+  * eval_cwa(++KBID,?Formula) is nondet.
   *
   * Succeeds if the formula holds under the closed-world assumption.
   * Free variables are understood as existentially quantified and will
@@ -295,6 +295,51 @@ eval_cwa(KB,some_t([],F)) :- !,
         eval_cwa(KB,F).
 eval_cwa(KB,all_t(VTs,F)) :-
         eval_cwa(KB,-some_t(VTs,-F)).
+
+/**
+  * cwa_fml(+Formula) is det.
+  *
+  * Succeeds if the formula can be safely evaluated using the
+  * closed-world assumption.
+  *
+  * @arg Formula a static objective formula about the initial
+  *              situation, without free variables
+  **/
+cwa_fml(F) :-
+        user:def(F,FD), !,
+        cwa_fml(FD).
+cwa_fml(Atom) :-
+        (isfluent(Atom);isrigid(Atom)),
+        user:cwa(Atom), !. % check arguments?
+cwa_fml(TAtom) :-
+        TAtom =.. [Type,_Arg],
+        is_type(Type), !.  % check arguments?
+cwa_fml(X=Y) :- !,
+        (var(X);is_stdname(X)),
+        (var(Y);is_stdname(Y)).
+cwa_fml(true):- !.
+cwa_fml(false) :- !.
+cwa_fml(F1*F2) :- !,
+        cwa_fml(F1),
+        cwa_fml(F2).
+cwa_fml(F1+F2) :- !,
+        cwa_fml(F1),
+        cwa_fml(F2).
+cwa_fml(-F) :- !,
+        cwa_fml(F).
+cwa_fml(F1<=>F2) :- !,
+        cwa_fml(F1),
+        cwa_fml(F2).
+cwa_fml(F1=>F2) :- !,
+        cwa_fml(F1),
+        cwa_fml(F2).
+cwa_fml(F1<=F2) :- !,
+        cwa_fml(F1),
+        cwa_fml(F2).
+cwa_fml(some_t(_Vs,F)) :- !,
+        cwa_fml(F).
+cwa_fml(all_t(_Vs,F)) :- !,
+        cwa_fml(F).
 
 /**
   * is_type(?Type) is nondet.
