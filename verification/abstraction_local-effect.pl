@@ -51,7 +51,6 @@ CEUR-WS.org, 2015.
 :- dynamic   
    is_entailed_cached/3,
    is_inconsistent_cached/2,
-   regression_cached/3,
    map_type_formula/2,
    map_type/2,
    map_literal/2,
@@ -626,17 +625,13 @@ apply_pos_effects([Lit|Literals],Effects,[Lit|NewEffects]) :-
         apply_pos_effects(Literals,Effects,NewEffects).
 apply_pos_effects([],Effects,Effects).
 
-% regression(F,E,R) :-
-%         regression_cached(F,E,R).
-regression(F,E,R) :-
-        regression_cached(FC,EC,RC),
-        F =@= FC,
-        E =@= EC,
-        R =@= RC, !.
+% regression: use "ligression" and simplify
 regression(F,E,R) :- !,
         ligress(F,E,R1),
-        simplify(R1,R),
-        assert(regression_cached(F,E,R)).
+        simplify(R1,R).
+
+% Note: removed caching of regression results due to significant slow down
+%       (large number of comparisons, have to use =@=)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
