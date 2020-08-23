@@ -32,7 +32,8 @@ causes_false(unload(X),onRobot(X),true).
 type(dish).
 type(room).
 
-domain(dish,'#d1'). %only one dish for testing
+domain(dish,'#d1').
+domain(dish,'#d2').
 domain(room,'#r1').
 domain(room,'#r2').
 
