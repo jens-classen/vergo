@@ -36,6 +36,9 @@ CEUR-WS.org, 2015.
 
 :- use_module('../logic/cwa').
 :- use_module('../logic/l').
+
+:- use_module('../projection/ligression').
+
 :- use_module('../reasoners/konclude', [consistent/1 as dl_consistent,
                                         inconsistent/1 as dl_inconsistent]).
 
@@ -631,160 +634,9 @@ regression(F,E,R) :-
         E =@= EC,
         R =@= RC, !.
 regression(F,E,R) :- !,
-        regress(F,E,R1),
+        ligress(F,E,R1),
         simplify(R1,R),
         assert(regression_cached(F,E,R)).
-
-regress(F1<=>F2,E,R1<=>R2) :- !,
-        regress(F1,E,R1),
-        regress(F2,E,R2).
-regress(F1=>F2,E,R1=>R2) :- !,
-        regress(F1,E,R1),
-        regress(F2,E,R2).
-regress(F1<=F2,E,R1<=R2) :- !,
-        regress(F1,E,R1),
-        regress(F2,E,R2).
-regress(F1+F2,E,R1+R2) :- !,
-        regress(F1,E,R1),
-        regress(F2,E,R2).
-regress(F1*F2,E,R1*R2) :- !,
-        regress(F1,E,R1),
-        regress(F2,E,R2).
-regress(-F1,E,-R1) :- !,
-        regress(F1,E,R1).
-regress(some(Xs,F1),E,some(Xs,R1)) :- !,
-        regress(F1,E,R1).
-regress(all(Xs,F1),E,all(Xs,R1)) :- !,
-        regress(F1,E,R1).
-regress(X=Y,_,X=Y) :- !.
-regress(true,_,true) :- !.
-regress(false,_,false) :- !.
-
-regress(concept_assertion(C,N),E,concept_assertion(CR,N)) :- !,
-        regress_dl(C,E,CR).
-regress(role_assertion(R,N1,N2),E,R) :- !,
-        regress(concept_assertion(some(R,oneof([N2])),N1),E,R).
-
-regress(poss(A),E,R) :-
-        poss(A,F), !,
-        regress(F,E,R).
-regress(poss(A),E,R) :-
-        poss(A,T,F1), !,
-        types_cons(T,F2),
-        conjoin([F1|F2],F),
-        regress(F,E,R).
-
-regress(Atom,E,(Atom+RP)*RN) :-
-        regress_pos(Atom,E,RP),
-        regress_neg(Atom,E,RN).
-
-regress_pos(_Atom,[],false) :- !.
-regress_pos(Atom,[L|E],(Equalities+RP)) :-
-        Atom=..[F|Args],
-        L=..[F|Args2],
-        length(Args,N),
-        length(Args2,N),!,
-        pos_equalities(Args,Args2,Equalities),
-        regress_pos(Atom,E,RP).
-regress_pos(Atom,[_|E],RP) :-
-        regress_pos(Atom,E,RP).
-
-pos_equalities([Arg1|Args1],[Arg2|Args2],Equalities) :- 
-        is_stdname(Arg1),
-        is_stdname(Arg2),
-        % same names => true
-        Arg1=Arg2, !,
-        pos_equalities(Args1,Args2,Equalities).
-pos_equalities([Arg1|_Args1],[Arg2|_Args2],false) :- 
-        is_stdname(Arg1),
-        is_stdname(Arg2),
-        % distinct names => true
-        not(Arg1=Arg2), !.
-pos_equalities([Arg1|Args1],[Arg2|Args2],(Arg1=Arg2)*Equalities) :-
-        pos_equalities(Args1,Args2,Equalities).
-pos_equalities([],[],true).
-
-regress_neg(_Atom,[],true) :- !.
-regress_neg(Atom,[-L|E],Inequalities*RN) :-
-        Atom=..[F|Args],
-        L=..[F|Args2],
-        length(Args,N),
-        length(Args2,N),!,
-        neg_inequalities(Args,Args2,Inequalities),
-        regress_neg(Atom,E,RN).
-regress_neg(Atom,[_|E],RN) :-
-        regress_neg(Atom,E,RN).
-
-neg_inequalities([Arg1|Args1],[Arg2|Args2],Inequalities) :- 
-        is_stdname(Arg1),
-        is_stdname(Arg2),
-        % same names => false
-        Arg1=Arg2, !,
-        neg_inequalities(Args1,Args2,Inequalities).
-neg_inequalities([Arg1|_Args1],[Arg2|_Args2],true):- 
-        is_stdname(Arg1),
-        is_stdname(Arg2),
-        % distinct names => true
-        not(Arg1=Arg2), !.
-neg_inequalities([Arg1|Args1],[Arg2|Args2],-(Arg1=Arg2)+Inequalities) :-
-        neg_inequalities(Args1,Args2,Inequalities).
-neg_inequalities([],[],false).
-
-regress_dl(thing,_E,thing) :- !.
-regress_dl(nothing,_E,nothing) :- !.
-regress_dl(not(C),E,not(D)) :- !,
-        regress_dl(C,E,D).
-regress_dl(and(Cs),E,and(Rs)) :- !,
-        regress_dl_list(Cs,E,Rs).
-regress_dl(or(Cs),E,or(Rs)) :- !,
-        regress_dl_list(Cs,E,Rs).
-regress_dl(oneof(Ns),_E,oneof(Ns)) :- !.
-regress_dl(some(R,C),E,Result) :- !,
-        all_individuals(Ind),
-        regress_dl(C,E,Res),
-        findall(and([oneof([A]),some(R,and([oneof([B]),Res]))]),
-                (member(A,Ind),
-                 member(B,Ind),
-                 not(member(role_assertion(R,A,B)),E),
-                 not(member(-role_assertion(R,A,B)),E)),
-                R3s),
-        findall(and([oneof([A]),some(universal,and([oneof([B],Res)]))]),
-                member(role_assertion(R,A,B),E),
-                R4s),                    
-        R1 = and([not(oneof(Ind)),some(R,Res)]),
-        R2 = and([oneof(Ind),some(R,and([not(oneof(Ind)),Res]))]),
-        R3 = or(R3s),
-        R4 = or(R4s),
-        Result = or([R1,R2,R3,R4]).
-regress_dl(all(R,C),E,Result) :- !,
-        all_individuals(Ind),
-        regress_dl(C,E,Res),
-        findall(or([not(oneof([A])),all(R,or([not(oneof([B])),Res]))]),
-                (member(A,Ind),
-                 member(B,Ind),
-                 not(member(role_assertion(R,A,B)),E),
-                 not(member(-role_assertion(R,A,B)),E)),
-                R3s),
-        findall(or([not(oneof([A])),some(universal,and([oneof([B],Res)]))]),
-                member(role_assertion(R,A,B),E),
-                R4s),                    
-        R1 = or([oneof(Ind),all(R,Res)]),
-        R2 = or([not(oneof(Ind)),all(R,or([oneof(Ind),Res]))]),
-        R3 = or(R3s),
-        R4 = and(R4s),
-        Result = or([R1,R2,R3,R4]).
-regress_dl(C,E,R) :- !,
-        findall(A,member(-concept_assertion(C,A),E),PosInd),
-        findall(B,member(concept_assertion(C,B),E),NegInd),
-        R = or([and([C,not(oneof(NegInd))],oneof(PosInd))]).
-
-regress_dl_list([C|Cs],E,[R|Rs]) :- !,
-        regress_dl(C,E,R),
-        regress_dl_list(Cs,E,Rs).
-regress_dl_list([],_E,[]) :- !.
-
-all_individuals(Ind) :- !,
-        findall(N,user:stdname(N),Ind).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
