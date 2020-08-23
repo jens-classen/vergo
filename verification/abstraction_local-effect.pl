@@ -512,7 +512,8 @@ is_entailed(Formulas,Formula) :-
         is_entailed_cached(Formulas,Formula,false), !, fail.
 is_entailed(Formulas,Formula) :-
         entails_l(Formulas,Formula,Truth), !,
-        assert(is_entailed_cached(Formulas,Formula,Truth)).
+        assert(is_entailed_cached(Formulas,Formula,Truth)),
+        Truth = true.
 
 is_inconsistent(Formulas) :-
         is_inconsistent_cached(Formulas,true), !.
