@@ -1,7 +1,6 @@
-:- module(konclude, [entails/2,
-                     inconsistent/1,
-                     consistent/1,
-                     simplify/2,
+:- module(konclude, [entails/3,
+                     inconsistent/2,
+                     consistent/2,
                      op(1130, xfy, <=>),
                      op(1110, xfy, <=),
                      op(1110, xfy, =>)]).
@@ -57,22 +56,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* Succeeds if Ontology entails Conjecture. */
-entails(Ontology,Conjecture) :- !,
+entails(Ontology,DistNames,Conjecture) :- !,
         add_to_ontology(Ontology,-Conjecture,NOntology),
-        inconsistent(NOntology).
+        konclude(NOntology,DistNames,inconsistent).
 
 /* Succeeds if Ontology is inconsistent. */
-inconsistent(Ontology) :- !,
-        not(consistent(Ontology)).
+inconsistent(Ontology,DistNames) :- !,
+        konclude(Ontology,DistNames,inconsistent).
 
 /* Succeeds if Ontology is consistent. */
-consistent(Ontology) :- !,
-        consistent_konclude(Ontology).
+consistent(Ontology,DistNames) :- !,
+        konclude(Ontology,DistNames,consistent).
 
-/* Succeeds if Ontology is consistent. Uses Konclude DL reasoner. */
-consistent_konclude(Ontology) :- !,
+/* Call Konclude DL reasoner to check if Ontology is (in)consistent. */
+konclude(Ontology,DistNames,Result) :- !,
         temp_file(File),
-        writeToFile(Ontology, File),
+        writeToFile(Ontology,DistNames,File),
         process_create(path('Konclude'), 
                        ['consistency',
                         '-i', File],
@@ -80,9 +79,10 @@ consistent_konclude(Ontology) :- !,
                         process(PID)]),       % need PID for exit status
         process_wait(PID, _Status), !,        % wait for completion
         read_string(Output,"","",_,String),
-        check_konclude_result(String).        % return value
+        close(Output),
+        check_konclude_result(String,Result). % return value
 
-check_konclude_result(String) :- 
+check_konclude_result(String,error) :-
         sub_string(String,_,_,_N,"error"), !,
         temp_file(File),
         report_message(error,['Konclude reported an error:']),
@@ -90,12 +90,11 @@ check_konclude_result(String) :-
         report_message(error,[String]),
         report_message(error,['Check ', File, '.']),
         abort.
-check_konclude_result(String) :-
+check_konclude_result(String,consistent) :-
         sub_string(String,_,_,_N,"is consistent."), !.
-check_konclude_result(String) :-
-        sub_string(String,_,_,_N,"is inconsistent."), !,
-        fail.
-check_konclude_result(String) :- 
+check_konclude_result(String,inconsistent) :-
+        sub_string(String,_,_,_N,"is inconsistent."), !.
+check_konclude_result(String,unexpected) :-
         temp_file(File),
         report_message(error,['Unexpected Konclude output:']),
         report_message(error,['Aborting...']),
@@ -107,12 +106,12 @@ temp_file(File) :- !,
         temp_dir(TempDir),
         string_concat(TempDir, '/owl2.ofn', File).
 
-writeToFile(Ontology, FileName) :- !,
+writeToFile(Ontology,DistNames,FileName) :- !,
         open(FileName, write, Stream),
-        write_ontology(Stream, Ontology),
+        write_ontology(Stream,Ontology,DistNames),
 	close(Stream).
 
-write_ontology(Stream, ontology(Names, Concepts, Roles, ABox, TBox)) :- !,
+write_ontology(Stream, ontology(Names, Concepts, Roles, ABox, TBox), _) :- !,
         URL = 'http://example.com/owl/temp',
         write_prefixes(Stream, URL),
         write(Stream, 'Ontology( <'),
@@ -125,13 +124,14 @@ write_ontology(Stream, ontology(Names, Concepts, Roles, ABox, TBox)) :- !,
         write_axioms(Stream, TBox),
         write(Stream, ')\n').
 
-write_ontology(Stream, Axioms) :-
+write_ontology(Stream, Axioms, DistNames) :-
         is_list(Axioms), !,
         URL = 'http://example.com/owl/temp',
         write_prefixes(Stream, URL),
         write(Stream, 'Ontology( <'),
         write(Stream, URL),
         write(Stream, '>\n'),
+        write_distnames(Stream, DistNames),
         write_axioms(Stream, Axioms),
         write(Stream, ')\n').
 
@@ -141,6 +141,12 @@ write_prefixes(Stream, URL) :- !,
         write(Stream, '#>)\n'),
         write(Stream, 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n'),
         write(Stream, 'Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n').
+
+write_distnames(_Stream, []) :- !.
+write_distnames(Stream, DistNames) :- !,
+        write(Stream, ' DifferentIndividuals( '),
+        write_name_list(Stream, DistNames),
+        write(Stream, ')\n').
 
 write_axioms(Stream, [Axiom|Axioms]) :- !,
         write_axiom(Stream, Axiom),
@@ -245,6 +251,12 @@ write_role(Stream, Indent, Prim) :- !,
         write(Stream, Prim),
         write(Stream, '\n').
 
+write_name_list(Stream, [Name|Names]) :-
+        atom_concat('#',C,Name), !,
+        write(Stream, ' :'),
+        write(Stream, C),
+        write(Stream, ' '),
+        write_name_list(Stream,Names).
 write_name_list(Stream, [Name|Names]) :- !,
         write(Stream, ' :'),
         write(Stream, Name),
@@ -270,11 +282,17 @@ write_axiom(Stream, BAxiom) :- !,
         boolaxiom2assertion(BAxiom, Assertion),
         write_axiom(Stream, Assertion).
 
+write_name(Stream, Indent, Name) :-
+        atom_concat('#',C,Name), !,
+        write_indent(Stream,Indent),
+        write(Stream, ':'),
+        write(Stream, C),
+        write(Stream, '\n').
 write_name(Stream, Indent, Name) :- !,
         write_indent(Stream,Indent),
         write(Stream, ':'),
         write(Stream, Name),
-        write(Stream, '\n').        
+        write(Stream, '\n').
 
 write_indent(Stream, Indent) :-
         Indent > 0, !,
@@ -321,7 +339,13 @@ get_names_roles(Atom, NamesRoles) :-
         get_new_role(N1,R1),
         get_new_role(N2,R2),
         NamesRoles = [(N1,R1),(N2,R2)].
+get_names_roles(true, []) :- !.
+get_names_roles(false, []) :- !.
 
+get_new_role(Name,Role) :-
+        % "#" from standard names will confuse Konclude...
+        atom_concat('#',C,Name), !,
+        atom_concat('__role_',C,Role).
 get_new_role(Name,Role) :- !,
         atom_concat('__role_',Name,Role).
 
@@ -333,7 +357,7 @@ construct_concept(Axiom, NamesRoles, Concept) :- !,
         append(CList, [C], Conjuncts),
         Concept = and(Conjuncts).
 
-construct_concept2([(N,R)|NamesRoles], [some(R,oneof([N])),all(R,oneof([N]))|Conjuncts]) :- !,
+construct_concept2([(N,R)|NamesRoles], [some(R,oneof([N])),only(R,oneof([N]))|Conjuncts]) :- !,
         construct_concept2(NamesRoles,Conjuncts).
 construct_concept2([],[]) :- !.
 
@@ -357,6 +381,8 @@ construct_concept3(concept_assertion(C,N), NamesRoles, Concept) :- !,
 construct_concept3(role_assertion(R,N1,N2), NamesRoles, Concept) :- !,
         member((N1,R1), NamesRoles),
         Concept = some(R1,some(R,oneof([N2]))).
+construct_concept3(true, _NamesRoles, thing) :- !.
+construct_concept3(false, _NamesRoles, nothing) :- !.
 
 % add formula to ontology: distinguish the two representation styles
 add_to_ontology(ontology(Names, Concepts, Roles, ABox, TBox), Formula,
@@ -371,10 +397,3 @@ add_to_ontology(ontology(Names, Concepts, Roles, ABox, TBox), Formula,
         NOntology = ontology(Names,Concepts,Roles,ABox,
                              [Formula|TBox]).
 add_to_ontology(Ontology,Formula,[Formula|Ontology]) :-  !.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Formula Simplification
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% change nothing so far
-simplify(F,F).

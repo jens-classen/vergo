@@ -32,6 +32,7 @@ means of abstraction.
 :- module(ligression, [ligress/3]).
 
 :- use_module('../logic/l').
+:- use_module('../logic/dl', [get_fml_std_names/2 as get_fml_std_names_dl]).
 :- use_module('../logic/cwa').
 
 :- multifile user:rel_fluent/1.
@@ -43,6 +44,10 @@ means of abstraction.
 :- multifile user:causes_true/3.
 :- multifile user:causes_false/3.
 :- multifile user:def/2.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ligression for general formulas
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ligress(F1<=>F2,E,R1<=>R2) :- !,
         ligress(F1,E,R1),
@@ -69,10 +74,12 @@ ligress(X=Y,_,X=Y) :- !.
 ligress(true,_,true) :- !.
 ligress(false,_,false) :- !.
 
+ligress(concept_assertion(C,N),[],concept_assertion(C,N)) :- !.
 ligress(concept_assertion(C,N),E,concept_assertion(CR,N)) :- !,
         ligress_dl(C,E,CR).
-ligress(role_assertion(R,N1,N2),E,R) :- !,
-        ligress(concept_assertion(some(R,oneof([N2])),N1),E,R).
+ligress(role_assertion(R,N1,N2),[],role_assertion(R,N1,N2)) :- !.
+ligress(role_assertion(R,N1,N2),E,Result) :- !,
+        ligress(concept_assertion(some(R,oneof([N2])),N1),E,Result).
 
 ligress(poss(A),E,R) :-
         user:poss(A,F), !,
@@ -83,6 +90,7 @@ ligress(poss(A),E,R) :-
         conjoin([F1|F2],F),
         ligress(F,E,R).
 
+ligress(Atom,[],Atom) :- !.
 ligress(Atom,E,(Atom+RP)*RN) :-
         ligress_pos(Atom,E,RP),
         ligress_neg(Atom,E,RN).
@@ -139,6 +147,11 @@ neg_inequalities([Arg1|Args1],[Arg2|Args2],-(Arg1=Arg2)+Inequalities) :-
         neg_inequalities(Args1,Args2,Inequalities).
 neg_inequalities([],[],false).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ligression for concepts of the description logic ALCO_U
+% (according to Benjamin Zarriess' note from 2015-09-08)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 ligress_dl(thing,_E,thing) :- !.
 ligress_dl(nothing,_E,nothing) :- !.
 ligress_dl(not(C),E,not(D)) :- !,
@@ -149,33 +162,39 @@ ligress_dl(or(Cs),E,or(Rs)) :- !,
         ligress_dl_list(Cs,E,Rs).
 ligress_dl(oneof(Ns),_E,oneof(Ns)) :- !.
 ligress_dl(some(R,C),E,Result) :- !,
-        all_individuals(Ind),
+        get_fml_std_names_dl(some(R,C),Ind1),
+        get_fml_std_names(E,Ind2),
+        append(Ind1,Ind2,Ind),
         ligress_dl(C,E,Res),
         findall(and([oneof([A]),some(R,and([oneof([B]),Res]))]),
                 (member(A,Ind),
                  member(B,Ind),
-                 not(member(role_assertion(R,A,B)),E),
-                 not(member(-role_assertion(R,A,B)),E)),
+                 L =.. [R,A,B],
+                 not(member(L,E)),
+                 not(member(-L,E))),
                 R3s),
-        findall(and([oneof([A]),some(universal,and([oneof([B],Res)]))]),
-                member(role_assertion(R,A,B),E),
+        findall(and([oneof([A]),some(universal,and([oneof([B]),Res]))]),
+                (member(L,E), L =.. [R,A,B]),
                 R4s),                    
         R1 = and([not(oneof(Ind)),some(R,Res)]),
         R2 = and([oneof(Ind),some(R,and([not(oneof(Ind)),Res]))]),
         R3 = or(R3s),
         R4 = or(R4s),
         Result = or([R1,R2,R3,R4]).
-ligress_dl(all(R,C),E,Result) :- !,
-        all_individuals(Ind),
+ligress_dl(only(R,C),E,Result) :- !,
+        get_fml_std_names_dl(only(R,C),Ind1),
+        get_fml_std_names(E,Ind2),
+        append(Ind1,Ind2,Ind),
         ligress_dl(C,E,Res),
         findall(or([not(oneof([A])),all(R,or([not(oneof([B])),Res]))]),
                 (member(A,Ind),
                  member(B,Ind),
-                 not(member(role_assertion(R,A,B)),E),
-                 not(member(-role_assertion(R,A,B)),E)),
+                 L =.. [R,A,B],
+                 not(member(L,E)),
+                 not(member(-L,E))),
                 R3s),
-        findall(or([not(oneof([A])),some(universal,and([oneof([B],Res)]))]),
-                member(role_assertion(R,A,B),E),
+        findall(or([not(oneof([A])),some(universal,and([oneof([B]),Res]))]),
+                (member(L,E), L =.. [R,A,B]),
                 R4s),                    
         R1 = or([oneof(Ind),all(R,Res)]),
         R2 = or([not(oneof(Ind)),all(R,or([oneof(Ind),Res]))]),
@@ -183,14 +202,11 @@ ligress_dl(all(R,C),E,Result) :- !,
         R4 = and(R4s),
         Result = or([R1,R2,R3,R4]).
 ligress_dl(C,E,R) :- !,
-        findall(A,member(-concept_assertion(C,A),E),PosInd),
-        findall(B,member(concept_assertion(C,B),E),NegInd),
-        R = or([and([C,not(oneof(NegInd))],oneof(PosInd))]).
+        findall(A,(member(L,E), L =.. [C,A]),PosInd),
+        findall(B,(member(-L,E), L =.. [C,B]),NegInd),
+        R = or([and([C,not(oneof(NegInd))]),oneof(PosInd)]).
 
 ligress_dl_list([C|Cs],E,[R|Rs]) :- !,
         ligress_dl(C,E,R),
         ligress_dl_list(Cs,E,Rs).
 ligress_dl_list([],_E,[]) :- !.
-
-all_individuals(Ind) :- !,
-        findall(N,user:stdname(N),Ind).

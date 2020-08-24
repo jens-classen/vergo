@@ -35,18 +35,20 @@ CEUR-WS.org, 2015.
 :- use_module('../lib/env').
 
 :- use_module('../logic/cwa').
-:- use_module('../logic/l').
+:- use_module('../logic/fol', [conjoin/2]).
+:- use_module('../logic/l', [entails_l/3, inconsistent_l/2,
+                             simplify/2 as simplify_l]).
+:- use_module('../logic/dl', [entails_dl/3, inconsistent_dl/2,
+                              simplify/2 as simplify_dl]).
 
 :- use_module('../projection/ligression').
 
-:- use_module('../reasoners/konclude', [consistent/1 as dl_consistent,
-                                        inconsistent/1 as dl_inconsistent]).
-
 :- use_module('characteristic_graphs_guards').
 
-:- discontiguous(stdnames_axioms/1).
-:- discontiguous(is_entailed/2).
-:- discontiguous(is_inconsistent/1).
+:- discontiguous(is_entailed/3).
+:- discontiguous(is_inconsistent/2).
+
+:- multifile user:base_logic/1.
 
 :- dynamic   
    is_entailed_cached/3,
@@ -289,7 +291,7 @@ can_split_property(Formulas,Literals,RegressedFormula) :-
         
 % split Formulas over RegressedCondition
 split(Formulas,RegressedCondition) :-
-        simplify(-RegressedCondition,NegRegressedCondition),
+        simplify_fml(-RegressedCondition,NegRegressedCondition),
         retract(abstract_state(Formulas,Literals,NodeID,Fringe)),
         assert(abstract_state([RegressedCondition|Formulas],Literals,
                               NodeID,Fringe)),
@@ -298,7 +300,7 @@ split(Formulas,RegressedCondition) :-
         fail.
 
 split(Formulas,RegressedCondition) :-
-        simplify(-RegressedCondition,NegRegressedCondition),
+        simplify_fml(-RegressedCondition,NegRegressedCondition),
         retract(abstract_trans(Formulas,Literals,NodeID,Action,
                                NewLiterals,NewNodeID)),
         assert(abstract_trans([RegressedCondition|Formulas],Literals,
@@ -314,7 +316,7 @@ split(Formulas,RegressedCondition) :-
         fail.
         
 split(Formulas,RegressedCondition) :-
-        simplify(-RegressedCondition,NegRegressedCondition),
+        simplify_fml(-RegressedCondition,NegRegressedCondition),
         is_inconsistent([NegRegressedCondition|Formulas]),
         retractall(abstract_state([NegRegressedCondition|Formulas],_,_,_)),
         retractall(abstract_trans([NegRegressedCondition|Formulas],_,_,_,_)), 
@@ -343,7 +345,7 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
                         '\t node     : ', NodeID, '\n']),
         
         split(Formulas,RegressedCondition),
-        simplify(-RegressedCondition,NegRegressedCondition),
+        simplify_fml(-RegressedCondition,NegRegressedCondition),
         
         create_transitions([RegressedCondition|Formulas],Literals,
                            NodeID,Action,NewNodeID),
@@ -370,7 +372,7 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
                         '\t node     : ', NodeID, '\n']),
         
         split(Formulas,RegressedCondition),
-        simplify(-RegressedCondition,NegRegressedCondition),
+        simplify_fml(-RegressedCondition,NegRegressedCondition),
         
         create_transitions([RegressedCondition|Formulas],Literals,
                            NodeID,Action,NewNodeID),
@@ -463,7 +465,7 @@ extract_subformulas(next(P)) :- !,
         extract_subformulas(P).
 extract_subformulas(F) :- 
         no_temporal_operators(F), !,
-        simplify(F,FS),
+        simplify_fml(F,FS),
         assert(property_subformula(FS)).
 
 no_temporal_operators(F) :-
@@ -502,74 +504,65 @@ no_temporal_operators(F) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% L reasoning with caching
+%% Reasoning: Use L or DL
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 is_entailed(Formulas,Formula) :-
+        user:base_logic(L), !,
+        is_entailed(L,Formulas,Formula).
+is_entailed(Formulas,Formula) :- !,
+        is_entailed(l,Formulas,Formula). % default
+
+is_inconsistent(Formulas) :-
+        user:base_logic(L), !,
+        is_inconsistent(L,Formulas).
+is_inconsistent(Formulas) :- !,
+        is_inconsistent(l,Formulas). % default
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% L reasoning with caching
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+is_entailed(l,Formulas,Formula) :-
         is_entailed_cached(Formulas,Formula,true), !.
-is_entailed(Formulas,Formula) :-
+is_entailed(l,Formulas,Formula) :-
         is_entailed_cached(Formulas,Formula,false), !, fail.
-is_entailed(Formulas,Formula) :-
+is_entailed(l,Formulas,Formula) :-
         entails_l(Formulas,Formula,Truth), !,
         assert(is_entailed_cached(Formulas,Formula,Truth)),
         Truth = true.
 
-is_inconsistent(Formulas) :-
+is_inconsistent(l,Formulas) :-
         is_inconsistent_cached(Formulas,true), !.
-is_inconsistent(Formulas) :-
+is_inconsistent(l,Formulas) :-
         is_inconsistent_cached(Formulas,false), !, fail.
-is_inconsistent(Formulas) :-
-        inconsistent_l(Formulas,true), !,
-        assert(is_inconsistent_cached(Formulas,true)).
-is_inconsistent(Formulas) :- !,
-        assert(is_inconsistent_cached(Formulas,false)),
-        fail.
-        
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+is_inconsistent(l,Formulas) :-
+        inconsistent_l(Formulas,Truth), !,
+        assert(is_inconsistent_cached(Formulas,Truth)),
+        Truth = true.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DL reasoning with caching
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO: incorporate standard names into dl.pl as in l.pl
-
-stdnames_axioms(Axioms) :-
-        findall(-(X=Y),
-                (user:stdname(X),user:stdname(Y),not(X=Y),(X @< Y)),
-                Axioms).
-
-is_entailed(Formulas,Formula) :-
+is_entailed(dl,Formulas,Formula) :-
         is_entailed_cached(Formulas,Formula,true), !.
-is_entailed(Formulas,Formula) :-
+is_entailed(dl,Formulas,Formula) :-
         is_entailed_cached(Formulas,Formula,false), !, fail.
-is_entailed(Formulas,Formula) :-
-        stdnames_axioms(StdAxioms),
-        append(Formulas,StdAxioms,Axioms),
-        dl_entails(Axioms,Formula), !,
-        assert(is_entailed_cached(Formulas,Formula,true)).
-is_entailed(Formulas,Formula) :-
-        stdnames_axioms(StdAxioms),
-        append(Formulas,StdAxioms,Axioms),
-        not(dl_entails(Axioms,Formula)), !,
-        assert(is_entailed_cached(Formulas,Formula,false)),
-        fail.
+is_entailed(dl,Formulas,Formula) :-
+        entails_dl(Formulas,Formula,Truth), !,
+        assert(is_entailed_cached(Formulas,Formula,Truth)),
+        Truth = true.
 
-is_inconsistent(Formulas) :-
+is_inconsistent(dl,Formulas) :-
         is_inconsistent_cached(Formulas,true), !.
-is_inconsistent(Formulas) :-
+is_inconsistent(dl,Formulas) :-
         is_inconsistent_cached(Formulas,false), !, fail.
-is_inconsistent(Formulas) :-
-        stdnames_axioms(StdAxioms),
-        append(Formulas,StdAxioms,Axioms),
-        dl_inconsistent(Axioms), !,
-        assert(is_inconsistent_cached(Formulas,true)).
-is_inconsistent(Formulas) :-
-        stdnames_axioms(StdAxioms),
-        append(Formulas,StdAxioms,Axioms),
-        not(dl_inconsistent(Axioms)), !,
-        assert(is_inconsistent_cached(Formulas,false)),
-        fail.
+is_inconsistent(dl,Formulas) :-
+        inconsistent_dl(Formulas,Truth), !,
+        assert(is_inconsistent_cached(Formulas,Truth)),
+        Truth = true.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -626,13 +619,30 @@ apply_pos_effects([Lit|Literals],Effects,[Lit|NewEffects]) :-
         apply_pos_effects(Literals,Effects,NewEffects).
 apply_pos_effects([],Effects,Effects).
 
+
 % regression: use "ligression" and simplify
 regression(F,E,R) :- !,
         ligress(F,E,R1),
-        simplify(R1,R).
+        simplify_fml(R1,R).
 
 % Note: removed caching of regression results due to significant slow down
 %       (large number of comparisons, have to use =@=)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Formula Simplification
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+simplify_fml(F,R) :-
+        user:base_logic(L), !,
+        simplify_fml(L,F,R).
+simplify_fml(F,R) :- !,
+        simplify_fml(l,F,R).
+simplify_fml(l,F,R) :- !,
+        simplify_l(F,R).
+simplify_fml(dl,F,R) :-
+        simplify_dl(F,R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -889,7 +899,7 @@ writeSpecProperty(Stream,next(P)) :- !,
         write(Stream, ')').
 writeSpecProperty(Stream, F) :-
         no_temporal_operators(F),
-        simplify(F,FS),
+        simplify_fml(F,FS),
         property_subformula(FS),
         map_subformula(FormulaN,FS), !,
         write(Stream, FormulaN).
