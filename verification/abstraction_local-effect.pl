@@ -901,7 +901,7 @@ writeSpecProperty(Stream, F) :-
         no_temporal_operators(F),
         simplify_fml(F,FS),
         property_subformula(FS),
-        map_subformula(FormulaN,FS), !,
+        map_subformula(FormulaN,FM), FS =@= FM, !,
         write(Stream, FormulaN).
 
 % TODO: boolean combintations of CTL formulae
