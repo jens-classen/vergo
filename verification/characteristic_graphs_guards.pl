@@ -27,7 +27,7 @@ operators.
 :- use_module('../golog/program_simplify').
 :- use_module('../golog/transfinal_guards').
 
-:- multifile use_sink_states/0.
+:- multifile user:use_sink_states/0.
 
 :- dynamic cg_node/4.
 :- dynamic cg_edge/5.
@@ -135,15 +135,15 @@ cg_construction_step(ProgramName) :-
         assert(cg_edge(ProgramName,ID,SimplifiedGuard,Action,NewID)).
 
 transition(Program,Guard,Action,NewProgram) :-
-        use_sink_states, !,
+        user:use_sink_states, !,
         step(Program,Guard,Action,NewProgram).
 transition(Program,Guard,Action,NewProgram) :-
-        not(use_sink_states), !,
+        not(user:use_sink_states), !,
         trans(Program,Guard,Action,NewProgram).
 is_final(_Program,false) :-
-        use_sink_states, !.
+        user:use_sink_states, !.
 is_final(Program,Final) :-
-        not(use_sink_states), !,
+        not(user:use_sink_states), !,
         final(Program,Final).
 
 simplify_guard([],[]) :- !.

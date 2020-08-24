@@ -27,7 +27,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../golog/program_simplify').
 :- use_module('../golog/transfinal_thesis').
 
-:- multifile use_sink_states/0.
+:- multifile user:use_sink_states/0.
 
 :- dynamic cg_node/4.
 :- dynamic cg_edge/7.
@@ -146,15 +146,15 @@ cg_construction_step(ProgramName) :-
                        SimplifiedCondition2)).
 
 transition(Program,Action,NewProgram,Condition1,Vars,Condition2) :-
-        use_sink_states, !,
+        user:use_sink_states, !,
         step(Program,Action,NewProgram,Condition1,Vars,Condition2).
 transition(Program,Action,NewProgram,Condition1,Vars,Condition2) :-
-        not(use_sink_states), !,
+        not(user:use_sink_states), !,
         trans(Program,Action,NewProgram,Condition1,Vars,Condition2).
 is_final(_Program,false) :-
-        use_sink_states, !.
+        user:use_sink_states, !.
 is_final(Program,Final) :-
-        not(use_sink_states), !,
+        not(user:use_sink_states), !,
         final(Program,Final).
 
 cg_get_node_id(ProgramName,Program,ID) :-
