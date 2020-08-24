@@ -17,6 +17,7 @@ arbitrarily alternate between pick quantifiers and condition formulas.
 
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
+:- use_module('../logic/fol', [conjoin/2]).
 :- use_module('program_simplify').
 
 :- multifile user:ignore_preconditions/0.
