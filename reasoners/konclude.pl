@@ -145,7 +145,8 @@ write_prefixes(Stream, URL) :- !,
         write(Stream, 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n'),
         write(Stream, 'Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n').
 
-write_distnames(_Stream, []) :- !.
+write_distnames(_Stream, []) :- !.  % need at least 2 for "DifferentIndividuals"
+write_distnames(_Stream, [_]) :- !. % need at least 2 for "DifferentIndividuals"
 write_distnames(Stream, DistNames) :- !,
         write(Stream, ' DifferentIndividuals( '),
         write_name_list(Stream, DistNames),
