@@ -84,7 +84,7 @@ check(History, Query, Outcome) :-
         report_message(['  Expected Outcome: ', Outcome]),
         report_message(['  Actual   Outcome: ', ActualOutcome]),
         report_message([]),
-        ActualOutcome = Outcome.
+        assertion(ActualOutcome = Outcome).
 
 :- begin_tests(regression).
 

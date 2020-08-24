@@ -105,9 +105,12 @@ check_prop(P) :-
         check_result(P,T), !.
 
 check_result(P,T) :-
+        assertion(expected_outcome(P,T)),
+        check_result2(P,T).
+check_result2(P,T) :-
         expected_outcome(P,T), !,
         report_message(info,['Outcome for ',P,' is as expected!']).
-check_result(P,_T) :- !,
+check_result2(P,_T) :- !,
         report_message(info,['Outcome for ',P,
                              ' is different from what expected!']).
 

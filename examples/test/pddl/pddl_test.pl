@@ -94,7 +94,7 @@ check(Dom,Pro) :-
 
         init(regression),
         validate(Plan,Goal),
-        report_message(['Successfully validated plan.']).
+        report_message(['Done validating plan.']).
 
 clear :-
         retractall(type(_)),
@@ -112,9 +112,9 @@ clear :-
         retractall(metric(_,_)).
 
 validate(fail,Goal) :- !,
-        ask(Goal,false).               % no plan => Goal shouldn't hold
+        assertion(ask(Goal,false)).               % no plan => Goal shouldn't hold
 validate(Plan,Goal) :- 
         append(Prefix,[_LastAction],Plan), !,
-        ask(executable(Plan),true),    % plan should be executable
-        ask(after(Plan,Goal),true),    % plan should achieve Goal
-        ask(after(Prefix,Goal),false). % plan w/o last action shouldn't
+        assertion(ask(executable(Plan),true)),    % plan should be executable
+        assertion(ask(after(Plan,Goal),true)),    % plan should achieve Goal
+        assertion(ask(after(Prefix,Goal),false)). % plan w/o last action shouldn't

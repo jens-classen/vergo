@@ -111,7 +111,7 @@ expected_outcome(prop3,false).
 expected_outcome(prop4,true).
 expected_outcome(prop5,false).
 
-:- begin_tests('abstraction_local-effect').
+:- begin_tests('abstraction_local-effect_dl').
 
 test(abstraction) :- !,
         compute_abstraction(main),
@@ -126,10 +126,13 @@ check_prop(P) :-
         check_result(P,T), !.
 
 check_result(P,T) :-
+        assertion(expected_outcome(P,T)),
+        check_result2(P,T).
+check_result2(P,T) :-
         expected_outcome(P,T), !,
         report_message(info,['Outcome for ',P,' is as expected!']).
-check_result(P,_T) :- !,
+check_result2(P,_T) :- !,
         report_message(info,['Outcome for ',P,
                              ' is different from what expected!']).
 
-:- end_tests('abstraction_local-effect').
+:- end_tests('abstraction_local-effect_dl').

@@ -274,9 +274,12 @@ actual_label(Prog,Prop,I,N,Psi) :-
 
 report_equivalence(I,N,Psi1,Psi2) :-
         expand_defs(Psi1,Psi3),
-        equivalent_l(Psi3,Psi2,true), !,
+        equivalent_l(Psi3,Psi2,Equiv), !,
+        report_equivalence2(I,N,Psi1,Equiv),
+        assertion(equivalent_l(Psi3,Psi2,true)).
+report_equivalence2(I,N,_Psi1,true) :- !,
         report_message(['Label for node ', N, ' in iteration ', I,
                         ' is as expected.']).
-report_equivalence(I,N,Psi1,_Psi2) :- !,
+report_equivalence2(I,N,Psi1,_) :- !,
         report_message(['Unexpected label for node ', N, ' in iteration ', I,
                         ': ', Psi1]).
