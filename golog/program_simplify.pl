@@ -67,6 +67,8 @@ simplify_program_list3(L,P) :- !,
 
 progdef(if(C,T,E),
         nondet([test(C),T],[test(-C),E])).
+progdef(if(C,T),
+        nondet([test(C),T],[])).
 progdef(while(C,D),
         [star([test(C),D]),test(-C)]).
 progdef(loop(D),
