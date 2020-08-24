@@ -176,7 +176,28 @@ simplify_and(C,C2) :-
         intersection2(O1,O2,O),
         simplify(oneof(O),OS),
         simplify_and([OS|C3],C2).
-% todo: more simplifications like these?
+simplify_and(C,C2) :-
+        member(not(oneof(O1)),C),
+        member(not(oneof(O2)),C),
+        O1 \= O2, !,
+        setminus2(C,[not(oneof(O1)),not(oneof(O2))],C3),
+        union2(O1,O2,O),
+        simplify(not(oneof(O)),OS),
+        simplify_and([OS|C3],C2).
+simplify_and(C,C2) :-
+        member(oneof(O1),C),
+        member(not(oneof(O2)),C), !,
+        setminus2(C,[oneof(O1),not(oneof(O2))],C3),
+        setminus2(O1,O2,O),
+        simplify(oneof(O),OS),
+        simplify_and([OS|C3],C2).
+simplify_and(C,C2) :-
+        member(only(R,A),C),
+        member(only(R,B),C),
+        A \= B, !,
+        setminus2(C,[only(R,A),only(R,B)],C3),
+        simplify(only(R,and([A,B])),S),
+        simpify_and([S|C3],C2).
 simplify_and([C],C) :- !.
 simplify_and(C,and(C)) :- !.
 
@@ -206,7 +227,28 @@ simplify_or(C,C2) :-
         union2(O1,O2,O),
         simplify(oneof(O),OS),
         simplify_or([OS|C3],C2).
-% todo: more simplifications like these?
+simplify_or(C,C2) :-
+        member(not(oneof(O1)),C),
+        member(not(oneof(O2)),C),
+        O1 \= O2, !,
+        setminus2(C,[not(oneof(O1)),not(oneof(O2))],C3),
+        intersection2(O1,O2,O),
+        simplify(not(oneof(O)),OS),
+        simplify_or([OS|C3],C2).
+simplify_or(C,C2) :-
+        member(oneof(O1),C),
+        member(not(oneof(O2)),C), !,
+        setminus2(C,[oneof(O1),not(oneof(O2))],C3),
+        setminus2(O2,O1,O),
+        simplify(oneof(O),OS),
+        simplify_or([OS|C3],C2).
+simplify_or(C,C2) :-
+        member(some(R,A),C),
+        member(some(R,B),C),
+        A \= B, !,
+        setminus2(C,[some(R,A),some(R,B)],C3),
+        simplify(some(R,or([A,B])),S),
+        simpify_or([S|C3],C2).
 simplify_or([C],C) :- !.
 simplify_or(C,or(C)) :- !.
 
@@ -221,11 +263,17 @@ simplify_not(not(C),C) :- !.
 simplify_not(C,not(C)) :- !.
 
 % quantification
-simplify(some(R,C),some(R,CS)) :-
-        simplify(C,CS), !.
-simplify(all(R,C),all(R,CS)) :-
-        simplify(C,CS), !.
-% todo: simplify role (double negation)?
+simplify(some(R,C),Res) :- !,
+        simplify(C,CS),
+        simplify_some(R,CS,Res).
+simplify(only(R,C),Res) :- !,
+        simplify(C,CS),
+        simplify_only(R,CS,Res).
+
+simplify_some(_R,nothing,nothing) :- !.
+simplify_some(R,C,some(R,C)) :- !.
+simplify_only(_R,thing,thing) :- !.
+simplify_only(R,C,only(R,C)) :- !.
 
 % TBox assertions
 simplify(subsumedBy(C1,C2),subsumedBy(C1S,C2S)) :-
@@ -327,3 +375,5 @@ simplify_list([],[]) :- !.
 simplify_list([F|Fs],[S|Ss]) :- !,
         simplify(F,S),
         simplify_list(Fs,Ss).
+
+% todo: is there a normal form that can be used for simplification?
