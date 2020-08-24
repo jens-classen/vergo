@@ -58,15 +58,18 @@
 /* Succeeds if Ontology entails Conjecture. */
 entails(Ontology,DistNames,Conjecture) :- !,
         add_to_ontology(Ontology,-Conjecture,NOntology),
-        konclude(NOntology,DistNames,inconsistent).
+        konclude(NOntology,DistNames,Result),
+        Result = inconsistent.
 
 /* Succeeds if Ontology is inconsistent. */
 inconsistent(Ontology,DistNames) :- !,
-        konclude(Ontology,DistNames,inconsistent).
+        konclude(Ontology,DistNames,Result),
+        Result = inconsistent.
 
 /* Succeeds if Ontology is consistent. */
 consistent(Ontology,DistNames) :- !,
-        konclude(Ontology,DistNames,consistent).
+        konclude(Ontology,DistNames,Result),
+        Result = consistent.
 
 /* Call Konclude DL reasoner to check if Ontology is (in)consistent. */
 konclude(Ontology,DistNames,Result) :- !,
