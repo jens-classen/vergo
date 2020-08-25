@@ -198,6 +198,10 @@ simplify_and(C,C2) :-
         setminus2(C,[only(R,A),only(R,B)],C3),
         simplify(only(R,and([A,B])),S),
         simpify_and([S|C3],C2).
+simplify_and(C,C2) :-
+        member(not(A),C),
+        member(A,C), !,
+        C2 = nothing.
 simplify_and([C],C) :- !.
 simplify_and(C,and(C)) :- !.
 
@@ -249,6 +253,10 @@ simplify_or(C,C2) :-
         setminus2(C,[some(R,A),some(R,B)],C3),
         simplify(some(R,or([A,B])),S),
         simpify_or([S|C3],C2).
+simplify_or(C,C2) :-
+        member(not(A),C),
+        member(A,C), !,
+        C2 = thing.
 simplify_or([C],C) :- !.
 simplify_or(C,or(C)) :- !.
 
