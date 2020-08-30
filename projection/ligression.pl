@@ -31,8 +31,11 @@ means of abstraction.
  **/
 :- module(ligression, [ligress/3]).
 
-:- use_module('../logic/l').
-:- use_module('../logic/dl', [get_fml_std_names/2 as get_fml_std_names_dl]).
+:- use_module('../logic/l', [op(1130, xfy, <=>),
+                             op(1110, xfy, <=),
+                             op(1110, xfy, =>)]).
+:- use_module('../logic/una', [is_stdname/1,
+                               get_fml_std_names/2]).
 :- use_module('../logic/cwa').
 
 :- multifile user:rel_fluent/1.
@@ -162,7 +165,7 @@ ligress_dl(or(Cs),E,or(Rs)) :- !,
         ligress_dl_list(Cs,E,Rs).
 ligress_dl(oneof(Ns),_E,oneof(Ns)) :- !.
 ligress_dl(exists(R,C),E,Result) :- !,
-        get_fml_std_names_dl(exists(R,C),Ind1),
+        get_fml_std_names(subsumedBy(nothing,exists(R,C)),Ind1),
         get_fml_std_names(E,Ind2),
         append(Ind1,Ind2,Ind),
         ligress_dl(C,E,Res),
@@ -182,7 +185,7 @@ ligress_dl(exists(R,C),E,Result) :- !,
         R4 = or(R4s),
         Result = or([R1,R2,R3,R4]).
 ligress_dl(only(R,C),E,Result) :- !,
-        get_fml_std_names_dl(only(R,C),Ind1),
+        get_fml_std_names(subsumedBy(nothing,only(R,C)),Ind1),
         get_fml_std_names(E,Ind2),
         append(Ind1,Ind2,Ind),
         ligress_dl(C,E,Res),
