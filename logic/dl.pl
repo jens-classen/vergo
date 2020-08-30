@@ -21,8 +21,10 @@ starting with '#', e.g. '#1', '#2', '#bob'.
                simplify/2]).
 
 :- reexport('l', [is_stdname/1]).
+:- reexport('../logic/una', [get_fml_std_names/2]).
 
 :- use_module('../lib/utils').
+:- use_module('../logic/una').
 :- use_module('../reasoners/konclude').
 
 :- discontiguous simplify/2.
@@ -63,83 +65,6 @@ consistent_dl(_Formulas,Truth) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-get_fml_std_names(Fml,Names) :- !,
-        collect_names(Fml,Names2),
-        sort(Names2,Names).
-
-collect_names([Fml|Fmls],Names) :- !,
-        collect_names(Fml,Names1),
-        collect_names(Fmls,Names2),
-        union(Names1,Names2,Names).
-collect_names([],[]) :- !.
-collect_names(Fml1<=>Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(Fml1=>Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(Fml1<=Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(Fml1*Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(Fml1+Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(-Fml,Names) :- !,
-        collect_names(Fml,Names).
-collect_names(concept_assertion(C,N),Names) :- !,
-        collect_names(C,Names1),
-        collect_names_term(N,Names2),
-        append([Names1,Names2],Names).
-collect_names(role_assertion(_R,N1,N2),Names) :- !,
-        % no names in roles...
-        collect_names_term(N1,Names1),
-        collect_names_term(N2,Names2),
-        append([Names1,Names2],Names).
-collect_names(subsumedBy(C1,C2),Names) :- !,
-        collect_names(C1,Names1),
-        collect_names(C2,Names2),
-        append([Names1,Names2],Names).
-
-collect_names(only(_,C),Names) :- !,
-        collect_names(C,Names).
-collect_names(some(_,C),Names) :- !,
-        collect_names(C,Names).
-collect_names(oneof(Ts),Names) :- !,
-        collect_names_term_list(Ts,Names).
-collect_names(not(C),Names) :- !,
-        collect_names(C,Names).
-collect_names(or(Cs),Names) :- !,
-        collect_names(Cs,Names).
-collect_names(and(Cs),Names) :- !,
-        collect_names(Cs,Names).
-collect_names(nothing,[]) :- !.
-collect_names(thing,[]) :- !.
-collect_names(_,[]) :- !.
-
-collect_names_term(T,[]) :-
-        var(T), !.
-collect_names_term(T,[T]) :-
-        is_stdname(T), !.
-collect_names_term(T,[]) :-
-        not(is_stdname(T)), !.
-collect_names_term(T,Names) :- !,
-        T =.. [_|L],
-        collect_names_term_list(L,Names).
-
-collect_names_term_list([],[]) :- !.
-collect_names_term_list([E|L],Names) :- !,
-        collect_names_term(E,Names1),
-        collect_names_term_list(L,Names2),
-        union(Names1,Names2,Names).
 
 % thing, nothing
 simplify(thing,thing) :- !.

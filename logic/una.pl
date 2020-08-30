@@ -1,4 +1,6 @@
-:- module(una, [apply_una/2]).
+:- module(una, [apply_una/2,
+                get_fml_std_names/2,
+                get_new_std_name/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
@@ -7,6 +9,8 @@
 
 :- multifile user:poss/2.
 :- multifile user:poss/3.
+
+:- discontiguous collect_names/2.
 
 apply_una(true,true) :- !.
 apply_una(false,false) :- !.
@@ -204,3 +208,138 @@ action_inequality_disjunct(X,Y,Fml1+Fml2,Fml1P+Fml2,Vars) :-
         action_inequality_disjunct(X,Y,Fml1,Fml1P,Vars), !.
 action_inequality_disjunct(X,Y,Fml1+Fml2,Fml1+Fml2P,Vars) :-
         action_inequality_disjunct(X,Y,Fml2,Fml2P,Vars), !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Standard names
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+get_fml_std_names(Fml,Names) :- !,
+        collect_names(Fml,Names2),
+        sort(Names2,Names).
+get_new_std_name(Names,New) :- !,
+        create_new_names(Names,1,[New]).
+
+collect_names([Fml|Fmls],Names) :- !,
+        collect_names(Fml,Names1),
+        collect_names(Fmls,Names2),
+        union(Names1,Names2,Names).
+collect_names([],[]) :- !.
+collect_names(Fml1<=>Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(Fml1=>Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(Fml1<=Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(Fml1*Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(Fml1+Fml2,Names) :- !,
+        collect_names(Fml1,Names1),
+        collect_names(Fml2,Names2),
+        union(Names1,Names2,Names).
+collect_names(-Fml,Names) :- !,
+        collect_names(Fml,Names).
+collect_names(some(_Vars,Fml),Names) :- !,
+        collect_names(Fml,Names).
+collect_names(all(_Vars,Fml),Names) :- !,
+        collect_names(Fml,Names).
+collect_names(know(Fml),Names) :- !,
+        collect_names(Fml,Names).
+collect_names((X=Y),Names) :- !,
+        collect_names_term(X,Names1),
+        collect_names_term(Y,Names2),
+        union(Names1,Names2,Names).
+
+% description logics
+collect_names(concept_assertion(C,N),Names) :- !,
+        collect_names_concept(C,Names1),
+        collect_names_term(N,Names2),
+        append([Names1,Names2],Names).
+collect_names(role_assertion(_R,N1,N2),Names) :- !,
+        % no names in roles...
+        collect_names_term(N1,Names1),
+        collect_names_term(N2,Names2),
+        append([Names1,Names2],Names).
+collect_names(subsumedBy(C1,C2),Names) :- !,
+        collect_names_concept(C1,Names1),
+        collect_names_concept(C2,Names2),
+        append([Names1,Names2],Names).
+collect_names_concept(only(_,C),Names) :- !,
+        collect_names_concept(C,Names).
+collect_names_concept(some(_,C),Names) :- !,
+        collect_names_concept(C,Names).
+collect_names_concept(oneof(Ts),Names) :- !,
+        collect_names_term_list(Ts,Names).
+collect_names_concept(not(C),Names) :- !,
+        collect_names_concept(C,Names).
+collect_names_concept(or(Cs),Names) :- !,
+        collect_names_concept_list(Cs,Names).
+collect_names_concept(and(Cs),Names) :- !,
+        collect_names_concept_list(Cs,Names).
+collect_names_concept(nothing,[]) :- !.
+collect_names_concept(thing,[]) :- !.
+collect_names_concept(_,[]) :- !.
+
+collect_names_concept_list([],[]) :- !.
+collect_names_concept_list([C|Cs],Names) :- !,
+        collect_names_concept(C,Names1),
+        collect_names_concept_list(Cs,Names2),
+        append(Names1,Names2,Names).
+
+collect_names(Atom,Names) :- !,
+        Atom =.. [_P|Args],
+        collect_names_term_list(Args,Names).
+
+collect_names_term(T,[]) :-
+        var(T), !.
+collect_names_term(T,[T]) :-
+        is_stdname(T), !.
+collect_names_term(T,[]) :-
+        not(is_stdname(T)), !.
+collect_names_term(T,Names) :- !,
+        T =.. [_|L],
+        collect_names_term_list(L,Names).
+
+collect_names_term_list([],[]) :- !.
+collect_names_term_list([E|L],Names) :- !,
+        collect_names_term(E,Names1),
+        collect_names_term_list(L,Names2),
+        union(Names1,Names2,Names).
+
+create_new_names(_Names,0,[]) :- !.
+create_new_names(Names,K,[C|Names2]) :- K > 0, !,
+        K1 is K - 1,
+        create_new_names(Names,K1,Names2),
+        smallest_name_not_contained(Names,Names2,C).
+
+smallest_name_not_contained(S1,S2,C) :- !,
+        smallest_name_not_contained2(S1,S2,C,[97]).
+
+smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
+        string_to_list(String,[Char|Chars]),
+        atom_string(Atom,String),
+        not(member(Atom,S1)),
+        not(member(Atom,S2)), !,
+        atom_concat('#',Atom,C).
+
+smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
+        string_to_list(String,[Char|Chars]),
+        atom_string(Atom,String),
+        (member(Atom,S1);member(Atom,S2)),
+        Char < 122, !,
+        Char1 is Char + 1,
+        smallest_name_not_contained2(S1,S2,C,[Char1|Chars]).
+
+smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
+        string_to_list(String,[Char|Chars]),
+        atom_string(Atom,String),
+        (member(Atom,S1);member(Atom,S2)),
+        Char = 122, !,
+        smallest_name_not_contained2(S1,S2,C,[97,122|Chars]).

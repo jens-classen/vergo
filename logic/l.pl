@@ -22,9 +22,7 @@ e.g. '#1', '#2', '#bob'.
               consistent_l/2,
               valid_l/2,
               equivalent_l/3,
-              is_stdname/1,
-              get_fml_std_names/2,
-              get_new_std_name/2]).
+              is_stdname/1]).
 
 :- reexport('../logic/fol', [get_reasoner/1,
                              set_reasoner/1,
@@ -36,7 +34,11 @@ e.g. '#1', '#2', '#bob'.
                              op(1110, xfy, <=),
                              op(1110, xfy, =>)]).
 
+:- reexport('../logic/una', [get_fml_std_names/2,
+                             get_new_std_name/2]).
+
 :- use_module('../logic/cwa').
+:- use_module('../logic/una').
 :- use_module('../logic/fol').
 
 % standard name: any constant (Prolog atom) starting with '#'
@@ -106,101 +108,3 @@ equivalent_l(Formula1,Formula2,Truth) :-
         Truth = true.
 equivalent_l(_Formula1,_Formula2,Truth) :- !,
         Truth = false.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper predicates
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-get_fml_std_names(Fml,Names) :- !,
-        collect_names(Fml,Names2),
-        sort(Names2,Names).
-get_new_std_name(Names,New) :- !,
-        create_new_names(Names,1,[New]).
-
-collect_names([Fml|Fmls],Names) :- !,
-        collect_names(Fml,Names1),
-        collect_names(Fmls,Names2),
-        union(Names1,Names2,Names).
-collect_names([],[]) :- !.
-collect_names(Fml1<=>Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(Fml1=>Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(Fml1<=Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(Fml1*Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(Fml1+Fml2,Names) :- !,
-        collect_names(Fml1,Names1),
-        collect_names(Fml2,Names2),
-        union(Names1,Names2,Names).
-collect_names(-Fml,Names) :- !,
-        collect_names(Fml,Names).
-collect_names(some(_Vars,Fml),Names) :- !,
-        collect_names(Fml,Names).
-collect_names(all(_Vars,Fml),Names) :- !,
-        collect_names(Fml,Names).
-collect_names(know(Fml),Names) :- !,
-        collect_names(Fml,Names).
-collect_names((X=Y),Names) :- !,
-        collect_names_term(X,Names1),
-        collect_names_term(Y,Names2),
-        union(Names1,Names2,Names).
-collect_names(Atom,Names) :- !,
-        Atom =.. [_P|Args],
-        collect_names_term_list(Args,Names).
-
-collect_names_term(T,[]) :-
-        var(T), !.
-collect_names_term(T,[T]) :-
-        is_stdname(T), !.
-collect_names_term(T,[]) :-
-        not(is_stdname(T)), !.
-collect_names_term(T,Names) :- !,
-        T =.. [_|L],
-        collect_names_term_list(L,Names).
-
-collect_names_term_list([],[]) :- !.
-collect_names_term_list([E|L],Names) :- !,
-        collect_names_term(E,Names1),
-        collect_names_term_list(L,Names2),
-        union(Names1,Names2,Names).
-
-create_new_names(_Names,0,[]) :- !.
-create_new_names(Names,K,[C|Names2]) :- K > 0, !,
-        K1 is K - 1,
-        create_new_names(Names,K1,Names2),
-        smallest_name_not_contained(Names,Names2,C).
-
-smallest_name_not_contained(S1,S2,C) :- !,
-        smallest_name_not_contained2(S1,S2,C,[97]).
-
-smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
-        string_to_list(String,[Char|Chars]),
-        atom_string(Atom,String),
-        not(member(Atom,S1)),
-        not(member(Atom,S2)), !,
-        atom_concat('#',Atom,C).
-
-smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
-        string_to_list(String,[Char|Chars]),
-        atom_string(Atom,String),
-        (member(Atom,S1);member(Atom,S2)),
-        Char < 122, !,
-        Char1 is Char + 1,
-        smallest_name_not_contained2(S1,S2,C,[Char1|Chars]).
-
-smallest_name_not_contained2(S1,S2,C,[Char|Chars]) :-
-        string_to_list(String,[Char|Chars]),
-        atom_string(Atom,String),
-        (member(Atom,S1);member(Atom,S2)),
-        Char = 122, !,
-        smallest_name_not_contained2(S1,S2,C,[97,122|Chars]).
