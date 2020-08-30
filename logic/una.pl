@@ -1,4 +1,5 @@
 :- module(una, [apply_una/2,
+                get_std_names_axioms/2,
                 get_fml_std_names/2,
                 get_new_std_name/2]).
 
@@ -212,6 +213,15 @@ action_inequality_disjunct(X,Y,Fml1+Fml2,Fml1+Fml2P,Vars) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Standard names
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+get_std_names_axioms(Formulas,Axioms) :-
+        get_fml_std_names(Formulas,Names),
+        findall(Axiom,
+                (member(X,Names),
+                 member(Y,Names),
+                 X @< Y,
+                 Axiom = -(X=Y)),
+                Axioms).
 
 get_fml_std_names(Fml,Names) :- !,
         collect_names(Fml,Names2),

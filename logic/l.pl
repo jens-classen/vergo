@@ -51,13 +51,7 @@ is_stdname(X) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
 entails_l(Formulas,Fml,Truth) :-
-        get_fml_std_names([Fml|Formulas],Names),
-        findall(StdNameAxiom,
-                (member(X,Names),
-                 member(Y,Names),
-                 X @< Y,
-                 StdNameAxiom = -(X=Y)),
-                StdNameAxioms),
+        get_std_names_axioms([Fml|Formulas],StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
         entails(FormulasWithAxioms,Fml), !,
         Truth = true.
@@ -69,13 +63,7 @@ entails_l(_Formulas,_Fml,Truth) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
 inconsistent_l(Formulas,Truth) :-
-        get_fml_std_names(Formulas,Names),
-        findall(StdNameAxiom,
-                (member(X,Names),
-                 member(Y,Names),
-                 X @< Y,
-                 StdNameAxiom = -(X=Y)),
-                StdNameAxioms),
+        get_std_names_axioms(Formulas,StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
         inconsistent(FormulasWithAxioms), !,
         Truth = true.
