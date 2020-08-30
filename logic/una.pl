@@ -1,11 +1,12 @@
 :- module(una, [apply_una/2,
+                is_stdname/1,
                 get_std_names_axioms/2,
                 get_fml_std_names/2,
                 get_new_std_name/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
-:- use_module('../logic/l').
+:- use_module('../logic/fol').
 :- use_module('../projection/regression', [isfluent/1,isrigid/1]).
 
 :- multifile user:poss/2.
@@ -121,6 +122,11 @@ make_inequalities([],[],false) :- !.
 make_inequalities([X],[Y],-(X=Y)) :- !.
 make_inequalities([X|Xs],[Y|Ys],(-(X=Y))+Equ) :- !,
         make_inequalities(Xs,Ys,Equ).
+
+% standard name: any constant (Prolog atom) starting with '#'
+is_stdname(X) :-
+        atomic(X),
+        atom_concat('#',_,X).
 
 unique_name(X) :-
         poss(X,_);

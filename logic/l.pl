@@ -35,16 +35,12 @@ e.g. '#1', '#2', '#bob'.
                              op(1110, xfy, =>)]).
 
 :- reexport('../logic/una', [get_fml_std_names/2,
-                             get_new_std_name/2]).
+                             get_new_std_name/2,
+                             is_stdname/1]).
 
 :- use_module('../logic/cwa').
 :- use_module('../logic/una').
 :- use_module('../logic/fol').
-
-% standard name: any constant (Prolog atom) starting with '#'
-is_stdname(X) :-
-        atomic(X),
-        atom_concat('#',_,X).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check formula against set of formulas
