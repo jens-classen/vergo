@@ -21,14 +21,14 @@ two specifications are equivalent.
 
 base_logic(dl).
 
-initially(subsumedBy(some(dirtyDish,thing),nothing)).
+initially(subsumedBy(exists(dirtyDish,thing),nothing)).
 initially(subsumedBy(onRobot,nothing)).
 
 rel_fluent(dirtyDish(_,_)).
 rel_fluent(onRobot(_)).
 
 poss(requestDDR(X,_),
-     -concept_assertion(some(dirtyDish,thing),X) *
+     -concept_assertion(exists(dirtyDish,thing),X) *
      -concept_assertion(onRobot,X)).
 poss(load(X,Y),
      role_assertion(dirtyDish,X,Y)).
@@ -54,13 +54,13 @@ domain(room,'#r1').
 domain(room,'#r2').
 
 program(control,
-        loop([while(concept_assertion(some(universal,onRobot),'#d1'),
+        loop([while(concept_assertion(exists(universal,onRobot),'#d1'),
                     % "something on robot"
                     pick(X,dish,unload(X))),
               pick(Y,room,[gotoRoom(Y),
-                           while(concept_assertion(some(universal,
-                                                        some(dirtyDish,
-                                                             oneof([Y]))),
+                           while(concept_assertion(exists(universal,
+                                                        exists(dirtyDish,
+                                                               oneof([Y]))),
                                                    '#d1'),
                                  % "some dirty dish in Y"
                                  pick(X,dish,load(X,Y)))
@@ -92,12 +92,12 @@ property(prop3,
          allpaths(eventually(role_assertion(dirtyDish,'#d1','#r1')))).
 property(prop4,
          main,
-         somepath(until(-concept_assertion(some(dirtyDish,thing),'#d1'),
-                        concept_assertion(some(dirtyDish,thing),'#d1')))).
+         somepath(until(-concept_assertion(exists(dirtyDish,thing),'#d1'),
+                        concept_assertion(exists(dirtyDish,thing),'#d1')))).
 property(prop5,
          main,
-         allpaths(eventually(concept_assertion(some(universal,
-                                                    some(dirtyDish,
+         allpaths(eventually(concept_assertion(exists(universal,
+                                                    exists(dirtyDish,
                                                          thing)),
                                                '#dummy')))).
 

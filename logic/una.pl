@@ -289,7 +289,7 @@ collect_names(subsumedBy(C1,C2),Names) :- !,
         append([Names1,Names2],Names).
 collect_names_concept(only(_,C),Names) :- !,
         collect_names_concept(C,Names).
-collect_names_concept(some(_,C),Names) :- !,
+collect_names_concept(exists(_,C),Names) :- !,
         collect_names_concept(C,Names).
 collect_names_concept(oneof(Ts),Names) :- !,
         collect_names_term_list(Ts,Names).

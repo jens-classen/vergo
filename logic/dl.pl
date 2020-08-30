@@ -172,11 +172,11 @@ simplify_or(C,C2) :-
         simplify(oneof(O),OS),
         simplify_or([OS|C3],C2).
 simplify_or(C,C2) :-
-        member(some(R,A),C),
-        member(some(R,B),C),
+        member(exists(R,A),C),
+        member(exists(R,B),C),
         A \= B, !,
-        setminus2(C,[some(R,A),some(R,B)],C3),
-        simplify(some(R,or([A,B])),S),
+        setminus2(C,[exists(R,A),exists(R,B)],C3),
+        simplify(exists(R,or([A,B])),S),
         simpify_or([S|C3],C2).
 simplify_or(C,C2) :-
         member(not(A),C),
@@ -196,15 +196,15 @@ simplify_not(not(C),C) :- !.
 simplify_not(C,not(C)) :- !.
 
 % quantification
-simplify(some(R,C),Res) :- !,
+simplify(exists(R,C),Res) :- !,
         simplify(C,CS),
-        simplify_some(R,CS,Res).
+        simplify_exists(R,CS,Res).
 simplify(only(R,C),Res) :- !,
         simplify(C,CS),
         simplify_only(R,CS,Res).
 
-simplify_some(_R,nothing,nothing) :- !.
-simplify_some(R,C,some(R,C)) :- !.
+simplify_exists(_R,nothing,nothing) :- !.
+simplify_exists(R,C,exists(R,C)) :- !.
 simplify_only(_R,thing,thing) :- !.
 simplify_only(R,C,only(R,C)) :- !.
 

@@ -79,7 +79,7 @@ ligress(concept_assertion(C,N),E,concept_assertion(CR,N)) :- !,
         ligress_dl(C,E,CR).
 ligress(role_assertion(R,N1,N2),[],role_assertion(R,N1,N2)) :- !.
 ligress(role_assertion(R,N1,N2),E,Result) :- !,
-        ligress(concept_assertion(some(R,oneof([N2])),N1),E,Result).
+        ligress(concept_assertion(exists(R,oneof([N2])),N1),E,Result).
 
 ligress(poss(A),E,R) :-
         user:poss(A,F), !,
@@ -161,23 +161,23 @@ ligress_dl(and(Cs),E,and(Rs)) :- !,
 ligress_dl(or(Cs),E,or(Rs)) :- !,
         ligress_dl_list(Cs,E,Rs).
 ligress_dl(oneof(Ns),_E,oneof(Ns)) :- !.
-ligress_dl(some(R,C),E,Result) :- !,
-        get_fml_std_names_dl(some(R,C),Ind1),
+ligress_dl(exists(R,C),E,Result) :- !,
+        get_fml_std_names_dl(exists(R,C),Ind1),
         get_fml_std_names(E,Ind2),
         append(Ind1,Ind2,Ind),
         ligress_dl(C,E,Res),
-        findall(and([oneof([A]),some(R,and([oneof([B]),Res]))]),
+        findall(and([oneof([A]),exists(R,and([oneof([B]),Res]))]),
                 (member(A,Ind),
                  member(B,Ind),
                  L =.. [R,A,B],
                  not(member(L,E)),
                  not(member(-L,E))),
                 R3s),
-        findall(and([oneof([A]),some(universal,and([oneof([B]),Res]))]),
+        findall(and([oneof([A]),exists(universal,and([oneof([B]),Res]))]),
                 (member(L,E), L =.. [R,A,B]),
                 R4s),                    
-        R1 = and([not(oneof(Ind)),some(R,Res)]),
-        R2 = and([oneof(Ind),some(R,and([not(oneof(Ind)),Res]))]),
+        R1 = and([not(oneof(Ind)),exists(R,Res)]),
+        R2 = and([oneof(Ind),exists(R,and([not(oneof(Ind)),Res]))]),
         R3 = or(R3s),
         R4 = or(R4s),
         Result = or([R1,R2,R3,R4]).
@@ -193,7 +193,7 @@ ligress_dl(only(R,C),E,Result) :- !,
                  not(member(L,E)),
                  not(member(-L,E))),
                 R3s),
-        findall(or([not(oneof([A])),some(universal,and([oneof([B]),Res]))]),
+        findall(or([not(oneof([A])),exists(universal,and([oneof([B]),Res]))]),
                 (member(L,E), L =.. [R,A,B]),
                 R4s),                    
         R1 = or([oneof(Ind),all(R,Res)]),

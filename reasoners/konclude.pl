@@ -20,7 +20,7 @@
       and([...])
       or([...])
       oneof([...]) (for nominals)
-      some(.,.)
+      exists(.,.)
       only(.,.)
 
    2. roles
@@ -219,7 +219,7 @@ write_concept(Stream, Indent, oneof(Names)) :- !,
         write(Stream, 'ObjectOneOf(\n'),
         write_name_list(Stream,Names),
         write(Stream, ')\n').
-write_concept(Stream, Indent, some(Role,Concept)) :- !,
+write_concept(Stream, Indent, exists(Role,Concept)) :- !,
         write_indent(Stream,Indent),
         write(Stream, 'ObjectSomeValuesFrom(\n'),
         IndentN = Indent + 1,
@@ -361,7 +361,7 @@ construct_concept(Axiom, NamesRoles, Concept) :- !,
         append(CList, [C], Conjuncts),
         Concept = and(Conjuncts).
 
-construct_concept2([(N,R)|NamesRoles], [some(R,oneof([N])),only(R,oneof([N]))|Conjuncts]) :- !,
+construct_concept2([(N,R)|NamesRoles], [exists(R,oneof([N])),only(R,oneof([N]))|Conjuncts]) :- !,
         construct_concept2(NamesRoles,Conjuncts).
 construct_concept2([],[]) :- !.
 
@@ -381,10 +381,10 @@ construct_concept3(-A, NamesRoles, not(C)) :- !,
         construct_concept3(A, NamesRoles, C).
 construct_concept3(concept_assertion(C,N), NamesRoles, Concept) :- !,
         member((N,R), NamesRoles),
-        Concept = some(R,C).
+        Concept = exists(R,C).
 construct_concept3(role_assertion(R,N1,N2), NamesRoles, Concept) :- !,
         member((N1,R1), NamesRoles),
-        Concept = some(R1,some(R,oneof([N2]))).
+        Concept = exists(R1,exists(R,oneof([N2]))).
 construct_concept3(true, _NamesRoles, thing) :- !.
 construct_concept3(false, _NamesRoles, nothing) :- !.
 
