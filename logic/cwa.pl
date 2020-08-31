@@ -315,8 +315,8 @@ cwa_fml(TAtom) :-
         TAtom =.. [Type,_Arg],
         is_type(Type), !.  % check arguments?
 cwa_fml(X=Y) :- !,
-        (var(X);is_stdname(X)),
-        (var(Y);is_stdname(Y)).
+        (var(X);is_std_name(X)),
+        (var(Y);is_std_name(Y)).
 cwa_fml(true):- !.
 cwa_fml(false) :- !.
 cwa_fml(F1*F2) :- !,

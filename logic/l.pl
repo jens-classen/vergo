@@ -22,7 +22,7 @@ e.g. '#1', '#2', '#bob'.
               consistent_l/2,
               valid_l/2,
               equivalent_l/3,
-              is_stdname/1]).
+              is_std_name/1]).
 
 :- reexport('../logic/fol', [get_reasoner/1,
                              set_reasoner/1,
@@ -36,7 +36,7 @@ e.g. '#1', '#2', '#bob'.
 
 :- reexport('../logic/una', [get_fml_std_names/2,
                              get_new_std_name/2,
-                             is_stdname/1]).
+                             is_std_name/1]).
 
 :- use_module('../logic/cwa').
 :- use_module('../logic/una').
@@ -47,7 +47,7 @@ e.g. '#1', '#2', '#bob'.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
 entails_l(Formulas,Fml,Truth) :-
-        get_std_names_axioms([Fml|Formulas],StdNameAxioms),
+        get_names_axioms_from_fmls(std,[Fml|Formulas],StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
         entails(FormulasWithAxioms,Fml), !,
         Truth = true.
@@ -59,7 +59,7 @@ entails_l(_Formulas,_Fml,Truth) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
 inconsistent_l(Formulas,Truth) :-
-        get_std_names_axioms(Formulas,StdNameAxioms),
+        get_names_axioms_from_fmls(std,Formulas,StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
         inconsistent(FormulasWithAxioms), !,
         Truth = true.

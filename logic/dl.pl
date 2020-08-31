@@ -20,7 +20,7 @@ starting with '#', e.g. '#1', '#2', '#bob'.
                get_fml_std_names/2,
                simplify/2]).
 
-:- reexport('l', [is_stdname/1]).
+:- reexport('l', [is_std_name/1]).
 :- reexport('../logic/una', [get_fml_std_names/2]).
 
 :- use_module('../lib/utils').

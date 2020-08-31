@@ -34,7 +34,7 @@ means of abstraction.
 :- use_module('../logic/l', [op(1130, xfy, <=>),
                              op(1110, xfy, <=),
                              op(1110, xfy, =>)]).
-:- use_module('../logic/una', [is_stdname/1,
+:- use_module('../logic/una', [is_std_name/1,
                                get_fml_std_names/2]).
 :- use_module('../logic/cwa').
 
@@ -110,14 +110,14 @@ ligress_pos(Atom,[_|E],RP) :-
         ligress_pos(Atom,E,RP).
 
 pos_equalities([Arg1|Args1],[Arg2|Args2],Equalities) :- 
-        is_stdname(Arg1),
-        is_stdname(Arg2),
+        is_std_name(Arg1),
+        is_std_name(Arg2),
         % same names => true
         Arg1=Arg2, !,
         pos_equalities(Args1,Args2,Equalities).
 pos_equalities([Arg1|_Args1],[Arg2|_Args2],false) :- 
-        is_stdname(Arg1),
-        is_stdname(Arg2),
+        is_std_name(Arg1),
+        is_std_name(Arg2),
         % distinct names => true
         not(Arg1=Arg2), !.
 pos_equalities([Arg1|Args1],[Arg2|Args2],(Arg1=Arg2)*Equalities) :-
@@ -136,14 +136,14 @@ ligress_neg(Atom,[_|E],RN) :-
         ligress_neg(Atom,E,RN).
 
 neg_inequalities([Arg1|Args1],[Arg2|Args2],Inequalities) :- 
-        is_stdname(Arg1),
-        is_stdname(Arg2),
+        is_std_name(Arg1),
+        is_std_name(Arg2),
         % same names => false
         Arg1=Arg2, !,
         neg_inequalities(Args1,Args2,Inequalities).
 neg_inequalities([Arg1|_Args1],[Arg2|_Args2],true):- 
-        is_stdname(Arg1),
-        is_stdname(Arg2),
+        is_std_name(Arg1),
+        is_std_name(Arg2),
         % distinct names => true
         not(Arg1=Arg2), !.
 neg_inequalities([Arg1|Args1],[Arg2|Args2],-(Arg1=Arg2)+Inequalities) :-
