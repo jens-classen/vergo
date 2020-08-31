@@ -47,7 +47,7 @@ e.g. '#1', '#2', '#bob'.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
 entails_l(Formulas,Fml,Truth) :-
-        get_names_axioms_from_fmls(std,[Fml|Formulas],StdNameAxioms),
+        get_names_axioms_from_fmls(uni,[Fml|Formulas],StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
         entails(FormulasWithAxioms,Fml), !,
         Truth = true.
@@ -59,7 +59,7 @@ entails_l(_Formulas,_Fml,Truth) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
 inconsistent_l(Formulas,Truth) :-
-        get_names_axioms_from_fmls(std,Formulas,StdNameAxioms),
+        get_names_axioms_from_fmls(uni,Formulas,StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
         inconsistent(FormulasWithAxioms), !,
         Truth = true.
