@@ -7,6 +7,7 @@ TESTFILES=" \
     office_robot/office_robot_bat.pl \
     teacher/teacher.pl \
     test/conditionals/conditionals.pl \
+    test/deontic/deontic_test.pl \
     test/pddl/pddl_test.pl \
 "
 
