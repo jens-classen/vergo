@@ -165,9 +165,3 @@ guardcond([test(F)|G],I,F*R) :- !,
         guardcond(G,I,R).
 guardcond([pick(Var)|G],I,some(Var,R)) :- !,
         guardcond(G,I,R).
-
-is_action(A) :- 
-        var(A), !.
-is_action(A) :-
-        nonvar(A), !,
-        (poss(A,_);poss(A,_,_)).

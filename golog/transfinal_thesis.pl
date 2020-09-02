@@ -158,9 +158,3 @@ final(star(_D),true).
 final(D,F) :-
         progdef(D,M),
         final(M,F).
-
-is_action(A) :- 
-        var(A), !.
-is_action(A) :-
-        nonvar(A), !,
-        (poss(A,_);poss(A,_,_)).
