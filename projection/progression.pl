@@ -6,10 +6,13 @@
                         progress/4,
                         can_progress/3]).
 
+:- use_module('ligression').
 :- use_module('regression').
 :- use_module('../kbs/l_kb').
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
+:- use_module('../logic/def').
+:- use_module('../logic/fobdd').
 :- use_module('../logic/fol').
 :- use_module('../logic/una').
 
@@ -88,7 +91,7 @@ can_progress(adl,_KB,Action) :-
                (cwa_fml(Cond), cwa(Fluent))).
 
 % todo: Here we ignore the case that fluent values may become known
-%       "just in time" (e.g. the shoot action in the Wumpus world),
+%       "just in time" (e.g. the pick action in the Wumpus world),
 %       which could be tested using ask(kwhether(...)) (but may be too
 %       expensive to do before every action). Instead we simply
 %       require that the CWA applies to all involved fluents.
@@ -97,18 +100,132 @@ can_progress(adl,_KB,Action) :-
 % Progression for local-effect theories
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% progress(Action,local_effect) :-
-%         ground(Action), !,
-%         findall(Fluent,
-%                 (user:causes_false(Action,Fluent,_Cond1);
-%                  user:causes_true(Action,Fluent,_Cond2)),
-%                 CharacteristicSet).
-%         % generate all combinations / truth assignment
-%         % generate all instantiated SSAs
-%         % unify each with initial theory
-%         % apply regression from verification/abstraction_local-effect to each
-%         % disjoin them all = result
+% Local-effect progression (for arbitrary KBs) as described in:
+%
+% Yongmei Liu and Gerhard Lakemeyer: "On First-Order Definability and
+% Computability of Progression for Local-Effect Actions and
+% Beyond". In: Proc. IJCAI 2009, AAAI Press, pp. 860–866.
 
+progress(local_effect,KB1,Action,KB2) :-
+        ground(Action), !,
+        characteristic_set(Action,Omega),
+        affected_kb_axioms(KB1,Omega,Axioms),
+        findall(Disjunct,
+                (is_model(Theta,Omega),
+                 consistent_with_kb(KB1,Theta),
+                 apply_model_axioms(Theta,Axioms,InstAxioms),
+                 apply_model_ssa(Theta,Action,InstSSA),
+                 append([InstAxioms,InstSSA],DisjunctFmls),
+                 conjoin(DisjunctFmls,DisjunctC),
+                 minimize(DisjunctC,Disjunct),
+                 consistent_l(Disjunct,true)),
+                Disjuncts),
+        disjoin(Disjuncts,Fml1),
+        minimize(Fml1,Fml2),
+        conjuncts(Fml2,Fmls),
+        findall(del(Axiom),member(Axiom,Axioms),DelAxioms),
+        findall(add(Axiom),member(Axiom,Fmls),AddAxioms),
+        append([DelAxioms,AddAxioms],AddDelAxioms),
+        update_kb(KB1,AddDelAxioms,KB2).
+
+% char. set: ground fluent atoms the action (might) have an effect on
+characteristic_set(Action,CharSet) :-
+        findall(Fluent,
+                (causes_true(Action,Fluent,_);
+                 causes_false(Action,Fluent,_)),
+                CharSet1),
+        sort(CharSet1,CharSet). % remove duplicates
+
+% affected KB axioms: only those that mention some affected fluent
+affected_kb_axioms(KB,Atoms,Axioms) :-
+        kb_as_list(KB,Fmls),
+        affected_kb_axioms2(Fmls,Atoms,Axioms).
+affected_kb_axioms2([],_Atoms,[]) :- !.
+affected_kb_axioms2([Fml|Fmls],Atoms,[Fml|Axioms]) :-
+        mentions_fluent(Fml,Atoms), !,
+        affected_kb_axioms2(Fmls,Atoms,Axioms).
+affected_kb_axioms2([_Fml|Fmls],Atoms,Axioms) :- !,
+        affected_kb_axioms2(Fmls,Atoms,Axioms).
+
+% check whether given formula mentions any fluent from given atoms
+mentions_fluent(F,Atoms) :-
+        (rel_fluent(F);rel_fluent(F,_)), !,
+        member(A,Atoms),
+        F =.. [P|FArgs],
+        A =.. [P|AArgs],
+        length(FArgs,N),
+        length(AArgs,N).
+mentions_fluent(true,_) :- !, fail.
+mentions_fluent(false,_) :- !, fail.
+mentions_fluent((_=_),_) :- !, fail.
+mentions_fluent(F1*F2,Atoms) :- !,
+        (mentions_fluent(F1,Atoms);
+         mentions_fluent(F2,Atoms)).
+mentions_fluent(F1+F2,Atoms) :- !,
+        (mentions_fluent(F1,Atoms);
+         mentions_fluent(F2,Atoms)).
+mentions_fluent(-F,Atoms) :- !,
+        mentions_fluent(F,Atoms).
+mentions_fluent(F1<=>F2,Atoms) :- !,
+        (mentions_fluent(F1,Atoms);
+         mentions_fluent(F2,Atoms)).
+mentions_fluent(F1=>F2,Atoms) :- !,
+        (mentions_fluent(F1,Atoms);
+         mentions_fluent(F2,Atoms)).
+mentions_fluent(F1<=F2,Atoms) :- !,
+        (mentions_fluent(F1,Atoms);
+         mentions_fluent(F2,Atoms)).
+mentions_fluent(some(_Vars,F),Atoms) :- !,
+        mentions_fluent(F,Atoms).
+mentions_fluent(all(_Vars,F),Atoms) :- !,
+        mentions_fluent(F,Atoms).
+mentions_fluent(F,Atoms) :-
+        user:def(F,D), !,
+        mentions_fluent(D,Atoms).
+mentions_fluent(_,_) :- !, fail.
+
+% model: consistent set of literals over some set of atoms
+is_model(Lits,Atoms) :-
+        is_model2(Lits,Atoms),
+        consistent_l(Lits,true).
+is_model2([],[]).
+is_model2([Atom|Lits],[Atom|Atoms]) :-
+        is_model2(Lits,Atoms).
+is_model2([-Atom|Lits],[Atom|Atoms]) :-
+        is_model2(Lits,Atoms).
+
+% consistent with KB: negation not entailed
+consistent_with_kb(KB,Fmls) :-
+        conjoin(Fmls,Fml),
+        entails_kb(KB,-Fml,false).
+
+% apply ligression to all formulas and minimize
+apply_model_axioms(Theta,Axioms,Fmls) :-
+        findall(Fml,
+                (member(Axiom,Axioms),
+                 ligress(Axiom,Theta,Fml1),
+                 minimize(Fml1,Fml)),
+                Fmls).
+
+% create instantiated SSAs, apply ligression and minimize
+apply_model_ssa(Theta,Action,Fmls) :-
+        findall(Fml,
+                (regression:ssa(Fluent,Action,Condition),
+                 free_variables(Fluent,Vars),
+                 ligress(Condition,Theta,LCondition),
+                 minimize(all(Vars,(Fluent <=> LCondition)),Fml)),
+                Fmls).
+
+% all actions must be local-effect
+can_progress(local_effect,_KB,Action) :-
+        % no effect on functional fluents
+        not(causes(Action,_,_,_)),
+        % action arguments contain all fluent arguments
+        forall((causes_true(Action,Fluent,_);
+                causes_false(Action,Fluent,_)),
+               (Action =.. [_Op|ArgsA],
+                Fluent =.. [_Pr|ArgsF],
+                subset2(ArgsF,ArgsA))).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Default Progression
