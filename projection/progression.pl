@@ -31,6 +31,9 @@ progress(KB1,Action,KB2) :-
 progress(KB1,Action,KB2) :-
         % automatically determined progression style
         can_progress(Style,KB1,Action), !,
+        report_message(info,
+                       ['Applying ',Style,' progression to action ',
+                        Action,'.']),
         progress(Style,KB1,Action,KB2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
