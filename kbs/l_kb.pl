@@ -31,6 +31,7 @@ facts of the dynamic predicate kb_axiom/2.
                  print_kb/1,
                  get_kb_std_names/2,
                  update_kb/3,
+                 create_kb/2,
                  delete_kb/1,
                  copy_kb/2]).
 
@@ -234,6 +235,20 @@ apply_mods(KB,[del(Fml)|Mods]) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/**
+  * create_kb(++KBID,+Fmls) is det.
+  *
+  * Create a new KB with the specified name from the given list of
+  * formulas. If a KB of that name already exists, it will be
+  * overwritten.
+  *
+  * @arg KBID  the identifier (handle) of the KB to be created
+  * @arg Fmls  a list of formulas to be inserted into the new KB
+ **/
+create_kb(KB,Fmls) :- !,
+        delete_kb(KB),
+        forall(member(Fml,Fmls),add_to_kb(KB,Fml)).
 
 /**
   * delete_kb(++KBID) is det.
