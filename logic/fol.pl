@@ -59,6 +59,8 @@ above handles. The default reasoner is eprover.
                 simplify/2,
                 disjoin/2,
                 conjoin/2,
+                disjuncts/2,
+                conjuncts/2,
                 free_variables/2,
                 op(1130, xfy, <=>),
                 op(1110, xfy, <=),
@@ -336,6 +338,15 @@ conjoin([F1,F2|Fs],R) :- !,
         (FR = false -> R = false; R = F1*FR).
 conjoin([],true) :- !.
 
+/* conjuncts(+F,-L)
+   L is a list of all conjuncts making up F */
+conjuncts(F1*F2,R) :- !,
+        conjuncts(F1,R1),
+        conjuncts(F2,R2),
+        append(R1,R2,R).
+conjuncts(true,[]) :- !.
+conjuncts(F,[F]) :- !.
+
 /* disjoin(+L,-F)
    F is the disjunction of the list of formulas L */
 disjoin([F|Fs],R) :-
@@ -348,6 +359,15 @@ disjoin([F1,F2|Fs],R) :- !,
         disjoin([F2|Fs],FR),
         (FR = true -> R = true; R = F1+FR).
 disjoin([],false) :- !.
+
+/* disjuncts(+F,-L)
+   L is a list of all disjuncts making up F */
+disjuncts(F1*F2,R) :- !,
+        disjuncts(F1,R1),
+        disjuncts(F2,R2),
+        append(R1,R2,R).
+disjuncts(false,[]) :- !.
+disjuncts(F,[F]) :- !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Formula Properties
