@@ -33,7 +33,8 @@ facts of the dynamic predicate kb_axiom/2.
                  update_kb/3,
                  create_kb/2,
                  delete_kb/1,
-                 copy_kb/2]).
+                 copy_kb/2,
+                 kb_as_list/2]).
 
 :- reexport(['../logic/l']).
 
@@ -286,5 +287,14 @@ del_fr_kb(KB,Fml) :-
         retract(kb_axiom(KB,Fml)), !.
 del_fr_kb(_,_) :- !. % if fml not exists
 
+/**
+  * kb_as_list(++KBID,-List) is det.
+  *
+  * Returns a list of all formulas contained in the KB with the
+  * specified identifier.
+  *
+  * @arg KBID the identifier (handle) of the KB
+  * @arg List a list of all formulas in the KB
+ **/
 kb_as_list(KB,List) :- !,
         findall(Fml,kb_axiom(KB,Fml),List).
