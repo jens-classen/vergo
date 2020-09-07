@@ -34,6 +34,19 @@ progress(KB1,Action,KB2) :-
         progress(Style,KB1,Action,KB2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Empty progression for actions with no effects (e.g. sensing)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+progress(empty,KB1,Action,KB2) :-
+        ground(Action), !,
+        copy_kb(KB1,KB2).
+
+can_progress(empty,_KB,Action) :-
+        not(causes_true(Action,_,_)),
+        not(causes_false(Action,_,_)),
+        not(causes(Action,_,_,_)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Closed-World STRIPS progression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
