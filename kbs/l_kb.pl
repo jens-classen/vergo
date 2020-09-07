@@ -255,7 +255,8 @@ delete_kb(KB) :- !,
   *
   * @arg KBID  the identifier (handle) of the KB to be deleted
  **/
-copy_kb(KB1,KB2) :-
+copy_kb(KB,KB) :- !. % do nothing if KB1=KB2
+copy_kb(KB1,KB2) :- !,
         delete_kb(KB2),
         forall(kb_axiom(KB1,Fml),
                assert(kb_axiom(KB2,Fml))).
