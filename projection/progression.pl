@@ -195,6 +195,10 @@ mentions_fluent(some(_Vars,F),Atoms) :- !,
         mentions_fluent(F,Atoms).
 mentions_fluent(all(_Vars,F),Atoms) :- !,
         mentions_fluent(F,Atoms).
+mentions_fluent(some_t(_Vars,F),Atoms) :- !,
+        mentions_fluent(F,Atoms).
+mentions_fluent(all_t(_Vars,F),Atoms) :- !,
+        mentions_fluent(F,Atoms).
 mentions_fluent(F,Atoms) :-
         user:def(F,D), !,
         mentions_fluent(D,Atoms).
