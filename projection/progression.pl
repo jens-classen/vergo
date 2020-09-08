@@ -129,8 +129,8 @@ progress(local_effect,KB1,Action,KB2) :-
         findall(Disjunct,
                 (is_model(Theta,Omega),
                  consistent_with_kb(KB1,Theta),
-                 apply_model_axioms(Theta,Axioms,InstAxioms),
-                 apply_model_ssa(Theta,Action,InstSSA),
+                 apply_model_axioms(Theta,KB1,Axioms,InstAxioms),
+                 apply_model_ssa(Theta,KB1,Action,InstSSA),
                  append([InstAxioms,InstSSA],DisjunctFmls),
                  conjoin(DisjunctFmls,DisjunctC),
                  minimize(DisjunctC,Disjunct),
@@ -220,22 +220,24 @@ consistent_with_kb(KB,Fmls) :-
         entails_kb(KB,-Fml,false).
 
 % apply ligression to all formulas and minimize
-apply_model_axioms(Theta,Axioms,Fmls) :-
+apply_model_axioms(Theta,KB,Axioms,Fmls) :-
         findall(Fml,
                 (member(Axiom,Axioms),
                  ligress(Axiom,Theta,Fml1),
-                 minimize(Fml1,Fml)),
+                 apply_cwa(KB,Fml1,Fml2),
+                 minimize(Fml2,Fml)),
                 Fmls).
 
 % create instantiated SSAs, apply ligression and minimize
-apply_model_ssa(Theta,Action,Fmls) :-
+apply_model_ssa(Theta,KB,Action,Fmls) :-
         findall(Fml,
                 ((rel_fluent(Fluent);rel_fluent(Fluent,_)),
                  mentions_fluent(Fluent,Theta),
                  regression:ssa(Fluent,Action,Condition),
                  free_variables(Fluent,Vars),
                  ligress(Condition,Theta,LCondition),
-                 minimize(all(Vars,(Fluent <=> LCondition)),Fml),
+                 apply_cwa(KB,LCondition,LCCondition),
+                 minimize(all(Vars,(Fluent <=> LCCondition)),Fml),
                  valid_l(Fml,false)),
                 Fmls).
 
