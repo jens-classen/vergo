@@ -252,6 +252,10 @@ can_progress(local_effect,_KB,Action) :-
                 Fluent =.. [_Pr|ArgsF],
                 subset2(ArgsF,ArgsA))).
 
+% todo: using minimize/2 instead of simplify/2 makes this slower, yet
+%       keeps formulas at a more manageable size (e.g. Wumpus world).
+%       Maybe make it optional?
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Default Progression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
