@@ -31,6 +31,7 @@ means of abstraction.
  **/
 :- module(ligression, [ligress/3]).
 
+:- use_module('../logic/def').
 :- use_module('../logic/l', [op(1130, xfy, <=>),
                              op(1110, xfy, <=),
                              op(1110, xfy, =>)]).
@@ -52,6 +53,9 @@ means of abstraction.
 % Ligression for general formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+ligress(F,E,R) :-
+        user:def(F,D), !,
+        ligress(D,E,R).
 ligress(F1<=>F2,E,R1<=>R2) :- !,
         ligress(F1,E,R1),
         ligress(F2,E,R2).
