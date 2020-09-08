@@ -231,10 +231,12 @@ apply_model_axioms(Theta,Axioms,Fmls) :-
 apply_model_ssa(Theta,Action,Fmls) :-
         findall(Fml,
                 ((rel_fluent(Fluent);rel_fluent(Fluent,_)),
+                 mentions_fluent(Fluent,Theta),
                  regression:ssa(Fluent,Action,Condition),
                  free_variables(Fluent,Vars),
                  ligress(Condition,Theta,LCondition),
-                 minimize(all(Vars,(Fluent <=> LCondition)),Fml)),
+                 minimize(all(Vars,(Fluent <=> LCondition)),Fml),
+                 valid_l(Fml,false)),
                 Fmls).
 
 % all actions must be local-effect
