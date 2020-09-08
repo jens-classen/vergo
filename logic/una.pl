@@ -516,6 +516,10 @@ collect_names(Type,some(_Vars,Fml),Names) :- !,
         collect_names(Type,Fml,Names).
 collect_names(Type,all(_Vars,Fml),Names) :- !,
         collect_names(Type,Fml,Names).
+collect_names(Type,some_t(_Vars,Fml),Names) :- !,
+        collect_names(Type,Fml,Names).
+collect_names(Type,all_t(_Vars,Fml),Names) :- !,
+        collect_names(Type,Fml,Names).
 collect_names(Type,know(Fml),Names) :- !,
         collect_names(Type,Fml,Names).
 collect_names(Type,(X=Y),Names) :- !,
