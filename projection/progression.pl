@@ -226,7 +226,8 @@ apply_model_axioms(Theta,Axioms,Fmls) :-
 % create instantiated SSAs, apply ligression and minimize
 apply_model_ssa(Theta,Action,Fmls) :-
         findall(Fml,
-                (regression:ssa(Fluent,Action,Condition),
+                ((rel_fluent(Fluent);rel_fluent(Fluent,_)),
+                 regression:ssa(Fluent,Action,Condition),
                  free_variables(Fluent,Vars),
                  ligress(Condition,Theta,LCondition),
                  minimize(all(Vars,(Fluent <=> LCondition)),Fml)),

@@ -56,13 +56,9 @@ expected_progression(all([X,Y],((X='#a')*(Y='#b')
                                      clear(Y))))).
 expected_progression(clear('#b')).
 expected_progression(-clear('#c')).
-expected_progression(-on('#a','#b')).          % (*)
-expected_progression(on('#a','#c')).           % (*)
-expected_progression(eh('#a')<=>(-eh('#c'))).  % (*)
-
-% It turned out that the three formulas marked (*) are not part of the
-% progression. The progression described in Example 3.1 in the paper
-% is too strong.
+expected_progression(-on('#a','#b')).
+expected_progression(on('#a','#c')).
+expected_progression(eh('#a')<=>(-eh('#c'))).
 
 :- begin_tests('progression_local-effect').
 
