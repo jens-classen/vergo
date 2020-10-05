@@ -57,6 +57,12 @@ conditionals:
 :- dynamic program_name/2.
 :- dynamic program_name_max/1.
 
+:- dynamic user:rel_fluent/2.
+:- dynamic user:cwa/1.
+:- dynamic user:domain/2.
+:- dynamic user:causes_true/3.
+:- dynamic user:causes_false/3.
+
 /**
   * action_rank(+Action,?R,-Condition) is nondet.
   *
