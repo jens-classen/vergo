@@ -380,5 +380,5 @@ report_rank(I,_A,Rules,RulesMat,BadCond) :-
         write('\n').
 
 % formula simplification
-simplify_fml(F,R) :- !,
-        minimize(F,R).
+simplify_fml(F,R) :-
+        minimize(F,R), !.
