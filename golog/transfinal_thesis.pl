@@ -20,7 +20,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- use_module('../logic/fol', [conjoin/2]).
 :- use_module('program_simplify').
 
-:- multifile user:ignore_preconditions.
+:- multifile user:ignore_preconditions/0.
 
 /**
  * trans(+Prog1,?Act,?Prog2,?Cond) is nondet
