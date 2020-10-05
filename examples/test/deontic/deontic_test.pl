@@ -106,7 +106,7 @@ test(ex3) :-
 
 check(Ex) :-
         findall(R,drule(Ex,R),Rules),
-        construct_ranking(Rules,_Axioms),
+        construct_ranking(Rules,userdb),
         check_ranks(Ex).
 
 check_ranks(Ex) :-
