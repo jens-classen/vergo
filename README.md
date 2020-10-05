@@ -239,7 +239,7 @@ are the following dependencies to external tools and systems:
    To use verification based on abstraction and model checking, we
    require that the 'nusmv' executable is visible in PATH. The system
    has been developed and tested with the (currently) most recent
-   version 2.5.4, which can be downloaded from
+   version 2.6.0, which can be downloaded from
 
    http://nusmv.fbk.eu
 
@@ -283,7 +283,7 @@ are the following dependencies to external tools and systems:
    To use description logic reasoning, we require that the 'Konclude'
    executable is visible in PATH. The system has been developed and
    tested with the (currently) most recent version
-   v0.6.1-527. Konclude can be obtained at
+   v0.6.2. Konclude can be obtained at
 
    http://www.derivo.de/products/konclude.html
 
