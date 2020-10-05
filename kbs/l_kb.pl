@@ -36,7 +36,26 @@ facts of the dynamic predicate kb_axiom/2.
                  copy_kb/2,
                  kb_as_list/2]).
 
-:- reexport(['../logic/l']).
+:- reexport('../logic/l', [entails_l/3,
+                           inconsistent_l/2,
+                           consistent_l/2,
+                           valid_l/2,
+                           equivalent_l/3,
+                           is_std_name/1]).
+
+:- reexport('../logic/fol', [get_reasoner/1,
+                             set_reasoner/1,
+                             simplify/2,
+                             disjoin/2,
+                             conjoin/2,
+                             free_variables/2,
+                             op(1130, xfy, <=>),
+                             op(1110, xfy, <=),
+                             op(1110, xfy, =>)]).
+
+:- reexport('../logic/una', [get_fml_std_names/2,
+                             get_new_std_name/2,
+                             is_std_name/1]).
 
 :- use_module('../logic/cwa').
 :- use_module('../logic/def').
