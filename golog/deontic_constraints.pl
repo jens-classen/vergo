@@ -316,6 +316,7 @@ create_action_costs(axioms(Axioms)) :- !,
 cost_axioms_action([Axiom]) :-
         (poss(A,_); poss(A,_,_)),
         action_rank(A,I,Cond1),
+        I > 0,
         simplify_fml(Cond1,Cond),
         Cond \= false,
         Axiom = causes(A,'total-cost',Y,((Y='total-cost'+I)*Cond)).
