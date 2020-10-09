@@ -56,6 +56,18 @@ References:
 
 :- dynamic requirement/1.
 
+:- dynamic user:type/1.
+:- dynamic user:subtype/2.
+:- dynamic user:rel_fluent/2.
+:- dynamic user:fun_fluent/3.
+:- dynamic user:cwa/1.
+:- dynamic user:poss/3.
+:- dynamic user:causes_true/3.
+:- dynamic user:causes_false/3.
+:- dynamic user:causes/4.
+:- dynamic user:goal/2.
+:- dynamic user:metric/2.
+
 /**
   * parse_pddl_domain(++From,+To,-SymbolTable) is semidet.
   *
