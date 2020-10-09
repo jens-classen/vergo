@@ -312,54 +312,56 @@ create_action_costs(axioms(Axioms)) :- !,
                    metric(deontic,minimize('total-cost'))],
         append([Axioms1,Axioms2],Axioms).
 
-% case: non-typed action => use conditional effects
+% use conditional effects for action costs
 cost_axioms_action([Axiom]) :-
-        poss(A,_),
+        (poss(A,_); poss(A,_,_)),
         action_rank(A,I,Cond1),
         simplify_fml(Cond1,Cond),
         Cond \= false,
         Axiom = causes(A,'total-cost',Y,((Y='total-cost'+I)*Cond)).
 
-% case: typed action => use special cost functions for use in PDDL
-cost_axioms_action(Axioms) :-
-        poss(A,VTs,_),
-        relevant_args(A,VTs,Args),
-        action_cost_fct(A,Args,Fct),
-        get_types(Args,VTs,ArgTs),
-        findall(Axiom,
-                cost_axioms_action_instance(A,VTs,Args,Axiom),
-                Axioms1),
-        append([fun_fluent(Fct,number,ArgTs),
-                cwa(Fct=_),
-                causes(A,'total-cost',Y,(Y='total-cost'+Fct))],
-               Axioms1,Axioms).
+% % use special action cost functions instead of conditional effects
+% % more elegant for translation to PDDL, but Fast Downward
+% % doesn't support state-dependent action costs yet
+% cost_axioms_action(Axioms) :-
+%         poss(A,VTs,_),
+%         relevant_args(A,VTs,Args),
+%         action_cost_fct(A,Args,Fct),
+%         get_types(Args,VTs,ArgTs),
+%         findall(Axiom,
+%                 cost_axioms_action_instance(A,VTs,Args,Axiom),
+%                 Axioms1),
+%         append([fun_fluent(Fct,number,ArgTs),
+%                 cwa(Fct=_),
+%                 causes(A,'total-cost',Y,(Y='total-cost'+Fct))],
+%                Axioms1,Axioms).
 
-% relevant arguments = only those mentioned in a rank condition
-relevant_args(A,VTs,Args) :- !,
-        relevant_args(A,VTs,Args,1).
-relevant_args(_A,_VTs,[],I) :-
-        rcmax(M), I > M, !.
-relevant_args(A,VTs,Args,I) :- !,
-        action_rank(A,I,Cond1),
-        simplify_fml(Cond1,Cond),
-        term_variables(Cond,Args1),
-        I1 is I+1,
-        relevant_args(A,VTs,Args2,I1),
-        union2(Args1,Args2,Args).
+% % relevant arguments = only those mentioned in a rank condition
+% relevant_args(A,VTs,Args) :- !,
+%         relevant_args(A,VTs,Args,1).
+% relevant_args(_A,_VTs,[],I) :-
+%         rcmax(M), I > M, !.
+% relevant_args(A,VTs,Args,I) :- !,
+%         action_rank(A,I,Cond1),
+%         simplify_fml(Cond1,Cond),
+%         term_variables(Cond,Args1),
+%         I1 is I+1,
+%         relevant_args(A,VTs,Args2,I1),
+%         union2(Args1,Args2,Args).
 
-cost_axioms_action_instance(A,VTs,Args,Axiom) :-
-        is_instance(VTs,A),
-        action_rank(A,I,Cond1),
-        simplify_fml(Cond1,Cond),
-        Cond \= false, % todo: non-static case?
-        valid_l(Cond,true),
-        action_cost_fct(A,Args,Fct),
-        Axiom = initially(Fct=I).
+% cost_axioms_action_instance(A,VTs,Args,Axiom) :-
+%         is_instance(VTs,A),
+%         action_rank(A,I,Cond1),
+%         simplify_fml(Cond1,Cond),
+%         Cond \= false, % todo: non-static case?
+%         valid_l(Cond,true),
+%         action_cost_fct(A,Args,Fct),
+%         Axiom = initially(Fct=I).
 
-action_cost_fct(A,RArgs,F) :-
-        A =.. [Act|_],
-        atom_concat(Act,'_cost',ActN),
-        F =.. [ActN|RArgs].
+% action_cost_fct(A,RArgs,F) :-
+%         A =.. [Act|_],
+%         atom_concat(Act,'_cost',ActN),
+%         F =.. [ActN|RArgs].
 
 /**
  * report_ranking is det.
