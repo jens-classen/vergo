@@ -73,5 +73,7 @@ progdef(while(C,D),
         [star([test(C),D]),test(-C)]).
 progdef(loop(D),
         while(true,D)).
+progdef(any,
+        pick(A,A)).
 progdef(Name,Def) :-
         program(Name,Def).

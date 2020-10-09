@@ -43,6 +43,7 @@ conditionals:
 
 :- use_module(library(pcre)).
 
+:- use_module('../golog/program_simplify').
 :- use_module('../kbs/l_kb').
 :- use_module('../logic/cwa').
 :- use_module('../logic/fobdd').
@@ -181,6 +182,9 @@ gprogram_formula(A,B,(A=B)) :-
         var(B), !.
 gprogram_formula(A,[P],F) :- !,
         gprogram_formula(A,P,F).
+gprogram_formula(A,P,F) :-
+        progdef(P,D), !,
+        gprogram_formula(A,D,F).
 gprogram_formula(A,P,F) :-
         program(P,D), !,
         gprogram_formula(A,D,F).
