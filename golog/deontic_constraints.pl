@@ -240,8 +240,22 @@ create_ssa(P,A,F) :-
         assert_if_not_exists(new_axiom(rel_fluent(did(X),[X-golog_program]))),
         assert_if_not_exists(new_axiom(cwa(did(_)))),
         assert_if_not_exists(new_axiom(domain(golog_program,N))),
-        assert_if_not_exists(new_axiom(causes_true(did(N),A,F))),
-        assert_if_not_exists(new_axiom(causes_false(did(N),A,NF))).
+        create_effects(A,N,F,NF).
+
+% create effects axioms for every action symbol
+create_effects(A,N,F,_NF) :-
+        (poss(A,_);poss(A,_,_)), % instantiate A by action
+        simplify_fml(F,FS),
+        FS \= false,
+        assert_if_not_exists(new_axiom(causes_true(A,did(N),FS))),
+        fail.
+create_effects(A,N,_F,NF) :-
+        (poss(A,_);poss(A,_,_)), % instantiate A by action
+        simplify_fml(NF,NFS),
+        NFS \= false,
+        assert_if_not_exists(new_axiom(causes_false(A,did(N),NFS))),
+        fail.
+create_effects(_,_,_,_) :- !.
 
 % Represent a program expression by a unique standard name (module
 % variable renaming) by turning the term into an atom, replacing every
