@@ -615,11 +615,12 @@ construct_formula2(D,some_t(V,F)) :- !,
         construct_quantified_formula(D,'exists',V,F).
 construct_formula2(D,all_t(V,F)) :- !,
         construct_quantified_formula(D,'forall',V,F).
+construct_formula2(D,true) :- !,
+        append([['()']],D). % what about false?
 construct_formula2(D,Atom) :- !,
         Atom =.. [F|Terms], % predicate atoms and equality
         construct_pterms(DTerms,Terms),
         append([['(',F,' '],DTerms,[')']],D).
-% true and false?
 
 construct_binary_formula(D,F1,Op,F2) :- !,
         construct_formula2(DF1,F1),
