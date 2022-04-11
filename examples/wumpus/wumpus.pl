@@ -24,6 +24,8 @@ sensing_style(truth).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 initially(at('#room-0-0')).
+initially(-wumpus('#room-0-0')).
+initially(-pit('#room-0-0')).
 % initially(-hasGold). % by CWA
 initially(hasArrow).
 initially(wumpusAlive).
