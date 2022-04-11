@@ -116,7 +116,7 @@ ask4result(false,true,false).
 ask4result(false,false,unknown).
 
 wh_ask(Fml,Result) :- !,
-        history(H),
+        history_r(H),
         regress_s(H,Fml,Fml2),
         reduce_s(know(Fml2),Result).
 
