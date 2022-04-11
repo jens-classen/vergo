@@ -26,6 +26,7 @@ sensing_style(truth).
 initially(at('#room-0-0')).
 initially(-wumpus('#room-0-0')).
 initially(-pit('#room-0-0')).
+initially(visited('#room-0-0')).
 % initially(-hasGold). % by CWA
 initially(hasArrow).
 initially(wumpusAlive).
@@ -68,6 +69,7 @@ rel_fluent(wumpusAlive, []).
 rel_fluent(hasArrow,    []).
 rel_fluent(hasGold,     []).
 rel_fluent(gold(X),     [X-loc]).
+rel_fluent(visited(X),  [X-loc]).
 
 rel_rigid(adj(X,Y,Z),    [X-loc,Y-dir,Z-loc]).
 rel_rigid(facing(X,Y,Z), [X-loc,Y-dir,Z-loc]).
@@ -79,6 +81,7 @@ cwa(adj(_,_,_)).
 cwa(facing(_,_,_)).
 cwa(hasGold).
 cwa(hasArrow).
+cwa(visited(_)).
 cwa(wumpusAlive).
 
 poss(senseStench, [],      true).
@@ -90,6 +93,7 @@ poss(move(D),     [D-dir], some_t([R1-loc,R2-loc],at(R1)*adj(R1,D,R2))).
 
 causes_true(move(D), at(R2), some_t([R1-loc],at(R1)*adj(R1,D,R2))).
 causes_false(move(_), at(R1), at(R1)).
+causes_true(move(D), visited(R2), some_t([R1-loc],at(R1)*adj(R1,D,R2))).
 
 causes_false(shoot(D), wumpusAlive, aimingAtWumpus(D)).
 causes_false(shoot(_), hasArrow, true).
