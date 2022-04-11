@@ -595,6 +595,9 @@ conjuncts(F1*F2,Conjuncts) :- !,
         append(Con1,Con2,Conjuncts).
 conjuncts(F,[F]) :- !.
 
+construct_formula2(D,F) :-
+        def(F,Def), !,
+        construct_formula2(D,Def).
 construct_formula2(D,F1<=>F2) :- !,
         construct_formula2(D,(F1=>F2)*(F2=>F1)).
 construct_formula2(D,F1<=F2) :- !,
