@@ -242,7 +242,9 @@ collect_actions(Actions) :- !,
         findall(action(Name,Args,Precondition,Effects),
                 (poss(A,Args,Precondition),
                  A =.. [Name|_],
-                 collect_effects(A,Effects)),
+                 collect_effects(A,Effects),
+                 Effects \= [],
+                 not(mentions_non_cwa(Effects))),
                 Actions).
 
 collect_effects(A,Effects) :- !,
@@ -300,6 +302,15 @@ assign_op(A,F,Cond,assign(Val)) :-
         user:causes(A,F,Y,(Y=Val)*Cond),
         \+ (Val =.. [Op,_T1,_T2], % Val is number or function
             member(Op,['+','-','*','/'])).
+
+mentions_non_cwa(Effects) :-
+        (rel_fluent(F,_);rel_fluent(F);
+         rel_rigid(F,_);rel_rigid(F);
+         fun_fluent(F,_,_),fun_fluent(F),
+         fun_rigid(F,_,_);fun_rigid(F)),
+        not(cwa(F)),
+        member(eff(_,Cond,_,_),Effects),
+        mentions(Cond,F).
 
 instantiate_effects(_A,[],[]) :- !.
 instantiate_effects(A,[Effect|Effects],[IEffect|IEffects]) :- !,
