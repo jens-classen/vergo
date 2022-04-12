@@ -178,29 +178,34 @@ collect_types(Types) :- !,
 
 collect_constants(Constants) :- !,
         findall(C-T,
-                (is_constant(C),
-                 user:domain(T,C),
-                 is_type(T)),
+                (user:domain(T,C),
+                 is_type(T),
+                 mentioned_by_action(C)),
                 Constants1),
         sort(Constants1,Constants). % remove duplicates
 
-is_constant(O) :-
-        (causes_true(A,F,C);
-         causes_false(A,F,C);
-         causes(A,F,Y,C)),
-        (mentions(A,O);
-         mentions(F,O);
-         mentions(C,O);
-         mentions(Y,O)).
+mentioned_by_action(X) :-
+        causes_true(A,F,C),
+        mentions((A,F,C),X).
+mentioned_by_action(X) :-
+        causes_false(A,F,C),
+        mentions((A,F,C),X).
+mentioned_by_action(X) :-
+        causes(A,F,Y,C),
+        mentions((A,F,Y,C),X).
 
 mentions(X,O) :-
-        atom(X), !,
-        O = X.
+        nonvar(X),
+        X = O, !.
+mentions(X,O) :-
+        nonvar(X),
+        def(X,D), !,
+        mentions(D,O).
 mentions(L,O) :-
         is_list(L), !,
         mentions_list(L,O).
 mentions(X,O) :-
-        nonvar(X),
+        nonvar(X), !,
         X =.. [_|R],
         mentions(R,O).
 mentions_list([X|L],O) :-
