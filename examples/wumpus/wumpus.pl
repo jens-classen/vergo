@@ -33,10 +33,10 @@ initially(wumpusAlive).
 initially(all_t([X-loc,Y-loc],(wumpus(X)*wumpus(Y))=>(X=Y))).
 
 initially(adj(R1,D,R2)) :-
-        domain(coordinate,X1),
-        domain(coordinate,X2),
-        domain(coordinate,Y1),
-        domain(coordinate,Y2),
+        coordinate(X1),
+        coordinate(X2),
+        coordinate(Y1),
+        coordinate(Y2),
         ((D = '#n', X2 is X1, Y2 is Y1+1);
          (D = '#w', X2 is X1-1, Y2 is Y1);
          (D = '#s', X2 is X1, Y2 is Y1-1);
@@ -56,10 +56,10 @@ type(loc).
 domain(dir,D) :-
         member(D, ['#n','#w','#s','#e']).
 domain(loc,L) :-
-        domain(coordinate,X),
-        domain(coordinate,Y),
+        coordinate(X),
+        coordinate(Y),
         atomic_list_concat(['#room', X, Y], '-', L).
-domain(coordinate,X) :-
+coordinate(X) :-
         grid_size(G),
         N is G-1,
         between(0,N,X).
