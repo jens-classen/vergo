@@ -108,24 +108,36 @@ def(wumpusNearby,some_t([R1-loc,D-dir,R2-loc],at(R1)*adj(R1,D,R2)*wumpus(R2))).
 def(pitNearby,some_t([R1-loc,D-dir,R2-loc],at(R1)*adj(R1,D,R2)*pit(R2))).
 def(aimingAtWumpus(D),some_t([R1-loc,R2-loc],at(R1)*wumpus(R2)*facing(R1,D,R2))).
 
+program(goto(L),plan(at(L))).
+program(main,goto('#room_2_2')).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Top-Level
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 initialize :-
-        initialize(3).
+        initialize(3,main).
 
-initialize(GridSize) :-
+initialize(GridSize,Program) :-
         retractall(grid_size(_)),
         assert(grid_size(GridSize)),
-        create(GridSize),   % wumpus_sim
-        init(progression).  % kbagent
+        create(GridSize),            % wumpus_sim
+        init(progression,Program).   % kbagent
 
-% todo: what if action not possible? (Java exception, sensing result?)
+perform_if_possible(Action) :-
+        ask(poss(Action),true), !,
+        perform(Action).
+
 perform(Action) :-
-        ask(poss(Action),true),
-        do_action(Action,SensingResult),  % wumpus_sim
-        execute(Action,SensingResult).    % kbagent
+        do_action(Action,SensingResult),   % wumpus_sim
+        execute(Action,SensingResult), !.  % kbagent
+
+run :-
+        can_terminate, !.
+run :-
+        next_action(Action), !,
+        perform(Action), % maybe some delay here?
+        run.
 
 finalize :-
         destroy.

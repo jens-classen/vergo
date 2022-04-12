@@ -41,12 +41,14 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 
  **/
 :- module(kbagent, [init/1, init/2, ask/2, tell/1, execute/2,
-                    next_action/1, ask4/2, wh_ask/2, print_kb/0]).
+                    next_action/1, can_terminate/0, ask4/2, wh_ask/2,
+                    print_kb/0]).
 
 :- dynamic(history_p/1).
 :- dynamic(history_r/1).
 :- dynamic(program/1).
 :- dynamic(update/1).
+:- dynamic(next/4).
 
 :- use_module('../projection/progression').
 :- use_module('../projection/reduction').
@@ -55,6 +57,7 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 :- use_module('../logic/cwa').
 :- use_module('../logic/fobdd').
 :- use_module('../logic/una').
+:- use_module('../golog/program_simplify').
 :- use_module('../golog/transfinal_guards').
 
 :- reexport('../logic/fol', [op(1130, xfy, <=>),
@@ -66,13 +69,14 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init(Update) :- !,
-        init(Update,'__undef').
+        init(Update,star(any)).
 init(Update,Program) :- !,
         initialize_kb(kb),
         retractall(history_p(_)),
         retractall(history_r(_)),
         retractall(program(_)),
         retractall(update(_)),
+        retractall(next(_,_,_)),
         assert(history_p([])),
         assert(history_r([])),
         assert(program(Program)),
@@ -90,7 +94,7 @@ tell(Fml) :- !,
         reduce_s(Fml2,Result),
         extend_kb_by(kb,Result).
 
-execute(Action,SenseResult) :-
+execute(Action,SenseResult) :- !,
         senseresult2fml(SenseResult,Action,Fml),
         history_r(H),
         regress_s(H,Fml,Fml2),
@@ -120,10 +124,44 @@ wh_ask(Fml,Result) :- !,
         regress_s(H,Fml,Fml2),
         reduce_s(know(Fml2),Result).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Online Execution
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% suggests next action, and also memorizes resulting program (to avoid
+% costly second call to trans/5 after the action is executed)
 next_action(Action) :- !,
         program(Program),
-        trans_s(Program,Action,Condition),
-        ask(Condition,true).
+        trans(Program,Guard,Action,NewProgram,online(kb)),
+        guardcond(Guard,Cond1),
+        minimize(Cond1,Condition),
+        ask(Condition,true),
+        memorize_program(Action,Program,NewProgram).
+
+memorize_program(Action,Program,NewProgram) :-
+        simplify_program(NewProgram,NewProgram2),
+        history_p(H),
+        retractall(next(_,_,_,_)),
+        assert(next(H,Program,Action,NewProgram2)).
+
+update_program(Action) :- !,
+        retract(program(P)),
+        new_program(P,Action,Q),
+        assert(program(Q)).
+
+new_program(P,A,Q) :-
+        history_p(H),
+        next(H,P,A,Q), !.             % memorized action
+new_program(P,A,Q) :-
+        trans(P,_,A,R,online(kb)), !, % different, but possible action
+        simplify_program(R,Q).
+new_program(_,_,failed).              % failure due to inexecutability
+
+can_terminate :-
+        program(Program),
+        final(Program,Cond1),
+        minimize(Cond1,Condition),
+        ask(Condition,true), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper Predicates
@@ -154,23 +192,6 @@ reduce_s(Fml1,Fml2) :- !,
         reduce(kb,Fml1,Fml3),
         apply_cwa(kb,Fml3,Fml4),
         minimize(Fml4,Fml2).
-
-trans_s(Program,Action,Condition) :-
-        trans(Program,Guard,Action,_),
-        guardcond(Guard,Cond1),
-        minimize(Cond1,Condition).
-
-new_program('__undef',_,'__undef') :- !.
-new_program(P,A,Q) :-
-        trans(P,_,A,R), !,
-        simplify_program(R,Q).
-
-new_program(_,_,_,failed).
-
-update_program(Action) :-
-        retract(program(P)),
-        new_program(P,Action,Q),
-        assert(program(Q)).
 
 update_history(Action) :-
         update(regression), !,

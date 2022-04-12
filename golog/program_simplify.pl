@@ -39,6 +39,8 @@ simplify_program(test(F),R) :- !,
 simplify_program(P,NP) :-
         progdef(P,D), !,
         simplify_program(D,NP).
+simplify_program(plan(G),plan(GP)) :- !,
+        simplify(G,GP).
 simplify_program(fail,fail) :- !.
 simplify_program(failed,failed) :- !.
 simplify_program(terminate,terminate) :- !.
