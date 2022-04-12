@@ -1,17 +1,15 @@
 :- use_module(library(jpl)).
 
 :- dynamic(wumpusworld/1).
-:- dynamic(grid_size/1).
 
 mapdir('#n','north').
 mapdir('#e','east').
 mapdir('#s','south').
 mapdir('#w','west').
 
-create :-
-        grid_size(G),
+create(GridSize) :-
         retractall(wumpusworld(_)),
-        jpl_new('WumpusWorld',[G,G],X),
+        jpl_new('WumpusWorld',[GridSize,GridSize],X),
         assert(wumpusworld(X)).
 
 randomize(GoldPieces,PitProbability) :-

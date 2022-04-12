@@ -15,8 +15,6 @@
 
 :- dynamic grid_size/1.
 
-grid_size(3). % default for testing, overwritten in main file
-
 sensing_style(truth).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -120,7 +118,7 @@ initialize :-
 initialize(GridSize) :-
         retractall(grid_size(_)),
         assert(grid_size(GridSize)),
-        create,             % wumpus_sim
+        create(GridSize),   % wumpus_sim
         init(progression).  % kbagent
 
 % todo: what if action not possible? (Java exception, sensing result?)
