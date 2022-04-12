@@ -23,10 +23,10 @@ sensing_style(truth).
 % Basic Action Theory
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-initially(at('#room-0-0')).
-initially(-wumpus('#room-0-0')).
-initially(-pit('#room-0-0')).
-initially(visited('#room-0-0')).
+initially(at('#room_0_0')).
+initially(-wumpus('#room_0_0')).
+initially(-pit('#room_0_0')).
+initially(visited('#room_0_0')).
 % initially(-hasGold). % by CWA
 initially(hasArrow).
 initially(wumpusAlive).
@@ -41,8 +41,8 @@ initially(adj(R1,D,R2)) :-
          (D = '#w', X2 is X1-1, Y2 is Y1);
          (D = '#s', X2 is X1, Y2 is Y1-1);
          (D = '#e', X2 is X1+1, Y2 is Y1)),
-        atomic_list_concat(['#room', X1, Y1], '-', R1),
-        atomic_list_concat(['#room', X2, Y2], '-', R2).
+        atomic_list_concat(['#room', X1, Y1], '_', R1),
+        atomic_list_concat(['#room', X2, Y2], '_', R2).
 
 initially(facing(R1,D,R2)) :-
         initially(adj(R1,D,R2)).
@@ -58,7 +58,7 @@ domain(dir,D) :-
 domain(loc,L) :-
         coordinate(X),
         coordinate(Y),
-        atomic_list_concat(['#room', X, Y], '-', L).
+        atomic_list_concat(['#room', X, Y], '_', L).
 coordinate(X) :-
         grid_size(G),
         N is G-1,
