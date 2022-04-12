@@ -12,6 +12,8 @@ This module provides functionality for simplifying Golog programs.
 
 :- use_module('../logic/fol', [simplify/2]).
 
+:- multifile user:program/2.
+
 simplify_program(A,D) :-
         var(A), !, D=A.
 simplify_program(A,A) :-
@@ -76,4 +78,4 @@ progdef(loop(D),
 progdef(any,
         pick(A,A)).
 progdef(Name,Def) :-
-        program(Name,Def).
+        user:program(Name,Def).
