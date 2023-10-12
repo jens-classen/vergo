@@ -53,9 +53,6 @@ CEUR-WS.org, 2015.
 :- dynamic   
    is_entailed_cached/3,
    is_inconsistent_cached/2,
-   map_type_formula/2,
-   map_type/2,
-   map_literal/2,
    map_property/3,
    map_subformula/2,
    map_action/2,  
