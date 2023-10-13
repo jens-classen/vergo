@@ -22,7 +22,8 @@ e.g. '#1', '#2', '#bob'.
               consistent_l/2,
               valid_l/2,
               equivalent_l/3,
-              is_std_name/1]).
+              is_std_name/1,
+              simplify_l/2]).
 
 :- reexport('../logic/fol', [get_reasoner/1,
                              set_reasoner/1,
@@ -92,3 +93,11 @@ equivalent_l(Formula1,Formula2,Truth) :-
         Truth = true.
 equivalent_l(_Formula1,_Formula2,Truth) :- !,
         Truth = false.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Formula simplification
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+simplify_l(F,R) :-
+        apply_una(F,F2),
+        simplify(F2,R).
