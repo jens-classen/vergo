@@ -136,7 +136,7 @@ cg_construction_step(ProgramName) :-
 
 transition(Program,Guard,Action,NewProgram) :-
         user:use_sink_states, !,
-        step(Program,Guard,Action,NewProgram,offline).
+        step(Program,Guard,Action,NewProgram).
 transition(Program,Guard,Action,NewProgram) :-
         not(user:use_sink_states), !,
         trans(Program,Guard,Action,NewProgram,offline).
