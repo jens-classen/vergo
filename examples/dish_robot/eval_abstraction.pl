@@ -3,9 +3,6 @@
 :- use_module('../../lib/utils').
 :- use_module('../../verification/abstraction_local-effect').
 
-:- dynamic(initially/1).
-:- dynamic(domain/2).
-
 % Runs one experiment, i.e. _all_ 5 properties tested on _one_
 % conbination of rooms, dishes and initial theory. To avoid
 % side effects, each new experiment should be started in a fresh
