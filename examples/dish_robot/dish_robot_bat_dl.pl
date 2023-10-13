@@ -13,13 +13,20 @@ two specifications are equivalent.
 
 **/
 
-:- use_module('../../verification/abstraction_local-effect').
+:- use_module('../../verification/abstraction_local-effect',
+              [compute_abstraction/1,
+               verify/2 as verify_abstraction]).
 :- use_module('../../lib/utils').
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
 
+:- dynamic(initially/1).
+:- dynamic(domain/2).
+
 base_logic(dl).
+
+use_sink_states.
 
 initially(subsumedBy(exists(dirtyDish,thing),nothing)).
 initially(subsumedBy(onRobot,nothing)).
@@ -48,8 +55,8 @@ causes_false(unload(X),onRobot(X),true).
 type(dish).
 type(room).
 
-% only one dish and two rooms for testing, otherwise too slow
 domain(dish,'#d1').
+domain(dish,'#d2').
 domain(room,'#r1').
 domain(room,'#r2').
 
@@ -101,38 +108,58 @@ property(prop5,
                                                          thing)),
                                                '#dummy')))).
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Testing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-expected_outcome(prop1,false).
-expected_outcome(prop2,true).
-expected_outcome(prop3,false).
-expected_outcome(prop4,true).
-expected_outcome(prop5,false).
+% Properties when initial KB is included
+expected_outcome(prop1,yes,false).
+expected_outcome(prop2,yes,true).
+expected_outcome(prop3,yes,false).
+expected_outcome(prop4,yes,true).
+expected_outcome(prop5,yes,false).
+
+% Properties when initial KB is not included
+expected_outcome(prop1,no,false).
+expected_outcome(prop2,no,false). % d1 might be dirty initially
+expected_outcome(prop3,no,false).
+expected_outcome(prop4,no,true).
+expected_outcome(prop5,no,false).
 
 :- begin_tests('abstraction_local-effect_dl').
 
-test(abstraction) :- !,
+test(abstraction_with_initial_kb) :- !,
+        retract(user:domain(dish,'#d2')), % to make test not
+        retract(user:domain(room,'#r2')), % too long
         compute_abstraction(main),
-        check_prop(prop1),
-        check_prop(prop2),
-        check_prop(prop3),
-        check_prop(prop4),
-        check_prop(prop5).
+        check_prop(prop1,yes),
+        check_prop(prop2,yes),
+        check_prop(prop3,yes),
+        check_prop(prop4,yes),
+        check_prop(prop5,yes).
 
-check_prop(P) :-
-        verify(P,T),
-        check_result(P,T), !.
-
-check_result(P,T) :-
-        assertion(expected_outcome(P,T)),
-        check_result2(P,T).
-check_result2(P,T) :-
-        expected_outcome(P,T), !,
-        report_message(info,['Outcome for ',P,' is as expected!']).
-check_result2(P,_T) :- !,
-        report_message(info,['Outcome for ',P,
-                             ' is different from what expected!']).
+test(abstraction_without_initial_kb) :- !,
+        retractall(user:initially(_)),
+        compute_abstraction(main),
+        check_prop(prop1,no),
+        check_prop(prop2,no),
+        check_prop(prop3,no),
+        check_prop(prop4,no),
+        check_prop(prop5,no).
 
 :- end_tests('abstraction_local-effect_dl').
+
+check_prop(P,I) :-
+        verify_abstraction(P,T),
+        check_result(P,I,T), !.
+
+check_result(P,I,T) :-
+        assertion(expected_outcome(P,I,T)),
+        check_result2(P,I,T).
+check_result2(P,I,T) :-
+        expected_outcome(P,I,T), !,
+        report_message(info,['Outcome for ',P,' is as expected!']).
+check_result2(P,_I,_T) :- !,
+        report_message(info,['Outcome for ',P,
+                             ' is different from what expected!']).
