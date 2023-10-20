@@ -26,6 +26,7 @@
    2. roles
 
       universal
+      inverse(...)
       <role>
       not(.)  (only in ABox assertions)
 
@@ -249,6 +250,11 @@ write_concepts(_Stream, _Indent, []) :- !.
 write_role(Stream, Indent, universal) :- !,
         write_indent(Stream,Indent),
         write(Stream, 'owl:topObjectProperty\n').
+write_role(Stream, Indent, inverse(Role)) :- !,
+        write_indent(Stream,Indent),
+        write(Stream, 'ObjectInverseOf('),
+        write_role(Stream, Indent, Role),
+        write(Stream, ')').
 write_role(Stream, Indent, Prim) :- !,
         write_indent(Stream,Indent),
         write(Stream, ':'),
