@@ -17,6 +17,7 @@
            disjoint2/2,
            member2/2,
            nth02/3,
+           variant_sort/2,
            write_readable/2,
            write_readable/1,
            measure_time_with_limit/4,
@@ -129,6 +130,17 @@ nth02(N,[_|L],X) :-
         N is N1+1.
 nth02(_,[],_) :-
         fail.
+
+% sort based on term variants
+% source: https://swi-prolog.discourse.group/t/predsort-variants/3530/5
+variant_sort(Terms, Sorted) :-
+    map_list_to_pairs(variant_key, Terms, Keyed),
+    sort(1, @<, Keyed, SortedPairs),
+    pairs_values(SortedPairs, Sorted).
+
+variant_key(Term, Key) :-
+    copy_term(Term, Key),
+    numbervars(Key, 0, _).
 
 % write Term to Stream using readable variables 
 % (A,B,C,... instead of _G201,_G202,...)
