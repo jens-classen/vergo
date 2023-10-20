@@ -3,6 +3,8 @@
            subvl/4,
            report_message/1,
            report_message/2,
+           report_message_r/1,
+           report_message_r/2,
            get_log_level/1,
            set_log_level/1,
            count/2,
@@ -34,20 +36,33 @@ subv(X1,X2,T1,T2) :- T1 =..[F|L1], subvl(X1,X2,L1,L2), T2 =..[F|L2].
 subvl(_,_,[],[]) :- !.
 subvl(X1,X2,[T1|L1],[T2|L2]) :- !, subv(X1,X2,T1,T2), subvl(X1,X2,L1,L2).
 
-/* Print a mesage */
-report_message(ML,M) :-
+/* Print a message using standard notation for variables */
+report_message(ML,M) :- !,
+        report_message3(ML,M,false).
+report_message(M) :- !, % default log level is info
+        report_message3(info,M,false).
+
+/* Print a message using readable notation for variables
+   (use write_readable/1 instead of write/1) */
+report_message_r(ML,M) :- !,
+        report_message3(ML,M,true).
+report_message_r(M) :- !, % default log level is info
+        report_message3(info,M,true).
+
+% only print if current log level less or equal than message's level
+report_message3(ML,M,R) :-
         current_log_level(CL),
         log_level(CL,NC),
         log_level(ML,NM),
         NC =< NM, !,
-        report_message2(M).
-report_message(_,_) :- !.
-report_message(M) :- !, % default if no level indicated
-        report_message(info,M).
+        report_message2(M,R).
+report_message3(_,_) :- !.
 
-report_message2([L|Ls]) :- !, write(L), report_message2(Ls).
-report_message2([]) :- !, write('\n'), flush_output(user_output).
-report_message2(M) :- report_message2([M]).
+% actually print message
+report_message2([L|Ls],true) :- !, write_readable2(L,false), report_message2(Ls,true).
+report_message2([L|Ls],false) :- !, write(L), report_message2(Ls,false).
+report_message2([],_) :- !, write('\n'), flush_output(user_output).
+report_message2(M,R) :- report_message2([M],R).
 
 current_log_level(info). % default
 
@@ -118,20 +133,24 @@ nth02(_,[],_) :-
 % write Term to Stream using readable variables 
 % (A,B,C,... instead of _G201,_G202,...)
 write_readable(Stream, Term) :-
+        write_readable2(Stream, Term, true).
+write_readable2(Stream, Term, Quoted) :-
         \+ \+ ( numbervars(Term, 0, _),
                 write_term(Stream, Term,
                            [ numbervars(true),
-                             quoted(true)
+                             quoted(Quoted)
                            ])
               ).
 
 % write Term using readable variables 
 % (A,B,C,... instead of _G201,_G202,...)
 write_readable(Term) :-
+        write_readable2(Term, true).
+write_readable2(Term, Quoted) :-
         \+ \+ ( numbervars(Term, 0, _),
                 write_term(Term,
                            [ numbervars(true),
-                             quoted(true)
+                             quoted(Quoted)
                            ])
               ).
 
