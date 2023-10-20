@@ -209,9 +209,14 @@ simplify_only(_R,thing,thing) :- !.
 simplify_only(R,C,only(R,C)) :- !.
 
 % TBox assertions
-simplify(subsumedBy(C1,C2),subsumedBy(C1S,C2S)) :-
+simplify(subsumedBy(C1,C2),Res) :- !,
         simplify(C1,C1S),
-        simplify(C2,C2S), !.
+        simplify(C2,C2S),
+        simplify_subsumedBy(C1S,C2S,Res).
+
+simplify_subsumedBy(_C,thing,true) :- !.
+simplify_subsumedBy(nothing,_C,true) :- !.
+simplify_subsumedby(C1,C2,subsumedBy(C1,C2)) :- !.
 
 % Abox assertions
 simplify(concept_assertion(C,N),concept_assertion(CS,N)) :- !,
