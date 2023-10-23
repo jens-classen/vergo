@@ -25,12 +25,27 @@ Twenty-First European Conference on Artificial Intelligence (ECAI
 for the verification of Golog programs over local-effect actions by
 means of abstraction.
 
+This module also supports a form of regression described in
+
+Benjamin Zarrieß and Jens Claßen:
+Decidable Verification of Golog Programs over Non-Local Effect Actions.
+In Proceedings of the 13th AAAI Conference on Artificial Intelligence (AAAI 2016),
+pages 1109-1115, AAAI Press, 2016.
+
+where a set of effects is given in the form of triples (S,F,E), where
+S is a sign (+ or -), F is a fluent template (fluent predicate applied
+to some variable arguments Vars), and E is an effect descriptor
+(formula with free variables Vars). This version is used for
+verification by abstraction on acyclic action theories. It is
+currently not supported for description logic action theories.
+
 @author  Jens Claßen
 @license GPLv2
 
  **/
 :- module(ligression, [ligress/3]).
 
+:- use_module('../lib/utils').
 :- use_module('../logic/def').
 :- use_module('../logic/l', [op(1130, xfy, <=>),
                              op(1110, xfy, <=),
@@ -83,7 +98,7 @@ ligress(false,_,false) :- !.
 
 ligress(concept_assertion(C,N),[],concept_assertion(C,N)) :- !.
 ligress(concept_assertion(C,N),E,concept_assertion(CR,N)) :- !,
-        ligress_dl(C,E,CR).
+        ligress_concept(C,E,CR).
 ligress(role_assertion(R,N1,N2),[],role_assertion(R,N1,N2)) :- !.
 ligress(role_assertion(R,N1,N2),E,Result) :- !,
         ligress(concept_assertion(exists(R,oneof([N2])),N1),E,Result).
@@ -98,11 +113,19 @@ ligress(poss(A),E,R) :-
         ligress(F,E,R).
 
 ligress(Atom,[],Atom) :- !.
-ligress(Atom,E,(Atom+RP)*RN) :-
+ligress(Atom,E,(Atom*RN)+RP) :-
         ligress_pos(Atom,E,RP),
         ligress_neg(Atom,E,RN).
 
 ligress_pos(_Atom,[],false) :- !.
+ligress_pos(Atom,[Effect|E],(EffS+RP)) :-
+        Effect = (+,Fluent,Eff),
+        Fluent =.. [F|Args],
+        Atom =.. [F|Args2],
+        length(Args,N),
+        length(Args2,N),!,
+        substitute(Args,Args2,Eff,EffS),
+        ligress_pos(Atom,E,RP).
 ligress_pos(Atom,[L|E],(Equalities+RP)) :-
         Atom=..[F|Args],
         L=..[F|Args2],
@@ -129,6 +152,14 @@ pos_equalities([Arg1|Args1],[Arg2|Args2],(Arg1=Arg2)*Equalities) :-
 pos_equalities([],[],true).
 
 ligress_neg(_Atom,[],true) :- !.
+ligress_neg(Atom,[Effect|E],(-EffS*RN)) :-
+        Effect = (-,Fluent,Eff),
+        Fluent =.. [F|Args],
+        Atom =.. [F|Args2],
+        length(Args,N),
+        length(Args2,N),!,
+        substitute(Args,Args2,Eff,EffS),
+        ligress_neg(Atom,E,RN).
 ligress_neg(Atom,[-L|E],Inequalities*RN) :-
         Atom=..[F|Args],
         L=..[F|Args2],
@@ -154,10 +185,35 @@ neg_inequalities([Arg1|Args1],[Arg2|Args2],-(Arg1=Arg2)+Inequalities) :-
         neg_inequalities(Args1,Args2,Inequalities).
 neg_inequalities([],[],false).
 
+substitute([],[],Eff,Eff) :- !.
+substitute([Arg|Args],[Arg2|Args2],Eff,EffS) :-
+        subv(Arg,Arg2,Eff,Eff2),
+        substitute(Args,Args2,Eff2,EffS).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Ligression for concepts of the description logic ALCO_U
 % (according to Benjamin Zarriess' note from 2015-09-08)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ligress_concept(C,E,R) :-
+        effs2literals(E,L),
+        ligress_dl(C,L,R).
+
+% convert to literal representation for DLs
+% TODO: add support for non-local effects
+effs2literals([],[]) :- !.
+effs2literals([(+,Fluent,true)|Effs],[Fluent|Lits]) :- !,
+        effs2literals(Effs,Lits).
+effs2literals([(-,Fluent,true)|Effs],[-Fluent|Lits]) :- !,
+        effs2literals(Effs,Lits).
+effs2literals([(_Sign,_Fluent,Eff)|_Effs],_R) :-
+        Eff \= true, !,
+        report_message(error, ['Non-local effects not yet supported ',
+                               'for description logic theories!']),
+        fail.
+effs2literals([Lit|Effs],[Lit|Lits]) :- !,
+        % Effs are already in literal form
+        effs2literals(Effs,Lits).
 
 ligress_dl(thing,_E,thing) :- !.
 ligress_dl(nothing,_E,nothing) :- !.
