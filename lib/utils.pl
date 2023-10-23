@@ -57,7 +57,7 @@ report_message3(ML,M,R) :-
         log_level(ML,NM),
         NC =< NM, !,
         report_message2(M,R).
-report_message3(_,_) :- !.
+report_message3(_,_,_) :- !.
 
 % actually print message
 report_message2([L|Ls],true) :- !, write_readable2(L,false), report_message2(Ls,true).
