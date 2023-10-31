@@ -5,6 +5,7 @@ TESTFILES=" \
     dish_robot/dish_robot_bat.pl \
     dish_robot/dish_robot_bat_dl.pl \
     office_robot/office_robot_bat.pl \
+    server/server_bat.pl \
     teacher/teacher.pl \
     test/blocks/blocks.pl \
     test/conditionals/conditionals.pl \

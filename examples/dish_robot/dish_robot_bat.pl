@@ -1,6 +1,9 @@
 :- use_module('../../verification/abstraction_local-effect',
-              [compute_abstraction/1,
-               verify/2 as verify_abstraction]).
+              [compute_abstraction/1 as compute_abstraction_le,
+               verify/2 as verify_le]).
+:- use_module('../../verification/abstraction_acyclic',
+              [compute_abstraction/1 as compute_abstraction_ac,
+               verify/2 as verify_ac]).
 :- use_module('../../lib/utils').
 
 :- discontiguous causes_true/3.
@@ -106,28 +109,76 @@ expected_outcome(prop5,no,false).
 :- begin_tests('abstraction_local-effect').
 
 test(abstraction_with_initial_kb) :- !,
-        compute_abstraction(main),
-        check_prop(prop1,yes),
-        check_prop(prop2,yes),
-        check_prop(prop3,yes),
-        check_prop(prop4,yes),
-        check_prop(prop5,yes).
+        set_initial_kb(true),
+        set_domains(2),
+        compute_abstraction_le(main),
+        check_prop(prop1,yes,le),
+        check_prop(prop2,yes,le),
+        check_prop(prop3,yes,le),
+        check_prop(prop4,yes,le),
+        check_prop(prop5,yes,le).
 
 test(abstraction_without_initial_kb) :- !,
-        retractall(user:initially(_)),
-        retract(user:domain(dish,'#d2')), % to make test not
-        retract(user:domain(room,'#r2')), % too long
-        compute_abstraction(main),
-        check_prop(prop1,no),
-        check_prop(prop2,no),
-        check_prop(prop3,no),
-        check_prop(prop4,no),
-        check_prop(prop5,no).
+        set_initial_kb(false),
+        set_domains(1),
+        compute_abstraction_le(main),
+        check_prop(prop1,no,le),
+        check_prop(prop2,no,le),
+        check_prop(prop3,no,le),
+        check_prop(prop4,no,le),
+        check_prop(prop5,no,le).
 
 :- end_tests('abstraction_local-effect').
 
-check_prop(P,I) :-
-        verify_abstraction(P,T),
+:- begin_tests('abstraction_acyclic').
+
+test(abstraction_with_initial_kb) :- !,
+        set_initial_kb(true),
+        set_domains(2),
+        compute_abstraction_ac(main),
+        check_prop(prop1,yes,ac),
+        check_prop(prop2,yes,ac),
+        check_prop(prop3,yes,ac),
+        check_prop(prop4,yes,ac),
+        check_prop(prop5,yes,ac).
+
+test(abstraction_without_initial_kb) :- !,
+        set_initial_kb(false),
+        set_domains(1),
+        compute_abstraction_ac(main),
+        check_prop(prop1,no,ac),
+        check_prop(prop2,no,ac),
+        check_prop(prop3,no,ac),
+        check_prop(prop4,no,ac),
+        check_prop(prop5,no,ac).
+
+:- end_tests('abstraction_acyclic').
+
+set_initial_kb(WithKB) :-
+        retractall(user:initially(_)),
+        (WithKB=true ->
+            (assert(user:initially(- some([X,Y],dirtyDish(X,Y)))),
+             assert(user:initially(- some(X,onRobot(X)))));
+            true).
+
+set_domains(2) :-
+        retractall(user:domain(_,_)),
+        assert(user:domain(dish,'#d1')),
+        assert(user:domain(dish,'#d2')),
+        assert(user:domain(room,'#r1')),
+        assert(user:domain(room,'#r2')).
+
+set_domains(1) :-
+        retractall(user:domain(_,_)),
+        assert(user:domain(dish,'#d1')),
+        assert(user:domain(room,'#r1')).
+
+check_prop(P,I,le) :-
+        verify_le(P,T),
+        check_result(P,I,T), !.
+
+check_prop(P,I,ac) :-
+        verify_ac(P,T),
         check_result(P,I,T), !.
 
 check_result(P,I,T) :-
