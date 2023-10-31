@@ -145,7 +145,7 @@ pos_equalities([Arg1|Args1],[Arg2|Args2],Equalities) :-
 pos_equalities([Arg1|_Args1],[Arg2|_Args2],false) :- 
         is_std_name(Arg1),
         is_std_name(Arg2),
-        % distinct names => true
+        % distinct names => false
         not(Arg1=Arg2), !.
 pos_equalities([Arg1|Args1],[Arg2|Args2],(Arg1=Arg2)*Equalities) :-
         pos_equalities(Args1,Args2,Equalities).
