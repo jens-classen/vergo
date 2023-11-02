@@ -47,6 +47,8 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
 
 :- use_module('../projection/ligression').
 
+:- use_module('../projection/progression').
+
 :- use_module('characteristic_graphs_guards').
 
 :- discontiguous(is_entailed/3).
@@ -157,7 +159,7 @@ init_construction :-
         construct_characteristic_graph(ProgramName),
 
         % preprocess actions
-        preprocess_actions,
+        preprocess_actions(ProgramName),
         
         % determine relevant formulas from property
         determine_property_subformulas(ProgramName),
@@ -579,12 +581,12 @@ is_inconsistent(dl,Formulas) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-preprocess_actions :-
-        determine_eff_con,
+preprocess_actions(Program) :-
+        determine_eff_con(Program),
         check_acyclicity.                  
 
-determine_eff_con :- % untyped fluent, positive effect
-        cg_edge(_Program,_NodeID,_Guard,Action,_NewNodeID),
+determine_eff_con(Program) :- % untyped fluent, positive effect
+        cg_edge(Program,_NodeID,_Guard,Action,_NewNodeID),
         action_template(Action,ActionT,Vars),
         causes_true(ActionT,Fluent,Condition),
         user:rel_fluent(Fluent),
@@ -592,8 +594,8 @@ determine_eff_con :- % untyped fluent, positive effect
         not(effect_description(+,Fluent,ActionT,Eff,Con)),
         assert(effect_description(+,Fluent,ActionT,Eff,Con)),
         fail.
-determine_eff_con :- % typed fluent, positive effect
-        cg_edge(_Program,_NodeID,_Guard,Action,_NewNodeID),
+determine_eff_con(Program) :- % typed fluent, positive effect
+        cg_edge(Program,_NodeID,_Guard,Action,_NewNodeID),
         action_template(Action,ActionT,Vars),
         causes_true(ActionT,Fluent,Condition),
         user:rel_fluent(Fluent,Types),
@@ -603,16 +605,16 @@ determine_eff_con :- % typed fluent, positive effect
         not(effect_description(+,Fluent,ActionT,Eff2,Con)),
         assert(effect_description(+,Fluent,ActionT,Eff2,Con)),
         fail.
-determine_eff_con :- % untyped fluent, negative effect
-        cg_edge(_Program,_NodeID,_Guard,Action,_NewNodeID),
+determine_eff_con(Program) :- % untyped fluent, negative effect
+        cg_edge(Program,_NodeID,_Guard,Action,_NewNodeID),
         action_template(Action,ActionT,Vars),
         causes_false(ActionT,Fluent,Condition),
         eff_con(Condition,Vars,Eff,Con),
         not(effect_description(-,Fluent,ActionT,Eff,Con)),
         assert(effect_description(-,Fluent,ActionT,Eff,Con)),
         fail.
-determine_eff_con :- % typed fluent, negative effect
-        cg_edge(_Program,_NodeID,_Guard,Action,_NewNodeID),
+determine_eff_con(Program) :- % typed fluent, negative effect
+        cg_edge(Program,_NodeID,_Guard,Action,_NewNodeID),
         action_template(Action,ActionT,Vars),
         causes_false(ActionT,Fluent,Condition),
         user:rel_fluent(Fluent,Types),
@@ -622,7 +624,7 @@ determine_eff_con :- % typed fluent, negative effect
         not(effect_description(+,Fluent,ActionT,Eff2,Con)),
         assert(effect_description(+,Fluent,ActionT,Eff2,Con)),
         fail.
-determine_eff_con.
+determine_eff_con(_Program).
 
 action_template(Action,ActionT,Vars) :-
         Action =.. [A|Args],
@@ -646,7 +648,24 @@ eff_con2([Conj|Conjuncts],Vars,[Conj|EffC],ConC) :- !,
         eff_con2(Conjuncts,Vars,EffC,ConC).
 eff_con2([],_Vars,[],[]) :- !.
 
-check_acyclicity. % TODO
+check_acyclicity :-
+        not(dg_cycle), !,
+        report_message_r(['Action theory is acyclic. Proceeding...']).
+check_acyclicity :-
+        report_message_r(err,
+                         ['Action theory is NOT acyclic! Aborting...']),
+        fail.
+dg_cycle :-
+        dg_edge(F1,F2),
+        dg_path(F2,F1).
+dg_edge(F1,F2) :-
+        effect_description(_S1,F1,_A1,Eff1,_C1),
+        effect_description(_S2,F2,_A2,_Eff2,_C2),
+        mentions_fluent(Eff1,[F2]), !.
+dg_path(F1,F1).
+dg_path(F1,F2) :-
+        dg_edge(F1,F3),
+        dg_path(F3,F2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

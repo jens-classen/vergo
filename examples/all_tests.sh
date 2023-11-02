@@ -12,6 +12,7 @@ TESTFILES=" \
     test/deontic/deontic_test.pl \
     test/pddl/pddl_test.pl \
     test/planning/planning_test.pl \
+    test/verification/acyclicity.pl \
 "
 
 echo ""

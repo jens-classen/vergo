@@ -4,7 +4,8 @@
 
 :- module(progression, [progress/3,
                         progress/4,
-                        can_progress/3]).
+                        can_progress/3,
+                        mentions_fluent/2]).
 
 :- use_module('ligression').
 :- use_module('regression').
