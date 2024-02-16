@@ -364,7 +364,7 @@ create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
 % actually create transition
 create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
         
-        determine_effects(Formulas,Action,NewEffects),
+        determine_effects(Formulas,Effects,Action,NewEffects),
         apply_effects(Effects,NewEffects,ResEffects),
         
         !,
@@ -673,12 +673,13 @@ dg_path(F1,F2) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-determine_effects(Formulas,Action,Effects) :-
-        findall(Effect,is_effect(Formulas,Action,Effect),Effects).
+determine_effects(Formulas,Effects,Action,NewEffects) :-
+        findall(Effect,is_effect(Formulas,Effects,Action,Effect),NewEffects).
 
-is_effect(Formulas,Action,Effect) :-
+is_effect(Formulas,Effects,Action,Effect) :-
         effect_description(Sign,Fluent,Action,Eff,Con),
-        is_entailed(Formulas,Con),
+        regression(Con,Effects,RCon),
+        is_entailed(Formulas,RCon),
         Effect=(Sign,Fluent,Eff).
 
 apply_effects(CurEffects,NewEffects,ResEffects) :- !,

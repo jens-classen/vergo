@@ -32,6 +32,7 @@ actions and a non-complete (open world) initial theory.
 :- use_module('../../verification/abstraction_acyclic',
               [compute_abstraction/1,
                verify/2 as verify_abstraction]).
+:- use_module('../../verification/characteristic_graphs_guards').
 :- use_module('../../lib/utils').
 :- use_module('../../logic/l').
 
@@ -147,3 +148,19 @@ check_result2(P,_T) :- !,
                              ' is different from what expected!\n']).
 
 :- end_tests('abstraction_acyclic').
+
+:- begin_tests('acyclic_effects').
+
+test(effects) :- !,
+        construct_characteristic_graph(main),
+        abstraction_acyclic:preprocess_actions(main),
+        F = [runs('#vm','#p')],
+        E = [(-,ovl('#s1'),true)],
+        A = migr('#vm','#s1','#s2'),
+        abstraction_acyclic:determine_effects(F,E,A,NE),
+        abstraction_acyclic:apply_effects(E,NE,E2),
+        assertion(member((+,avail(X),runs('#vm',X)),E2)),
+        assertion(member((+,hosts(X,Y),(X='#s2')*(runs('#vm',Y)+(Y='#vm'))),E2)),
+        assertion(member((-,hosts(X,Y),(runs('#vm',Y)+(Y='#vm'))*(X='#s1')),E2)).
+
+:- end_tests('acyclic_effects').
