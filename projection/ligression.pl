@@ -187,8 +187,14 @@ neg_inequalities([],[],false).
 
 substitute([],[],Eff,Eff) :- !.
 substitute([Arg|Args],[Arg2|Args2],Eff,EffS) :-
+        var(Arg), !,
         subv(Arg,Arg2,Eff,Eff2),
         substitute(Args,Args2,Eff2,EffS).
+substitute([Arg|Args],[Arg2|Args2],Eff,EffS) :-
+        Arg == Arg2, !,
+        substitute(Args,Args2,Eff,EffS).
+substitute([Arg|Args],[Arg2|Args2],Eff,Eff2*(Arg=Arg2)) :- !,
+        substitute(Args,Args2,Eff,Eff2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Ligression for concepts of the description logic ALCO_U
