@@ -80,7 +80,7 @@ progress(strips(open),KB1,Action,KB2) :-
         append([DelsF,DelsA,AddsF,AddsA],Mods),
         update_kb(KB1,Mods,KB2).
 
-can_progress(strips(closed),_KB,_Action) :-
+can_progress(strips(open),_KB,_Action) :-
         fail.
 
 % todo: We need to check whether the KB mentions all involved fluents
