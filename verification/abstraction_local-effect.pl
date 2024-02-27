@@ -160,28 +160,28 @@ init_construction :-
 construction_step :-
         
         % if there is an abstract state at the fringe...
-        abstract_state(Formulas,Literals,NodeID,true),
+        abstract_state(Formulas,Effects,NodeID,true),
         
         % where none of the three cases below applies...
-        not(can_expand(Formulas,Literals,NodeID,_,_,_)),
-        not(can_split_transition(Formulas,Literals,NodeID,_,_)),
-        not(can_split_property(Formulas,Literals,_)),
+        not(can_expand(Formulas,Effects,NodeID,_,_,_)),
+        not(can_split_transition(Formulas,Effects,NodeID,_,_)),
+        not(can_split_property(Formulas,Effects,_)),
 
         % then
         !,
         
         % this state is not a fringe state anymore
-        retract(abstract_state(Formulas,Literals,NodeID,true)),
-        assert(abstract_state(Formulas,Literals,NodeID,false)).
+        retract(abstract_state(Formulas,Effects,NodeID,true)),
+        assert(abstract_state(Formulas,Effects,NodeID,false)).
         
 % construction step: expand transition(s)
 construction_step :-
         
         % if there is an abstract state...
-        abstract_state(Formulas,Literals,NodeID,true),
+        abstract_state(Formulas,Effects,NodeID,true),
         
         % where it is possible to expand an action...
-        can_expand(Formulas,Literals,NodeID,Action,RegressedCondition,
+        can_expand(Formulas,Effects,NodeID,Action,RegressedCondition,
                    NewNodeID),
         
         % then
@@ -191,22 +191,22 @@ construction_step :-
                         '\t action     : ', Action, '\n',
                         '\t condition  : ', RegressedCondition, '\n',
                         '\t type       : ', Formulas, '\n',
-                        '\t literals   : ', Literals, '\n',
+                        '\t effects    : ', Effects, '\n',
                         '\t node       : ', NodeID, '\n',
                         '\t new node   : ', NewNodeID, '\n']),
         
         % create the corresponding transition(s)
-        create_transitions(Formulas,Literals,NodeID,Action,NewNodeID).
+        create_transitions(Formulas,Effects,NodeID,Action,NewNodeID).
         
 
 % construction step: split types by some transition condition
 construction_step :-
         
         % if there is an abstract state...
-        abstract_state(Formulas,Literals,NodeID,true),
+        abstract_state(Formulas,Effects,NodeID,true),
         
         % where we can split over a transition condition...
-        can_split_transition(Formulas,Literals,NodeID,Action,
+        can_split_transition(Formulas,Effects,NodeID,Action,
                              RegressedCondition),
         
         % then
@@ -216,7 +216,7 @@ construction_step :-
                         '\t action   : ', Action, '\n',
                         '\t condition: ', RegressedCondition, '\n',
                         '\t type     : ', Formulas, '\n',
-                        '\t literals : ', Literals, '\n',
+                        '\t effects  : ', Effects, '\n',
                         '\t node     : ', NodeID, '\n']),
         
         % split states and transitions over this condition
@@ -227,10 +227,10 @@ construction_step :-
 construction_step :-
         
         % if there is an abstract state...
-        abstract_state(Formulas,Literals,NodeID,true),
+        abstract_state(Formulas,Effects,NodeID,true),
         
         % where we can split over a property subformula...
-        can_split_property(Formulas,Literals,RegressedFormula),
+        can_split_property(Formulas,Effects,RegressedFormula),
         
         % then
         !,
@@ -238,14 +238,14 @@ construction_step :-
         report_message(['Doing split over property subformula: \n',
                         '\t property : ', RegressedFormula, '\n',
                         '\t type     : ', Formulas, '\n',
-                        '\t literals : ', Literals, '\n',
+                        '\t effects  : ', Effects, '\n',
                         '\t node     : ', NodeID, '\n']),
         
         % split states and transitions over this formula
         split(Formulas,RegressedFormula).
 
 % is it possible to expand a transition?
-can_expand(Formulas,Literals,NodeID,Action,RegressedCondition,
+can_expand(Formulas,Effects,NodeID,Action,RegressedCondition,
            NewNodeID) :- 
         
         % there is a possible outgoing transition...
@@ -253,15 +253,15 @@ can_expand(Formulas,Literals,NodeID,Action,RegressedCondition,
         guardcond(Guard,Condition),
 
         % whose regressed condition is entailed...
-        regression(Condition,Literals,RegressedCondition),
+        regression(Condition,Effects,RegressedCondition),
         is_entailed(Formulas,RegressedCondition),
         
         % and where the corresponding transition(s) do not yet exist
-        not(abstract_trans(Formulas,Literals,NodeID,Action,
-                           _NewLiterals,NewNodeID)).
+        not(abstract_trans(Formulas,Effects,NodeID,Action,
+                           _NewEffects,NewNodeID)).
         
 % is it possible to split over a transition condition?
-can_split_transition(Formulas,Literals,NodeID,Action,
+can_split_transition(Formulas,Effects,NodeID,Action,
                      RegressedCondition) :-
 
         % there is a possible outgoing transition...
@@ -270,40 +270,40 @@ can_split_transition(Formulas,Literals,NodeID,Action,
         
         % whose (negated) regressed condition is not yet entailed
         % by the type formulas
-        regression(Condition,Literals,RegressedCondition),
+        regression(Condition,Effects,RegressedCondition),
         not(is_entailed(Formulas,RegressedCondition)),
         not(is_entailed(Formulas,-RegressedCondition)).
         
 % is it possible to split over a property subformula?
-can_split_property(Formulas,Literals,RegressedFormula) :-
+can_split_property(Formulas,Effects,RegressedFormula) :-
         
         % there is a property subformula
         property_subformula(Formula),
         
         % whose (negated) regressed condition is not yet entailed
         % by the type formulas
-        regression(Formula,Literals,RegressedFormula),
+        regression(Formula,Effects,RegressedFormula),
         not(is_entailed(Formulas,RegressedFormula)),
         not(is_entailed(Formulas,-RegressedFormula)).
         
 % split Formulas over RegressedCondition
 split(Formulas,RegressedCondition) :-
         simplify_fml(-RegressedCondition,NegRegressedCondition),
-        retract(abstract_state(Formulas,Literals,NodeID,Fringe)),
-        assert(abstract_state([RegressedCondition|Formulas],Literals,
+        retract(abstract_state(Formulas,Effects,NodeID,Fringe)),
+        assert(abstract_state([RegressedCondition|Formulas],Effects,
                               NodeID,Fringe)),
-        assert(abstract_state([NegRegressedCondition|Formulas],Literals,
+        assert(abstract_state([NegRegressedCondition|Formulas],Effects,
                               NodeID,Fringe)),
         fail.
 
 split(Formulas,RegressedCondition) :-
         simplify_fml(-RegressedCondition,NegRegressedCondition),
-        retract(abstract_trans(Formulas,Literals,NodeID,Action,
-                               NewLiterals,NewNodeID)),
-        assert(abstract_trans([RegressedCondition|Formulas],Literals,
-                              NodeID,Action,NewLiterals,NewNodeID)), 
-        assert(abstract_trans([NegRegressedCondition|Formulas],Literals,
-                              NodeID,Action,NewLiterals,NewNodeID)), 
+        retract(abstract_trans(Formulas,Effects,NodeID,Action,
+                               NewEffects,NewNodeID)),
+        assert(abstract_trans([RegressedCondition|Formulas],Effects,
+                              NodeID,Action,NewEffects,NewNodeID)),
+        assert(abstract_trans([NegRegressedCondition|Formulas],Effects,
+                              NodeID,Action,NewEffects,NewNodeID)),
         fail.
         
 split(Formulas,RegressedCondition) :-
@@ -323,10 +323,10 @@ split(_,_).
 
 
 % split over positive effect conditions
-create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
+create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
         
         pos_effect_con(Action,Fluent,Condition),
-        regression(Condition,Literals,RegressedCondition),
+        regression(Condition,Effects,RegressedCondition),
         
         not(is_entailed(Formulas,RegressedCondition)),
         not(is_entailed(Formulas,-RegressedCondition)),
@@ -338,22 +338,22 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
                         '\t fluent   : ', Fluent, '\n',
                         '\t condition: ', RegressedCondition, '\n',
                         '\t type     : ', Formulas, '\n',
-                        '\t literals : ', Literals, '\n',
+                        '\t effects  : ', Effects, '\n',
                         '\t node     : ', NodeID, '\n']),
         
         split(Formulas,RegressedCondition),
         simplify_fml(-RegressedCondition,NegRegressedCondition),
         
-        create_transitions([RegressedCondition|Formulas],Literals,
+        create_transitions([RegressedCondition|Formulas],Effects,
                            NodeID,Action,NewNodeID),
-        create_transitions([NegRegressedCondition|Formulas],Literals,
+        create_transitions([NegRegressedCondition|Formulas],Effects,
                            NodeID,Action,NewNodeID).
 
 % split over negative effect conditions
-create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
+create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
         
         neg_effect_con(Action,Fluent,Condition),
-        regression(Condition,Literals,RegressedCondition),
+        regression(Condition,Effects,RegressedCondition),
         
         not(is_entailed(Formulas,RegressedCondition)),
         not(is_entailed(Formulas,-RegressedCondition)),
@@ -365,34 +365,34 @@ create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
                         '\t fluent   : ', Fluent, '\n',
                         '\t condition: ', RegressedCondition, '\n',
                         '\t type     : ', Formulas, '\n',
-                        '\t literals : ', Literals, '\n',
+                        '\t effects  : ', Effects, '\n',
                         '\t node     : ', NodeID, '\n']),
         
         split(Formulas,RegressedCondition),
         simplify_fml(-RegressedCondition,NegRegressedCondition),
         
-        create_transitions([RegressedCondition|Formulas],Literals,
+        create_transitions([RegressedCondition|Formulas],Effects,
                            NodeID,Action,NewNodeID),
-        create_transitions([NegRegressedCondition|Formulas],Literals,
+        create_transitions([NegRegressedCondition|Formulas],Effects,
                            NodeID,Action,NewNodeID).
 
 % actually create transition
-create_transitions(Formulas,Literals,NodeID,Action,NewNodeID) :-
+create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
         
-        determine_effects(Formulas,Action,Effects),
-        apply_effects(Literals,Effects,NewLiterals),
+        determine_effects(Formulas,Action,NewEffects),
+        apply_effects(Effects,NewEffects,ResEffects),
         
         !,
         
-        assert(abstract_trans(Formulas,Literals,NodeID,Action,
-                              NewLiterals,NewNodeID)),
-        create_state_if_not_exists(Formulas,NewLiterals,NewNodeID).
+        assert(abstract_trans(Formulas,Effects,NodeID,Action,
+                              ResEffects,NewNodeID)),
+        create_state_if_not_exists(Formulas,ResEffects,NewNodeID).
 
 % create a new abstract state if it does not exist already
-create_state_if_not_exists(Formulas,Literals,NodeID) :-
-        abstract_state(Formulas,Literals,NodeID,_Fringe), !.
-create_state_if_not_exists(Formulas,Literals,NodeID) :- !,
-        assert(abstract_state(Formulas,Literals,NodeID,true)).
+create_state_if_not_exists(Formulas,Effects,NodeID) :-
+        abstract_state(Formulas,Effects,NodeID,_Fringe), !.
+create_state_if_not_exists(Formulas,Effects,NodeID) :- !,
+        assert(abstract_state(Formulas,Effects,NodeID,true)).
 
 % draw transition system using dot
 % TODO: doesn't work, need node labels w/o brackets etc.
@@ -407,19 +407,19 @@ draw_graph :-
         close(Stream).
 
 write_nodes(Stream) :-
-        abstract_state(Formulas,Literals,NodeID,_Fringe),
+        abstract_state(Formulas,Effects,NodeID,_Fringe),
         write(Stream, '\t'),
-        write(Stream, (Formulas,Literals,NodeID)),
+        write(Stream, (Formulas,Effects,NodeID)),
         write(Stream, ';\n'),
         fail.
 write_nodes(_Stream).
 
 write_edges(Stream) :-
-        abstract_trans(Formulas,Literals,NodeID,Action,NewLiterals,NewNodeID),
+        abstract_trans(Formulas,Effects,NodeID,Action,NewEffects,NewNodeID),
         write(Stream, '\t'),
-        write(Stream, (Formulas,Literals,NodeID)),
+        write(Stream, (Formulas,Effects,NodeID)),
         write(Stream, ' -> '),
-        write(Stream, (Formulas,NewLiterals,NewNodeID)),
+        write(Stream, (Formulas,NewEffects,NewNodeID)),
         write(Stream, ' [label=\"'),
         write(Stream, Action),
         % write(Stream, ' / '),
@@ -567,8 +567,8 @@ is_inconsistent(dl,Formulas) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-determine_effects(Formulas,Action,Effects) :-
-        findall(Effect,is_effect(Formulas,Action,Effect),Effects).
+determine_effects(Formulas,Action,NewEffects) :-
+        findall(Effect,is_effect(Formulas,Action,Effect),NewEffects).
 
 is_effect(Formulas,Action,Effect) :-
         pos_effect_con(Action,Fluent,Condition),
@@ -592,29 +592,29 @@ neg_effect_con(Action,Fluent,Condition) :-
         user:rel_fluent(Fluent),
         user:causes_false(Action,Fluent,Condition).
 
-apply_effects(Literals,Effects,NewEffects) :- !,
-        apply_neg_effects(Literals,Effects,Effects2),
-        apply_pos_effects(Effects2,Effects,NewEffects2),
-        sort(NewEffects2,NewEffects).
+apply_effects(CurEffects,NewEffects,ResEffects) :- !,
+        apply_neg_effects(CurEffects,NewEffects,NewEffects2),
+        apply_pos_effects(NewEffects2,NewEffects,ResEffects2),
+        sort(ResEffects2,ResEffects).
 
-apply_neg_effects([-Lit|Literals],Effects,NewEffects) :-
-        member(Lit,Effects), !,
-        apply_neg_effects(Literals,Effects,NewEffects).
-apply_neg_effects([-Lit|Literals],Effects,[-Lit|NewEffects]) :-
-        apply_neg_effects(Literals,Effects,NewEffects).
-apply_neg_effects([Lit|Literals],Effects,NewEffects) :-
-        member(-Lit,Effects), !,
-        apply_neg_effects(Literals,Effects,NewEffects).
-apply_neg_effects([Lit|Literals],Effects,[Lit|NewEffects]) :-
-        apply_neg_effects(Literals,Effects,NewEffects).
-apply_neg_effects([],_Effects,[]).
+apply_neg_effects([-Eff|CurEffects],NewEffects,ResEffects) :-
+        member(Eff,NewEffects), !,
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([-Eff|CurEffects],NewEffects,[-Eff|ResEffects]) :-
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([Eff|CurEffects],NewEffects,ResEffects) :-
+        member(-Eff,NewEffects), !,
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([],_NewEffects,[]).
 
-apply_pos_effects([Lit|Literals],Effects,NewEffects) :-
-        member(Lit,Effects), !,
-        apply_pos_effects(Literals,Effects,NewEffects).
-apply_pos_effects([Lit|Literals],Effects,[Lit|NewEffects]) :-
-        apply_pos_effects(Literals,Effects,NewEffects).
-apply_pos_effects([],Effects,Effects).
+apply_pos_effects([Eff|CurEffects],NewEffects,ResEffects) :-
+        member(Eff,NewEffects), !,
+        apply_pos_effects(CurEffects,NewEffects,ResEffects).
+apply_pos_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
+        apply_pos_effects(CurEffects,NewEffects,ResEffects).
+apply_pos_effects([],NewEffects,NewEffects).
 
 
 % regression: use "ligression" and simplify
@@ -709,19 +709,19 @@ memorize_actions([],N) :-
         assert(map_number_of_actions(N)).
 
 propositionalize_states :-
-        abstract_state(Formulas,Literals,NodeID,_),
+        abstract_state(Formulas,Effects,NodeID,_),
         retract(map_number_of_states(N)),
         N1 is N+1,
-        assert(map_state(N,Formulas,Literals,NodeID)),
+        assert(map_state(N,Formulas,Effects,NodeID)),
         assert(map_number_of_states(N1)),
         fail.
 propositionalize_states.
         
 propositionalize_transitions :-
-        abstract_trans(Formulas,Literals,NodeID,Action,NewLiterals,
+        abstract_trans(Formulas,Effects,NodeID,Action,NewEffects,
                        NewNodeID),
-        map_state(S1,Formulas,Literals,NodeID),
-        map_state(S2,Formulas,NewLiterals,NewNodeID),
+        map_state(S1,Formulas,Effects,NodeID),
+        map_state(S2,Formulas,NewEffects,NewNodeID),
         map_action(A,Action),
         assert(map_trans(S1,A,S2)),
         fail.
@@ -738,7 +738,7 @@ pt_draw_graph :-
         close(Stream).
 
 pt_write_nodes(Stream) :-
-        map_state(S,_Formulas,_Literals,_NodeID),
+        map_state(S,_Formulas,_Effects,_NodeID),
         write(Stream, '\t'),
         write(Stream, S),
         write(Stream, ';\n'),
@@ -848,8 +848,8 @@ writeDefineSubformulas(Stream) :-
 writeDefineSubformulas(_).
 
 writeSubformulaDefinition(Stream,Formula) :-
-        map_state(N,Formulas,Literals,_NodeID),
-        regression(Formula,Literals,RegressedFormula),
+        map_state(N,Formulas,Effects,_NodeID),
+        regression(Formula,Effects,RegressedFormula),
         is_entailed(Formulas,RegressedFormula),
         write(Stream, '     state = '),
         write(Stream, N),
@@ -969,7 +969,7 @@ skip_to_counterexample([_|Lines],Lines).
 
 % single state counterexample = initial state without such a path
 translate_counterexample([State],Formulas,[]) :- !,
-        map_state(State,Formulas,_Literals,_NodeID).
+        map_state(State,Formulas,_Effects,_NodeID).
 
 % multiple states counterexample = execution trace
 translate_counterexample(States,Type,Trace) :-
