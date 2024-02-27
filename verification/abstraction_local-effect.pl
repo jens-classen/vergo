@@ -121,7 +121,7 @@ verify(PropertyName) :-
 verify(PropertyName,TruthValue) :-
        map_property(N,PropertyName,Property),
        call_smv(N, TruthValue, Type, Actions),
-       report_message(['Verified: \n',
+       report_message_r(['Verified: \n',
                        '\t Property            : ', Property, '\n',
                        '\t Truth Value         : ', TruthValue, '\n',
                        '\t Counterexample Type : ', Type, '\n',
@@ -187,7 +187,7 @@ construction_step :-
         % then
         !,
         
-        report_message(['Expanding action: \n',
+        report_message_r(['Expanding action: \n',
                         '\t action     : ', Action, '\n',
                         '\t condition  : ', RegressedCondition, '\n',
                         '\t type       : ', Formulas, '\n',
@@ -212,7 +212,7 @@ construction_step :-
         % then
         !,
         
-        report_message(['Doing split over transition condition: \n',
+        report_message_r(['Doing split over transition condition: \n',
                         '\t action   : ', Action, '\n',
                         '\t condition: ', RegressedCondition, '\n',
                         '\t type     : ', Formulas, '\n',
@@ -235,7 +235,7 @@ construction_step :-
         % then
         !,
         
-        report_message(['Doing split over property subformula: \n',
+        report_message_r(['Doing split over property subformula: \n',
                         '\t property : ', RegressedFormula, '\n',
                         '\t type     : ', Formulas, '\n',
                         '\t effects  : ', Effects, '\n',
@@ -333,7 +333,7 @@ create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
         
         !,
         
-        report_message(['Doing split over positive action condition: \n',
+        report_message_r(['Doing split over positive action condition: \n',
                         '\t action   : ', Action, '\n',
                         '\t fluent   : ', Fluent, '\n',
                         '\t condition: ', RegressedCondition, '\n',
@@ -360,7 +360,7 @@ create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
         
         !,
         
-        report_message(['Doing split over negative action condition: \n',
+        report_message_r(['Doing split over negative action condition: \n',
                         '\t action   : ', Action, '\n',
                         '\t fluent   : ', Fluent, '\n',
                         '\t condition: ', RegressedCondition, '\n',
