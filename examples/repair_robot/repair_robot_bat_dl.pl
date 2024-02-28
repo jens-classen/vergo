@@ -18,7 +18,7 @@ based on description logics.
 
 **/
 
-:- use_module('../../verification/abstraction_local-effect').
+:- use_module('../../verification/abstraction_acyclic').
 
 base_logic(dl).
 use_sink_states.

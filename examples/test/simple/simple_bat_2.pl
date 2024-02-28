@@ -10,7 +10,7 @@ A simple BAT, mainly for testing purposes.
 
 **/
 
-:- use_module('../../../verification/abstraction_local-effect').
+:- use_module('../../../verification/abstraction_acyclic').
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.

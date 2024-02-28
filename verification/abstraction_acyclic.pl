@@ -13,6 +13,16 @@ pages 1109-1115, AAAI Press, 2016.
 It also subsumes the methods presented in
 
 Benjamin Zarrieß and Jens Claßen:
+Verification of Knowledge-Based Programs over Description Logic Actions.
+In Proceedings of the Twenty-Fourth International Joint Conference on Artificial Intelligence (IJCAI 2015),
+AAAI Press, 2015.
+
+Benjamin Zarrieß and Jens Claßen:
+Decidable Verification of Knowledge-Based Programs over Description Logic Actions with Sensing.
+In Proceedings of the Twenty-Eighth International Workshop on Description Logics (DL 2015),
+CEUR-WS.org, 2015.
+
+Benjamin Zarrieß and Jens Claßen:
 Verifying CTL* Properties of Golog Programs over Local-Effect Actions.
 In Proceedings of the Twenty-First European Conference on Artificial Intelligence (ECAI 2014),
 IOS Press, 2014.
@@ -27,8 +37,6 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
  **/
 :- module('abstraction_acyclic', [compute_abstraction/1,
                                   verify/1, verify/2]).
-
-% TODO: merge this module with abstraction_local-effect?
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').

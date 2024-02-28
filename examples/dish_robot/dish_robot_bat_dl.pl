@@ -13,9 +13,7 @@ two specifications are equivalent.
 
 **/
 
-:- use_module('../../verification/abstraction_local-effect',
-              [compute_abstraction/1,
-               verify/2 as verify_abstraction]).
+:- use_module('../../verification/abstraction_acyclic').
 :- use_module('../../lib/utils').
 
 :- discontiguous causes_true/3.
@@ -151,7 +149,7 @@ test(abstraction_without_initial_kb) :- !,
 :- end_tests('abstraction_local-effect_dl').
 
 check_prop(P,I) :-
-        verify_abstraction(P,T),
+        verify(P,T),
         check_result(P,I,T), !.
 
 check_result(P,I,T) :-
