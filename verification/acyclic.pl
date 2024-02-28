@@ -36,7 +36,7 @@ pages 1109-1115, AAAI Press, 2016.
 :- use_module('../logic/dl', [entails_dl/3, inconsistent_dl/2,
                               simplify/2 as simplify_dl]).
 
-:- use_module('../logic/fobdd').
+:- use_module('../logic/fobdd', [minimize/2 as minimize_l]).
 
 :- use_module('../projection/ligression').
 
@@ -173,14 +173,16 @@ apply_effects(CurEffects,NewEffects,ResEffects) :- !,
 is_res_effect(CurEffects,NewEffects,Effect) :-
         member((Sign,Fluent,Eff),NewEffects),
         regression(Eff,CurEffects,REff),
-        simplify_fml(REff,REffS),
+        minimize_fml(REff,REffS),
+        % simplify_fml(REff,REffS),
         REffS \= false,
         Effect = (Sign,Fluent,REffS).
 is_res_effect(CurEffects,NewEffects,Effect) :-
         member((+,Fluent,Eff),CurEffects),
         neg_new_effects(Fluent,CurEffects,NewEffects,NegRPhiPs),
         conjoin([Eff|NegRPhiPs],REff),
-        simplify_fml(REff,REffS),
+        minimize_fml(REff,REffS),
+        % simplify_fml(REff,REffS),
         REffS \= false,
         Effect = (+,Fluent,REffS).
 is_res_effect(CurEffects,_NewEffects,Effect) :-
@@ -208,15 +210,26 @@ regression(F,E,R) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% quick simplification
 simplify_fml(F,R) :-
         user:base_logic(L), !,
         simplify_fml(L,F,R).
 simplify_fml(F,R) :- !,
         simplify_fml(l,F,R).
 simplify_fml(l,F,R) :- !,
-        % required to eliminate equivalent effect descriptors
-        minimize(F,R). 
+        simplify_l(F,R).
 simplify_fml(dl,F,R) :- !,
+        simplify_dl(F,R).
+
+% slower minimization to eliminate equivalent effect descriptors
+minimize_fml(F,R) :-
+        user:base_logic(L), !,
+        minimize_fml(L,F,R).
+minimize_fml(F,R) :- !,
+        minimize_fml(l,F,R).
+minimize_fml(l,F,R) :- !,
+        minimize_l(F,R).
+minimize_fml(dl,F,R) :- !,
         % TODO: need a corresponding minimize/2 for DLs for acyclic case
         simplify_dl(F,R).
 
