@@ -54,9 +54,20 @@ pages 1109-1115, AAAI Press, 2016.
 :- discontiguous(is_inconsistent/2).
 
 :- dynamic
-   is_entailed_cached/3,
-   is_inconsistent_cached/2,
    effect_description/5.
+
+% Note: caching of is_entailed/2 etc. should not be done using
+% unification, as this might create artifacts such as 'some(X,f(X,a))'
+% unifying with 'some(Y,f(a,Y))', yielding 'some(a,f(a,a))'. Term
+% variance (=@=/2) avoids this. Using Prolog's built-in tabling
+% mechanism for this is considerably faster than a manual
+% implementation.
+:- table
+   is_entailed/2,
+   is_inconsistent/1,
+   simplify_fml/2,
+   minimize_fml/2,
+   regression/3.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -252,45 +263,25 @@ is_inconsistent(Formulas) :- !,
         is_inconsistent(l,Formulas). % default
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% L reasoning with caching
+%% L reasoning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-is_entailed(l,Formulas,Formula) :-
-        is_entailed_cached(Formulas,Formula,true), !.
-is_entailed(l,Formulas,Formula) :-
-        is_entailed_cached(Formulas,Formula,false), !, fail.
 is_entailed(l,Formulas,Formula) :-
         entails_l(Formulas,Formula,Truth), !,
-        assert(is_entailed_cached(Formulas,Formula,Truth)),
         Truth = true.
 
-is_inconsistent(l,Formulas) :-
-        is_inconsistent_cached(Formulas,true), !.
-is_inconsistent(l,Formulas) :-
-        is_inconsistent_cached(Formulas,false), !, fail.
 is_inconsistent(l,Formulas) :-
         inconsistent_l(Formulas,Truth), !,
-        assert(is_inconsistent_cached(Formulas,Truth)),
         Truth = true.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% DL reasoning with caching
+%% DL reasoning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-is_entailed(dl,Formulas,Formula) :-
-        is_entailed_cached(Formulas,Formula,true), !.
-is_entailed(dl,Formulas,Formula) :-
-        is_entailed_cached(Formulas,Formula,false), !, fail.
 is_entailed(dl,Formulas,Formula) :-
         entails_dl(Formulas,Formula,Truth), !,
-        assert(is_entailed_cached(Formulas,Formula,Truth)),
         Truth = true.
 
 is_inconsistent(dl,Formulas) :-
-        is_inconsistent_cached(Formulas,true), !.
-is_inconsistent(dl,Formulas) :-
-        is_inconsistent_cached(Formulas,false), !, fail.
-is_inconsistent(dl,Formulas) :-
         inconsistent_dl(Formulas,Truth), !,
-        assert(is_inconsistent_cached(Formulas,Truth)),
         Truth = true.
