@@ -47,8 +47,10 @@ pages 1109-1115, AAAI Press, 2016.
 :- multifile user:base_logic/1.
 :- multifile user:causes_true/3.
 :- multifile user:causes_false/3.
-:- multifile user:causes_true/4.
-:- multifile user:causes_false/4.
+
+% TODO: integrate CWA
+% :- multifile user:causes_true/4.
+% :- multifile user:causes_false/4.
 
 :- discontiguous(is_entailed/3).
 :- discontiguous(is_inconsistent/2).
