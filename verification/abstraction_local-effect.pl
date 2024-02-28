@@ -181,16 +181,9 @@ construction_step :-
         % then
         !,
         
-        report_message_r(['Expanding action: \n',
-                        '\t action     : ', Action, '\n',
-                        '\t condition  : ', RegressedCondition, '\n',
-                        '\t type       : ', Formulas, '\n',
-                        '\t effects    : ', Effects, '\n',
-                        '\t node       : ', NodeID, '\n',
-                        '\t new node   : ', NewNodeID, '\n']),
-        
         % create the corresponding transition(s)
-        create_transitions(Formulas,Effects,NodeID,Action,NewNodeID).
+        create_transitions(Formulas,Effects,NodeID,Action,
+                           RegressedCondition,NewNodeID).
         
 
 % construction step: split types by some transition condition
@@ -317,7 +310,7 @@ split(_,_).
 
 
 % split over positive effect conditions
-create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
+create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
         
         pos_effect_con(Action,Fluent,Condition),
         regression(Condition,Effects,RegressedCondition),
@@ -339,12 +332,12 @@ create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
         simplify_fml(-RegressedCondition,NegRegressedCondition),
         
         create_transitions([RegressedCondition|Formulas],Effects,
-                           NodeID,Action,NewNodeID),
+                           NodeID,Action,Cond,NewNodeID),
         create_transitions([NegRegressedCondition|Formulas],Effects,
-                           NodeID,Action,NewNodeID).
+                           NodeID,Action,Cond,NewNodeID).
 
 % split over negative effect conditions
-create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
+create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
         
         neg_effect_con(Action,Fluent,Condition),
         regression(Condition,Effects,RegressedCondition),
@@ -366,18 +359,26 @@ create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
         simplify_fml(-RegressedCondition,NegRegressedCondition),
         
         create_transitions([RegressedCondition|Formulas],Effects,
-                           NodeID,Action,NewNodeID),
+                           NodeID,Action,Cond,NewNodeID),
         create_transitions([NegRegressedCondition|Formulas],Effects,
-                           NodeID,Action,NewNodeID).
+                           NodeID,Action,Cond,NewNodeID).
 
 % actually create transition
-create_transitions(Formulas,Effects,NodeID,Action,NewNodeID) :-
+create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
         
         determine_effects(Formulas,Action,NewEffects),
         apply_effects(Effects,NewEffects,ResEffects),
         
         !,
         
+        report_message_r(['Expanding action: \n',
+                        '\t action     : ', Action, '\n',
+                        '\t condition  : ', Cond, '\n',
+                        '\t type       : ', Formulas, '\n',
+                        '\t effects    : ', Effects, '\n',
+                        '\t node       : ', NodeID, '\n',
+                        '\t new node   : ', NewNodeID, '\n']),
+
         assert(abstract_trans(Formulas,Effects,NodeID,Action,
                               ResEffects,NewNodeID)),
         create_state_if_not_exists(Formulas,ResEffects,NewNodeID).
