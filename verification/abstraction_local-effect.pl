@@ -366,7 +366,7 @@ create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
 % actually create transition
 create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
         
-        determine_effects(Formulas,Action,NewEffects),
+        determine_effects(Formulas,Effects,Action,NewEffects),
         apply_effects(Effects,NewEffects,ResEffects),
         
         !,
@@ -433,16 +433,18 @@ trans_file(File) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-determine_effects(Formulas,Action,NewEffects) :-
-        findall(Effect,is_effect(Formulas,Action,Effect),NewEffects).
+determine_effects(Formulas,Effects,Action,NewEffects) :-
+        findall(Effect,is_effect(Formulas,Effects,Action,Effect),NewEffects).
 
-is_effect(Formulas,Action,Effect) :-
+is_effect(Formulas,Effects,Action,Effect) :-
         pos_effect_con(Action,Fluent,Condition),
-        is_entailed(Formulas,Condition),
+        regression(Condition,Effects,RegressedCondition),
+        is_entailed(Formulas,RegressedCondition),
         Effect=Fluent.
-is_effect(Formulas,Action,Effect) :-
+is_effect(Formulas,Effects,Action,Effect) :-
         neg_effect_con(Action,Fluent,Condition),
-        is_entailed(Formulas,Condition),
+        regression(Condition,Effects,RegressedCondition),
+        is_entailed(Formulas,RegressedCondition),
         Effect=(-Fluent).
 
 % need this for integrating types
