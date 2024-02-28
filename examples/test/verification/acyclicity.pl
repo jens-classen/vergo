@@ -27,14 +27,15 @@ program(main2,loop(act2)).
 
 test(non_acyclic) :- !,
         retractall(acyclic:effect_description(_,_,_,_,_)),
+        retractall(acyclic:bat_type(_)),
         acyclic:construct_characteristic_graph(main1),
-        acyclic:determine_eff_con(main1),
-        assertion(not(acyclic:check_acyclicity)).
+        not(acyclic:preprocess_actions(main1)).
 
 test(acyclic) :- !,
         retractall(acyclic:effect_description(_,_,_,_,_)),
+        retractall(acyclic:bat_type(_)),
         acyclic:construct_characteristic_graph(main2),
-        acyclic:determine_eff_con(main2),
-        assertion(acyclic:check_acyclicity).
+        acyclic:preprocess_actions(main2),
+        assertion(acyclic:bat_type(acyclic)).
 
 :- end_tests('acyclic').

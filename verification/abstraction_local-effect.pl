@@ -42,8 +42,7 @@ CEUR-WS.org, 2015.
 
 :- use_module('../projection/ligression').
 
-:- use_module('acyclic', [simplify_fml/2, is_entailed/2,
-                          is_inconsistent/1]).
+:- use_module('acyclic').
 :- use_module('characteristic_graphs_guards').
 
 :- dynamic
@@ -136,6 +135,9 @@ init_construction :-
         
         % materialize the characteristic graph
         construct_characteristic_graph(ProgramName),
+
+        % preprocess actions
+        preprocess_actions(ProgramName),
         
         % determine relevant formulas from property
         determine_property_subformulas(ProgramName),
@@ -401,77 +403,6 @@ write_edges(_Stream).
 trans_file(File) :-
         temp_dir(TempDir),
         string_concat(TempDir, '/trans.dot', File).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Regression
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-effect_description('+',Fluent,Action,true,Con) :-
-        pos_effect_con(Action,Fluent,Con).
-effect_description('-',Fluent,Action,true,Con) :-
-        neg_effect_con(Action,Fluent,Con).
-
-determine_effects(Formulas,Effects,Action,NewEffects) :-
-        findall(Effect,is_effect(Formulas,Effects,Action,Effect),NewEffects).
-
-is_effect(Formulas,Effects,Action,Effect) :-
-        pos_effect_con(Action,Fluent,Condition),
-        regression(Condition,Effects,RegressedCondition),
-        is_entailed(Formulas,RegressedCondition),
-        Effect=Fluent.
-is_effect(Formulas,Effects,Action,Effect) :-
-        neg_effect_con(Action,Fluent,Condition),
-        regression(Condition,Effects,RegressedCondition),
-        is_entailed(Formulas,RegressedCondition),
-        Effect=(-Fluent).
-
-% need this for integrating types
-pos_effect_con(Action,Fluent,Condition) :-
-        user:rel_fluent(Fluent),
-        user:causes_true(Action,Fluent,Condition).
-pos_effect_con(Action,Fluent,Condition) :-
-        user:rel_fluent(Fluent,Types),
-        user:causes_true(Action,Fluent,EffCon),
-        types_cons(Types,TyCons),
-        conjoin([EffCon|TyCons],Condition).
-neg_effect_con(Action,Fluent,Condition) :-
-        user:rel_fluent(Fluent),
-        user:causes_false(Action,Fluent,Condition).
-
-apply_effects(CurEffects,NewEffects,ResEffects) :- !,
-        apply_neg_effects(CurEffects,NewEffects,NewEffects2),
-        apply_pos_effects(NewEffects2,NewEffects,ResEffects2),
-        sort(ResEffects2,ResEffects).
-
-apply_neg_effects([-Eff|CurEffects],NewEffects,ResEffects) :-
-        member(Eff,NewEffects), !,
-        apply_neg_effects(CurEffects,NewEffects,ResEffects).
-apply_neg_effects([-Eff|CurEffects],NewEffects,[-Eff|ResEffects]) :-
-        apply_neg_effects(CurEffects,NewEffects,ResEffects).
-apply_neg_effects([Eff|CurEffects],NewEffects,ResEffects) :-
-        member(-Eff,NewEffects), !,
-        apply_neg_effects(CurEffects,NewEffects,ResEffects).
-apply_neg_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
-        apply_neg_effects(CurEffects,NewEffects,ResEffects).
-apply_neg_effects([],_NewEffects,[]).
-
-apply_pos_effects([Eff|CurEffects],NewEffects,ResEffects) :-
-        member(Eff,NewEffects), !,
-        apply_pos_effects(CurEffects,NewEffects,ResEffects).
-apply_pos_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
-        apply_pos_effects(CurEffects,NewEffects,ResEffects).
-apply_pos_effects([],NewEffects,NewEffects).
-
-
-% regression: use "ligression" and simplify
-regression(F,E,R) :- !,
-        ligress(F,E,R1),
-        simplify_fml(R1,R).
-
-% Note: removed caching of regression results due to significant slow down
-%       (large number of comparisons, have to use =@=)
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -16,6 +16,7 @@ pages 1109-1115, AAAI Press, 2016.
 
  **/
 :- module('acyclic', [preprocess_actions/1,
+                      bat_type/1,
                       effect_description/5,
                       determine_effects/4,
                       apply_effects/3,
@@ -56,6 +57,7 @@ pages 1109-1115, AAAI Press, 2016.
 :- discontiguous(is_inconsistent/2).
 
 :- dynamic
+   bat_type/1,
    effect_description/5.
 
 % Note: caching of is_entailed/2 etc. should not be done using
@@ -79,7 +81,7 @@ pages 1109-1115, AAAI Press, 2016.
 
 preprocess_actions(Program) :-
         determine_eff_con(Program),
-        check_acyclicity.                  
+        check_bat_type.
 
 determine_eff_con(Program) :- % untyped fluent, positive effect
         cg_edge(Program,_NodeID,_Guard,Action,_NewNodeID),
@@ -144,13 +146,22 @@ eff_con2([Conj|Conjuncts],Vars,[Conj|EffC],ConC) :- !,
         eff_con2(Conjuncts,Vars,EffC,ConC).
 eff_con2([],_Vars,[],[]) :- !.
 
-check_acyclicity :-
+% TODO: bat_type should depend on program
+
+check_bat_type :-
+        not((effect_description(_,_,_,Eff,_),
+             Eff \= true)), !,
+        report_message_r(['Action theory is local-effect. Proceeding...']),
+        assert(bat_type('local-effect')).
+check_bat_type :-
         not(dg_cycle), !,
-        report_message_r(['Action theory is acyclic. Proceeding...']).
-check_acyclicity :-
+        report_message_r(['Action theory is acyclic. Proceeding...']),
+        assert(bat_type(acyclic)).
+check_bat_type :- !,
         report_message_r(err,
-                         ['Action theory is NOT acyclic! Aborting...']),
+                         ['Action theory is NOT local-effect or acyclic! Aborting...']),
         fail.
+
 dg_cycle :-
         dg_edge(F1,F2),
         dg_path(F2,F1).
@@ -173,15 +184,35 @@ determine_effects(Formulas,Effects,Action,NewEffects) :-
         findall(Effect,is_effect(Formulas,Effects,Action,Effect),NewEffects).
 
 is_effect(Formulas,Effects,Action,Effect) :-
+        bat_type(acyclic),
         effect_description(Sign,Fluent,Action,Eff,Con),
         regression(Con,Effects,RCon),
         is_entailed(Formulas,RCon),
         Effect=(Sign,Fluent,Eff).
 
-apply_effects(CurEffects,NewEffects,ResEffects) :- !,
+is_effect(Formulas,Effects,Action,Effect) :-
+        bat_type('local-effect'),
+        effect_description('+',Fluent,Action,_,Condition),
+        regression(Condition,Effects,RegressedCondition),
+        is_entailed(Formulas,RegressedCondition),
+        Effect=Fluent.
+is_effect(Formulas,Effects,Action,Effect) :-
+        bat_type('local-effect'),
+        effect_description('-',Fluent,Action,_,Condition),
+        regression(Condition,Effects,RegressedCondition),
+        is_entailed(Formulas,RegressedCondition),
+        Effect=(-Fluent).
+
+apply_effects(CurEffects,NewEffects,ResEffects) :- 
+        bat_type(acyclic), !,
         findall(Effect,is_res_effect(CurEffects,NewEffects,Effect),
                 ResEffects2),
         variant_sort(ResEffects2,ResEffects).
+apply_effects(CurEffects,NewEffects,ResEffects) :- 
+        bat_type('local-effect'), !,
+        apply_neg_effects(CurEffects,NewEffects,NewEffects2),
+        apply_pos_effects(NewEffects2,NewEffects,ResEffects2),
+        sort(ResEffects2,ResEffects).
 
 is_res_effect(CurEffects,NewEffects,Effect) :-
         member((Sign,Fluent,Eff),NewEffects),
@@ -211,6 +242,25 @@ neg_new_effects(Fluent,CurEffects,NewEffects,NegRPhiPs) :-
               NegRPhiPs), !.
 % bagof fails if there are no solutions
 neg_new_effects(_,_,_,[]) :- !.
+
+apply_neg_effects([-Eff|CurEffects],NewEffects,ResEffects) :-
+        member(Eff,NewEffects), !,
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([-Eff|CurEffects],NewEffects,[-Eff|ResEffects]) :-
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([Eff|CurEffects],NewEffects,ResEffects) :-
+        member(-Eff,NewEffects), !,
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([],_NewEffects,[]).
+
+apply_pos_effects([Eff|CurEffects],NewEffects,ResEffects) :-
+        member(Eff,NewEffects), !,
+        apply_pos_effects(CurEffects,NewEffects,ResEffects).
+apply_pos_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
+        apply_pos_effects(CurEffects,NewEffects,ResEffects).
+apply_pos_effects([],NewEffects,NewEffects).
 
 % regression: use "ligression" and simplify
 regression(F,E,R) :- !,
