@@ -36,6 +36,9 @@ CEUR-WS.org, 2015.
 
 :- use_module('../logic/cwa').
 :- use_module('../logic/fol', [conjoin/2]).
+:- use_module('../logic/l', [op(1130, xfy, <=>),
+                             op(1110, xfy, <=),
+                             op(1110, xfy, =>)]).
 
 :- use_module('../projection/ligression').
 
@@ -515,10 +518,32 @@ extract_subformulas(until(P1,P2)) :- !,
         extract_subformulas(P2).        
 extract_subformulas(next(P)) :- !,
         extract_subformulas(P).
+
 extract_subformulas(F) :- 
         no_temporal_operators(F), !,
         simplify_fml(F,FS),
-        assert(property_subformula(FS)).
+        (not(property_subformula(FS)) ->
+            assert(property_subformula(FS));
+            true).
+
+extract_subformulas(F1*F2) :- !,
+        extract_subformulas(F1),
+        extract_subformulas(F2).
+extract_subformulas(F1+F2) :- !,
+        extract_subformulas(F1),
+        extract_subformulas(F2).
+extract_subformulas(F1=>F2) :- !,
+        extract_subformulas(F1),
+        extract_subformulas(F2).
+extract_subformulas(F1<=F2) :- !,
+        extract_subformulas(F1),
+        extract_subformulas(F2).
+extract_subformulas(F1<=>F2) :- !,
+        extract_subformulas(F1),
+        extract_subformulas(F2).
+extract_subformulas(-F) :- !,
+        extract_subformulas(F).
+% no quantification
 
 no_temporal_operators(F) :-
         var(F), !.
@@ -550,9 +575,6 @@ no_temporal_operators(F) :-
     
 no_temporal_operators(F) :-
         not(compound(F)).
-
-
-% TODO: boolean combinations of CTL subformulae!
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -783,6 +805,46 @@ writeSpecs(Stream) :-
         fail.
 writeSpecs(_).
 
+writeSpecProperty(Stream, F) :-
+        no_temporal_operators(F), !,
+        simplify_fml(F,FS),
+        property_subformula(FS),
+        map_subformula(FormulaN,FM), FS =@= FM, !,
+        write(Stream, FormulaN).
+writeSpecProperty(Stream,P1*P2) :- !,
+        write(Stream,'('),
+        writeSpecProperty(Stream,P1),
+        write(Stream,' & '),
+        writeSpecProperty(Stream,P2),
+        write(Stream, ')').
+writeSpecProperty(Stream,P1+P2) :- !,
+        write(Stream,'('),
+        writeSpecProperty(Stream,P1),
+        write(Stream,' | '),
+        writeSpecProperty(Stream,P2),
+        write(Stream, ')').
+writeSpecProperty(Stream,P1=>P2) :- !,
+        write(Stream,'('),
+        writeSpecProperty(Stream,P1),
+        write(Stream,' -> '),
+        writeSpecProperty(Stream,P2),
+        write(Stream, ')').
+writeSpecProperty(Stream,P1<=P2) :- !,
+        write(Stream,'('),
+        writeSpecProperty(Stream,P2),
+        write(Stream,' -> '),
+        writeSpecProperty(Stream,P1),
+        write(Stream, ')').
+writeSpecProperty(Stream,P1<=>P2) :- !,
+        write(Stream,'('),
+        writeSpecProperty(Stream,P1),
+        write(Stream,' <-> '),
+        writeSpecProperty(Stream,P2),
+        write(Stream, ')').
+writeSpecProperty(Stream,-P) :- !,
+        write(Stream,'!('),
+        writeSpecProperty(Stream,P),
+        write(Stream, ')').
 writeSpecProperty(Stream,somepath(P)) :- !,
         write(Stream,'E'),
         writeSpecProperty(Stream,P).
@@ -807,14 +869,6 @@ writeSpecProperty(Stream,next(P)) :- !,
         write(Stream,'X('),
         writeSpecProperty(Stream,P),
         write(Stream, ')').
-writeSpecProperty(Stream, F) :-
-        no_temporal_operators(F),
-        simplify_fml(F,FS),
-        property_subformula(FS),
-        map_subformula(FormulaN,FM), FS =@= FM, !,
-        write(Stream, FormulaN).
-
-% TODO: boolean combintations of CTL formulae
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
