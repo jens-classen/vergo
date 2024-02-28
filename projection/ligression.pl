@@ -49,7 +49,8 @@ currently not supported for description logic action theories.
 :- use_module('../logic/def').
 :- use_module('../logic/l', [op(1130, xfy, <=>),
                              op(1110, xfy, <=),
-                             op(1110, xfy, =>)]).
+                             op(1110, xfy, =>),
+                             conjoin/2]).
 :- use_module('../logic/una', [is_std_name/1,
                                get_fml_std_names/2]).
 :- use_module('../logic/cwa').
