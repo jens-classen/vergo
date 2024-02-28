@@ -422,6 +422,70 @@ write_edges(_Stream).
 trans_file(File) :-
         temp_dir(TempDir),
         string_concat(TempDir, '/trans.dot', File).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Regression
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+determine_effects(Formulas,Action,NewEffects) :-
+        findall(Effect,is_effect(Formulas,Action,Effect),NewEffects).
+
+is_effect(Formulas,Action,Effect) :-
+        pos_effect_con(Action,Fluent,Condition),
+        is_entailed(Formulas,Condition),
+        Effect=Fluent.
+is_effect(Formulas,Action,Effect) :-
+        neg_effect_con(Action,Fluent,Condition),
+        is_entailed(Formulas,Condition),
+        Effect=(-Fluent).
+
+% need this for integrating types
+pos_effect_con(Action,Fluent,Condition) :-
+        user:rel_fluent(Fluent),
+        user:causes_true(Action,Fluent,Condition).
+pos_effect_con(Action,Fluent,Condition) :-
+        user:rel_fluent(Fluent,Types),
+        user:causes_true(Action,Fluent,EffCon),
+        types_cons(Types,TyCons),
+        conjoin([EffCon|TyCons],Condition).
+neg_effect_con(Action,Fluent,Condition) :-
+        user:rel_fluent(Fluent),
+        user:causes_false(Action,Fluent,Condition).
+
+apply_effects(CurEffects,NewEffects,ResEffects) :- !,
+        apply_neg_effects(CurEffects,NewEffects,NewEffects2),
+        apply_pos_effects(NewEffects2,NewEffects,ResEffects2),
+        sort(ResEffects2,ResEffects).
+
+apply_neg_effects([-Eff|CurEffects],NewEffects,ResEffects) :-
+        member(Eff,NewEffects), !,
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([-Eff|CurEffects],NewEffects,[-Eff|ResEffects]) :-
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([Eff|CurEffects],NewEffects,ResEffects) :-
+        member(-Eff,NewEffects), !,
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
+        apply_neg_effects(CurEffects,NewEffects,ResEffects).
+apply_neg_effects([],_NewEffects,[]).
+
+apply_pos_effects([Eff|CurEffects],NewEffects,ResEffects) :-
+        member(Eff,NewEffects), !,
+        apply_pos_effects(CurEffects,NewEffects,ResEffects).
+apply_pos_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
+        apply_pos_effects(CurEffects,NewEffects,ResEffects).
+apply_pos_effects([],NewEffects,NewEffects).
+
+
+% regression: use "ligression" and simplify
+regression(F,E,R) :- !,
+        ligress(F,E,R1),
+        simplify_fml(R1,R).
+
+% Note: removed caching of regression results due to significant slow down
+%       (large number of comparisons, have to use =@=)
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -489,70 +553,6 @@ no_temporal_operators(F) :-
 
 
 % TODO: boolean combinations of CTL subformulae!
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Regression
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-determine_effects(Formulas,Action,NewEffects) :-
-        findall(Effect,is_effect(Formulas,Action,Effect),NewEffects).
-
-is_effect(Formulas,Action,Effect) :-
-        pos_effect_con(Action,Fluent,Condition),
-        is_entailed(Formulas,Condition),
-        Effect=Fluent.
-is_effect(Formulas,Action,Effect) :-
-        neg_effect_con(Action,Fluent,Condition),
-        is_entailed(Formulas,Condition),
-        Effect=(-Fluent).
-
-% need this for integrating types
-pos_effect_con(Action,Fluent,Condition) :-
-        user:rel_fluent(Fluent),
-        user:causes_true(Action,Fluent,Condition).
-pos_effect_con(Action,Fluent,Condition) :-
-        user:rel_fluent(Fluent,Types),
-        user:causes_true(Action,Fluent,EffCon),
-        types_cons(Types,TyCons),
-        conjoin([EffCon|TyCons],Condition).
-neg_effect_con(Action,Fluent,Condition) :-
-        user:rel_fluent(Fluent),
-        user:causes_false(Action,Fluent,Condition).
-
-apply_effects(CurEffects,NewEffects,ResEffects) :- !,
-        apply_neg_effects(CurEffects,NewEffects,NewEffects2),
-        apply_pos_effects(NewEffects2,NewEffects,ResEffects2),
-        sort(ResEffects2,ResEffects).
-
-apply_neg_effects([-Eff|CurEffects],NewEffects,ResEffects) :-
-        member(Eff,NewEffects), !,
-        apply_neg_effects(CurEffects,NewEffects,ResEffects).
-apply_neg_effects([-Eff|CurEffects],NewEffects,[-Eff|ResEffects]) :-
-        apply_neg_effects(CurEffects,NewEffects,ResEffects).
-apply_neg_effects([Eff|CurEffects],NewEffects,ResEffects) :-
-        member(-Eff,NewEffects), !,
-        apply_neg_effects(CurEffects,NewEffects,ResEffects).
-apply_neg_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
-        apply_neg_effects(CurEffects,NewEffects,ResEffects).
-apply_neg_effects([],_NewEffects,[]).
-
-apply_pos_effects([Eff|CurEffects],NewEffects,ResEffects) :-
-        member(Eff,NewEffects), !,
-        apply_pos_effects(CurEffects,NewEffects,ResEffects).
-apply_pos_effects([Eff|CurEffects],NewEffects,[Eff|ResEffects]) :-
-        apply_pos_effects(CurEffects,NewEffects,ResEffects).
-apply_pos_effects([],NewEffects,NewEffects).
-
-
-% regression: use "ligression" and simplify
-regression(F,E,R) :- !,
-        ligress(F,E,R1),
-        simplify_fml(R1,R).
-
-% Note: removed caching of regression results due to significant slow down
-%       (large number of comparisons, have to use =@=)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
