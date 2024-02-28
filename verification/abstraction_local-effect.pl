@@ -46,7 +46,7 @@ CEUR-WS.org, 2015.
                           is_inconsistent/1]).
 :- use_module('characteristic_graphs_guards').
 
-:- dynamic   
+:- dynamic
    map_property/3,
    map_subformula/2,
    map_action/2,  
@@ -80,7 +80,7 @@ compute_abstraction(ProgramName) :-
         
         retractall(program_to_verify(ProgramName)),
         assert(program_to_verify(ProgramName)),
-        
+
         construct_abstract_transition_system,
         construct_propositional_mapping,
         translate_to_smv, !.
@@ -184,7 +184,6 @@ construction_step :-
         % create the corresponding transition(s)
         create_transitions(Formulas,Effects,NodeID,Action,
                            RegressedCondition,NewNodeID).
-        
 
 % construction step: split types by some transition condition
 construction_step :-
@@ -208,7 +207,6 @@ construction_step :-
         
         % split states and transitions over this condition
         split(Formulas,RegressedCondition).
-
 
 % construction step: split types by some property subformula
 construction_step :-
@@ -370,12 +368,14 @@ create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
         apply_effects(Effects,NewEffects,ResEffects),
         
         !,
-        
+
         report_message_r(['Expanding action: \n',
                         '\t action     : ', Action, '\n',
                         '\t condition  : ', Cond, '\n',
                         '\t type       : ', Formulas, '\n',
                         '\t effects    : ', Effects, '\n',
+                        '\t new effects: ', NewEffects, '\n',
+                        '\t res effects: ', ResEffects, '\n',
                         '\t node       : ', NodeID, '\n',
                         '\t new node   : ', NewNodeID, '\n']),
 
@@ -596,7 +596,7 @@ construct_propositional_mapping :-
         retractall(map_number_of_subformulas(_)),
         retractall(map_number_of_actions(_)),
         retractall(map_number_of_states(_)),
-                
+
         program_to_verify(ProgramName),
         
         % determine properties

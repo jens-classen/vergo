@@ -290,9 +290,9 @@ split(Formulas,RegressedCondition) :-
         retract(abstract_trans(Formulas,Effects,NodeID,Action,
                                NewEffects,NewNodeID)),
         assert(abstract_trans([RegressedCondition|Formulas],Effects,
-                              NodeID,Action,NewEffects,NewNodeID)), 
+                              NodeID,Action,NewEffects,NewNodeID)),
         assert(abstract_trans([NegRegressedCondition|Formulas],Effects,
-                              NodeID,Action,NewEffects,NewNodeID)), 
+                              NodeID,Action,NewEffects,NewNodeID)),
         fail.
         
 split(Formulas,RegressedCondition) :-
@@ -357,7 +357,7 @@ create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
                         '\t res effects: ', ResEffects, '\n',
                         '\t node       : ', NodeID, '\n',
                         '\t new node   : ', NewNodeID, '\n']),
-                
+
         assert(abstract_trans(Formulas,Effects,NodeID,Action,
                               ResEffects,NewNodeID)),
         create_state_if_not_exists(Formulas,ResEffects,NewNodeID).
@@ -509,7 +509,7 @@ construct_propositional_mapping :-
         retractall(map_number_of_subformulas(_)),
         retractall(map_number_of_actions(_)),
         retractall(map_number_of_states(_)),
-        
+
         program_to_verify(ProgramName),
         
         % determine properties
