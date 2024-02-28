@@ -36,23 +36,14 @@ CEUR-WS.org, 2015.
 
 :- use_module('../logic/cwa').
 :- use_module('../logic/fol', [conjoin/2]).
-:- use_module('../logic/l', [entails_l/3, inconsistent_l/2,
-                             simplify/2 as simplify_l]).
-:- use_module('../logic/dl', [entails_dl/3, inconsistent_dl/2,
-                              simplify/2 as simplify_dl]).
 
 :- use_module('../projection/ligression').
 
+:- use_module('acyclic', [simplify_fml/2, is_entailed/2,
+                          is_inconsistent/1]).
 :- use_module('characteristic_graphs_guards').
 
-:- discontiguous(is_entailed/3).
-:- discontiguous(is_inconsistent/2).
-
-:- multifile user:base_logic/1.
-
 :- dynamic   
-   is_entailed_cached/3,
-   is_inconsistent_cached/2,
    map_property/3,
    map_subformula/2,
    map_action/2,  
@@ -501,68 +492,6 @@ no_temporal_operators(F) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Reasoning: Use L or DL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-is_entailed(Formulas,Formula) :-
-        user:base_logic(L), !,
-        is_entailed(L,Formulas,Formula).
-is_entailed(Formulas,Formula) :- !,
-        is_entailed(l,Formulas,Formula). % default
-
-is_inconsistent(Formulas) :-
-        user:base_logic(L), !,
-        is_inconsistent(L,Formulas).
-is_inconsistent(Formulas) :- !,
-        is_inconsistent(l,Formulas). % default
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% L reasoning with caching
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-is_entailed(l,Formulas,Formula) :-
-        is_entailed_cached(Formulas,Formula,true), !.
-is_entailed(l,Formulas,Formula) :-
-        is_entailed_cached(Formulas,Formula,false), !, fail.
-is_entailed(l,Formulas,Formula) :-
-        entails_l(Formulas,Formula,Truth), !,
-        assert(is_entailed_cached(Formulas,Formula,Truth)),
-        Truth = true.
-
-is_inconsistent(l,Formulas) :-
-        is_inconsistent_cached(Formulas,true), !.
-is_inconsistent(l,Formulas) :-
-        is_inconsistent_cached(Formulas,false), !, fail.
-is_inconsistent(l,Formulas) :-
-        inconsistent_l(Formulas,Truth), !,
-        assert(is_inconsistent_cached(Formulas,Truth)),
-        Truth = true.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% DL reasoning with caching
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-is_entailed(dl,Formulas,Formula) :-
-        is_entailed_cached(Formulas,Formula,true), !.
-is_entailed(dl,Formulas,Formula) :-
-        is_entailed_cached(Formulas,Formula,false), !, fail.
-is_entailed(dl,Formulas,Formula) :-
-        entails_dl(Formulas,Formula,Truth), !,
-        assert(is_entailed_cached(Formulas,Formula,Truth)),
-        Truth = true.
-
-is_inconsistent(dl,Formulas) :-
-        is_inconsistent_cached(Formulas,true), !.
-is_inconsistent(dl,Formulas) :-
-        is_inconsistent_cached(Formulas,false), !, fail.
-is_inconsistent(dl,Formulas) :-
-        inconsistent_dl(Formulas,Truth), !,
-        assert(is_inconsistent_cached(Formulas,Truth)),
-        Truth = true.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Regression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -624,22 +553,6 @@ regression(F,E,R) :- !,
 
 % Note: removed caching of regression results due to significant slow down
 %       (large number of comparisons, have to use =@=)
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Formula Simplification
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-simplify_fml(F,R) :-
-        user:base_logic(L), !,
-        simplify_fml(L,F,R).
-simplify_fml(F,R) :- !,
-        simplify_fml(l,F,R).
-simplify_fml(l,F,R) :- !,
-        simplify_l(F,R).
-simplify_fml(dl,F,R) :-
-        simplify_dl(F,R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
