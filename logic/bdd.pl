@@ -153,8 +153,8 @@ bdd_conjoin(BDD1,BDD2,BDD) :-
 bdd_disjoin(BDD1,BDD2,BDD) :-
         ite(BDD1,1,BDD2,BDD).
 bdd_equival(BDD1,BDD2,BDD) :-
-        bdd_negate(BDD2,BDD3),
-        ite(BDD1,BDD3,BDD).
+        bdd_negated(BDD2,BDD3),
+        ite(BDD1,BDD2,BDD3,BDD).
 bdd_negated(BDD1,BDD) :-
         ite(BDD1,0,1,BDD).
         
