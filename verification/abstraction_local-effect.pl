@@ -307,51 +307,26 @@ split(Formulas,RegressedCondition) :-
 split(_,_).
 
 
-% split over positive effect conditions
+% split over effect conditions
 create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
         
-        pos_effect_con(Action,Fluent,Condition),
-        regression(Condition,Effects,RegressedCondition),
+        effect_description(Sign,Fluent,Action,Eff,Con),
+        regression(Con,Effects,RegressedCondition),
         
         not(is_entailed(Formulas,RegressedCondition)),
         not(is_entailed(Formulas,-RegressedCondition)),
         
         !,
         
-        report_message_r(['Doing split over positive action condition: \n',
-                        '\t action   : ', Action, '\n',
-                        '\t fluent   : ', Fluent, '\n',
-                        '\t condition: ', RegressedCondition, '\n',
-                        '\t type     : ', Formulas, '\n',
-                        '\t effects  : ', Effects, '\n',
-                        '\t node     : ', NodeID, '\n']),
-        
-        split(Formulas,RegressedCondition),
-        simplify_fml(-RegressedCondition,NegRegressedCondition),
-        
-        create_transitions([RegressedCondition|Formulas],Effects,
-                           NodeID,Action,Cond,NewNodeID),
-        create_transitions([NegRegressedCondition|Formulas],Effects,
-                           NodeID,Action,Cond,NewNodeID).
-
-% split over negative effect conditions
-create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
-        
-        neg_effect_con(Action,Fluent,Condition),
-        regression(Condition,Effects,RegressedCondition),
-        
-        not(is_entailed(Formulas,RegressedCondition)),
-        not(is_entailed(Formulas,-RegressedCondition)),
-        
-        !,
-        
-        report_message_r(['Doing split over negative action condition: \n',
-                        '\t action   : ', Action, '\n',
-                        '\t fluent   : ', Fluent, '\n',
-                        '\t condition: ', RegressedCondition, '\n',
-                        '\t type     : ', Formulas, '\n',
-                        '\t effects  : ', Effects, '\n',
-                        '\t node     : ', NodeID, '\n']),
+        report_message_r(['Doing split over effect condition: \n',
+                        '\t action           : ', Action, '\n',
+                        '\t sign             : ', Sign, '\n',
+                        '\t fluent           : ', Fluent, '\n',
+                        '\t effect descriptor: ', Eff, '\n',
+                        '\t regressed context: ', RegressedCondition, '\n',
+                        '\t type             : ', Formulas, '\n',
+                        '\t effects          : ', Effects, '\n',
+                        '\t node             : ', NodeID, '\n']),
         
         split(Formulas,RegressedCondition),
         simplify_fml(-RegressedCondition,NegRegressedCondition),
@@ -432,6 +407,11 @@ trans_file(File) :-
 %% Regression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+effect_description('+',Fluent,Action,true,Con) :-
+        pos_effect_con(Action,Fluent,Con).
+effect_description('-',Fluent,Action,true,Con) :-
+        neg_effect_con(Action,Fluent,Con).
 
 determine_effects(Formulas,Effects,Action,NewEffects) :-
         findall(Effect,is_effect(Formulas,Effects,Action,Effect),NewEffects).
