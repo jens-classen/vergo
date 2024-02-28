@@ -73,7 +73,7 @@ sfcond(A,Y,Sensecondition) :- nonvar(A), user:sensing_style(object),
 sfcond(_,Y,(Y = '#ok')) :- user:sensing_style(object), !.
 
 % ssa if exists pre-instantiated axiom by user => use it
-ssa(Fluent,A,Condition) :- ssa_inst(Fluent,A,Condition), !.
+ssa(Fluent,A,Condition) :- user:ssa_inst(Fluent,A,Condition), !.
 % ssa if A is a variable => big disjunction over all cases
 ssa(Fluent,A,Condition) :- rel_fluent_con(Fluent,CondF), var(A), !,
         condition(user:causes_true(B,Fluent,Phi),Phi,B,A,Poscondition),
@@ -87,7 +87,7 @@ ssa(Fluent,A,Condition) :- rel_fluent_con(Fluent,_), nonvar(A), !,
         simplify(Condition2,Condition).
  
 % ssa if exists pre-instantiated axiom by user => use it
-ssa(Fluent=Y,A,Condition) :- ssa_inst(Fluent=Y,A,Condition), !.
+ssa(Fluent=Y,A,Condition) :- user:ssa_inst(Fluent=Y,A,Condition), !.
 % ssa if A is a variable => big disjunction over all cases
 ssa(Fluent=Y,A,Condition) :- fun_fluent_con(Fluent,CondF), var(A), !,
         condition(user:causes(B,Fluent,Y,Phi),Phi,B,A,Cond),
