@@ -53,9 +53,6 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
 :- use_module('characteristic_graphs_guards').
 
 :- dynamic
-   map_type_formula/2,
-   map_type/2,
-   map_literal/2,
    map_property/3,
    map_subformula/2,
    map_action/2,  
