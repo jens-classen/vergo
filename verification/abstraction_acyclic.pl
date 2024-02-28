@@ -34,14 +34,9 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
 :- use_module('../lib/env').
 
 :- use_module('../logic/cwa').
-:- use_module('../logic/l', [entails_l/3, inconsistent_l/2, simplify_l/2,
-                             conjoin/2, conjuncts/2, free_variables/2,
-                             op(1130, xfy, <=>),
+:- use_module('../logic/l', [op(1130, xfy, <=>),
                              op(1110, xfy, <=),
                              op(1110, xfy, =>)]).
-
-:- use_module('../logic/dl', [entails_dl/3, inconsistent_dl/2,
-                              simplify/2 as simplify_dl]).
 
 :- use_module('../logic/fobdd').
 
@@ -217,7 +212,6 @@ construction_step :-
         % split states and transitions over this condition
         split(Formulas,RegressedCondition).
 
-
 % construction step: split types by some property subformula
 construction_step :-
         
@@ -317,7 +311,7 @@ split(Formulas,RegressedCondition) :-
 split(_,_).
 
 
-% split over positive effect conditions
+% split over effect conditions
 create_transitions(Formulas,Effects,NodeID,Action,Cond,NewNodeID) :-
         
         effect_description(Sign,Fluent,Action,Eff,Con),
