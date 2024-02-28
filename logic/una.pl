@@ -390,10 +390,10 @@ get_type2_axioms_from_names2(Name,[N|Ns],[Axiom|Axioms]) :- !,
 
 una_axiom_type2(NameA,NameB/NB,Axiom) :-
         atomic(NameA), !,
-        una_axiom_type(NameA/0,NameB/NB,Axiom).
+        una_axiom_type2(NameA/0,NameB/NB,Axiom).
 una_axiom_type2(NameA/NA,NameB,Axiom) :-
         atomic(NameB), !,
-        una_axiom_type(NameA/NA,NameB/0,Axiom).
+        una_axiom_type2(NameA/NA,NameB/0,Axiom).
 una_axiom_type2(NameA,NameB,-(NameA=NameB)) :-
         atomic(NameA),
         atomic(NameB), !.
