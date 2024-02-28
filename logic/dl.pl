@@ -122,7 +122,7 @@ simplify_and(C,C2) :-
         A \= B, !,
         setminus2(C,[only(R,A),only(R,B)],C3),
         simplify(only(R,and([A,B])),S),
-        simpify_and([S|C3],C2).
+        simplify_and([S|C3],C2).
 simplify_and(C,C2) :-
         member(not(A),C),
         member(A,C), !,
@@ -177,7 +177,7 @@ simplify_or(C,C2) :-
         A \= B, !,
         setminus2(C,[exists(R,A),exists(R,B)],C3),
         simplify(exists(R,or([A,B])),S),
-        simpify_or([S|C3],C2).
+        simplify_or([S|C3],C2).
 simplify_or(C,C2) :-
         member(not(A),C),
         member(A,C), !,
@@ -216,7 +216,7 @@ simplify(subsumedBy(C1,C2),Res) :- !,
 
 simplify_subsumedBy(_C,thing,true) :- !.
 simplify_subsumedBy(nothing,_C,true) :- !.
-simplify_subsumedby(C1,C2,subsumedBy(C1,C2)) :- !.
+simplify_subsumedBy(C1,C2,subsumedBy(C1,C2)) :- !.
 
 % Abox assertions
 simplify(concept_assertion(C,N),concept_assertion(CS,N)) :- !,
