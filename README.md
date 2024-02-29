@@ -169,7 +169,7 @@ The code is divided into the following subdirectories:
 
 ## Dependencies
 
-Vergo uses SWI-Prolog (currently version 8.3.8). Furthermore, there
+Vergo uses SWI-Prolog (currently version 9.3.2). Furthermore, there
 are the following dependencies to external tools and systems:
 
 1. **Theorem Prover** (required)
