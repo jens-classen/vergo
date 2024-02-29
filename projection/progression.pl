@@ -135,7 +135,7 @@ progress(local_effect,KB1,Action,KB2) :-
                  append([InstAxioms,InstSSA],DisjunctFmls),
                  conjoin(DisjunctFmls,DisjunctC),
                  minimize(DisjunctC,Disjunct),
-                 consistent_l(Disjunct,true)),
+                 consistent_l([Disjunct],true)),
                 Disjuncts),
         disjoin(Disjuncts,Fml1),
         minimize(Fml1,Fml2),
