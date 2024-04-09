@@ -260,6 +260,9 @@ construction_step(P,F) :-
 can_expand(P,F,Formulas,Effects,Next,Tail,NodeID,Action,
            RegressedCondition,ResEffects,NewNext,NewTail,NewNodeID) :-
 
+        % tail does not hold,
+        Tail = false,
+
         % there is a possible outgoing transition...
         cg_edge(P,NodeID,Guard,Action,NewNodeID),
         guardcond(Guard,Condition),
