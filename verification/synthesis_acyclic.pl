@@ -39,7 +39,8 @@ pages 1109-1115, AAAI Press, 2016.
 
 :- dynamic   
    abstract_state/2,
-   abstract_trans/3.
+   abstract_trans/3,
+   strategy_node/2.
 
 % TODO: include support for closed-world assumption?
 
@@ -55,7 +56,8 @@ pages 1109-1115, AAAI Press, 2016.
  **/
 synthesize(Program,Property) :-
         init_construction(Program,Property),
-        iterate_construction(Program,Property).
+        iterate_construction(Program,Property),
+        build_strategy(Program,Property).
 
 % iterate construction steps as long as possible
 iterate_construction(Program,Property) :-
@@ -418,6 +420,98 @@ create_state_if_not_exists(State,Fringe) :-
         abstract_state(State,Fringe), !.
 create_state_if_not_exists(State,true) :- !,
         assert(abstract_state(State,true)).
+% is the abstract state final?
+is_final(State) :-
+
+        State = (P,_F,Formulas,Effects,_Next,_Tail,NodeID),
+        
+        % determine the finality condition Final for NodeID
+        cg_node(P,_SubProg,Final,NodeID),
+        
+        % and check whether its regression holds.
+        regression(Final,Effects,RegressedFinal),
+        is_entailed(Formulas,RegressedFinal).
+
+% is the abstract state accepting?
+is_accepting(State) :-
+
+        State = (_P,_F,_Formulas,_Effects,Next,Tail,_NodeID),
+        
+        % this is a tail state
+        Tail = true,
+
+        % whose next formulas have an assignment...
+        tnf2xnf(Next,XNF),
+        xnf_ass(XNF,Ls,Xs,NewTail),
+        
+        % that is satisfiable.
+        is_satisfiable(Ls,Xs,NewTail). % TODO: shouldn't we check
+                                       % consistency with type?
+
+% is the propositional assignment satisfiable?
+is_satisfiable(Ls,_Xs,_Tail) :-
+        % Xs irrelevant because all positive, distinct from Ls
+        % Tail irrelevant because does not occur in Ls
+        not(is_inconsistent(Ls)).
+
+% build strategy from existing transition system
+build_strategy(P,F) :-
+        label_leaves(P,F),
+        label_inductively(P,F).
+
+% label good leaves
+label_leaves(P,F) :-
+        State = (P,F,_,_,_,_,_),
+        abstract_state(State,false),
+        not(strategy_node(State,_)),
+        is_final(State),
+        is_accepting(State),
+        assert(strategy_node(State,good)),
+        fail.
+
+% label bad leaves
+label_leaves(P,F) :-
+        State = (P,F,_,_,_,_,_),
+        abstract_state(State,false),
+        not(strategy_node(State,good)),
+        assert(strategy_node(State,bad)),
+        fail.
+
+% finish labelling leaves
+label_leaves(_,_).
+
+% label bad state due to environment action
+label_inductively(P,F) :-
+        State = (P,F,_,_,_,_,_),
+        abstract_state(State,false),
+        strategy_node(NewState,bad),
+        abstract_trans(State,Action,NewState),
+        not(strategy_node(State,_)),
+        user:env_action(Action),
+        assert(strategy_node(State,bad)),
+        fail.
+
+% label bad state due to control actions
+label_inductively(P,F) :-
+        State = (P,F,_,_,_,_,_),
+        abstract_state(State,false),
+        not(strategy_node(State,_)),
+        forall((abstract_trans(State,Action,NewState),
+                user:ctl_action(Action)),
+               strategy_node(NewState,bad)),
+        assert(strategy_node(State,bad)),
+        fail.
+
+% label remaining states as good states
+label_inductively(P,F) :-
+        State = (P,F,_,_,_,_,_),
+        abstract_state(State,false),
+        not(strategy_node(State,_)),
+        assert(strategy_node(State,good)),
+        fail.
+
+% finish induction
+label_inductively(_,_).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

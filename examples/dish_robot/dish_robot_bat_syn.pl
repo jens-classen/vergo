@@ -28,6 +28,12 @@ rel_fluent(at(_)).
 rel_fluent(new(_)).
 rel_rigid(room(_)).
 
+ctl_action(load(_,_)).
+ctl_action(unload(_)).
+ctl_action(goto(_)).
+
+env_action(requestDDR(_,_)).
+
 poss(requestDDR(X,Y),new(X)*room(Y)).
 poss(load(_X,Y),at(Y)).
 poss(unload(X),onRobot(X)*at('#kitchen')).
