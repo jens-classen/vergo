@@ -436,23 +436,12 @@ is_final(State) :-
 is_accepting(State) :-
 
         State = (_P,_F,_Formulas,_Effects,Next,Tail,_NodeID),
-        
+
         % this is a tail state
         Tail = true,
-
-        % whose next formulas have an assignment...
-        tnf2xnf(Next,XNF),
-        xnf_ass(XNF,Ls,Xs,NewTail),
         
-        % that is satisfiable.
-        is_satisfiable(Ls,Xs,NewTail). % TODO: shouldn't we check
-                                       % consistency with type?
-
-% is the propositional assignment satisfiable?
-is_satisfiable(Ls,_Xs,_Tail) :-
-        % Xs irrelevant because all positive, distinct from Ls
-        % Tail irrelevant because does not occur in Ls
-        not(is_inconsistent(Ls)).
+        % next is empty
+        Next = [].
 
 % build strategy from existing transition system
 build_strategy(P,F) :-
