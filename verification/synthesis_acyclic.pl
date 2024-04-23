@@ -460,6 +460,7 @@ label_leaves(P,F) :-
         is_final(State),
         is_accepting(State),
         assert(strategy_node(State,good)),
+        report_label(State,'GOOD (leaf)'),
         fail.
 
 % label bad leaves
@@ -469,6 +470,7 @@ label_leaves(P,F) :-
         not(abstract_trans(State,_,_)),
         not(strategy_node(State,good)),
         assert(strategy_node(State,bad)),
+        report_label(State,'BAD (leaf)'),
         fail.
 
 % finish labelling leaves
@@ -483,6 +485,7 @@ label_inductively(P,F) :-
         not(strategy_node(State,_)),
         env_action(Action,State),
         assert(strategy_node(State,bad)),
+        report_label(State,'BAD (env action)'),
         fail.
 
 % label bad state due to control actions
@@ -494,6 +497,7 @@ label_inductively(P,F) :-
                 ctl_action(Action,State)),
                strategy_node(NewState,bad)),
         assert(strategy_node(State,bad)),
+        report_label(State,'BAD (ctl action)'),
         fail.
 
 % label remaining states as good states
@@ -502,10 +506,17 @@ label_inductively(P,F) :-
         abstract_state(State,false),
         not(strategy_node(State,_)),
         assert(strategy_node(State,good)),
+        report_label(State,'GOOD (default)'),
         fail.
 
 % finish induction
 label_inductively(_,_).
+
+% report a label to standard output
+report_label(State,LabelDescription) :-
+        report_message_r(['Labelling state:\n',
+                          '\t label      : ', LabelDescription, '\n']),
+        report_state(State).
 
 % control action = non-environment action
 ctl_action(A,State) :-
