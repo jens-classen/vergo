@@ -462,6 +462,7 @@ label_leaves(P,F) :-
 label_leaves(P,F) :-
         State = (P,F,_,_,_,_,_),
         abstract_state(State,false),
+        not(abstract_trans(State,_,_)),
         not(strategy_node(State,good)),
         assert(strategy_node(State,bad)),
         fail.
