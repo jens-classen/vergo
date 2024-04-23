@@ -42,6 +42,10 @@ pages 1109-1115, AAAI Press, 2016.
    abstract_trans/3,
    strategy_node/2.
 
+:- multifile user:exo/2.
+:- multifile user:initially/1.
+:- multifile user:property/2.
+
 % TODO: include support for closed-world assumption?
 
 /**
@@ -477,7 +481,7 @@ label_inductively(P,F) :-
         strategy_node(NewState,bad),
         abstract_trans(State,Action,NewState),
         not(strategy_node(State,_)),
-        user:env_action(Action),
+        env_action(Action,State),
         assert(strategy_node(State,bad)),
         fail.
 
@@ -487,7 +491,7 @@ label_inductively(P,F) :-
         abstract_state(State,false),
         not(strategy_node(State,_)),
         forall((abstract_trans(State,Action,NewState),
-                user:ctl_action(Action)),
+                ctl_action(Action,State)),
                strategy_node(NewState,bad)),
         assert(strategy_node(State,bad)),
         fail.
@@ -502,6 +506,17 @@ label_inductively(P,F) :-
 
 % finish induction
 label_inductively(_,_).
+
+% control action = non-environment action
+ctl_action(A,State) :-
+        not(env_action(A,State)).
+
+% environment action = exogenous actions defined in BAT
+env_action(A,State) :-
+        user:exo(A,F),
+        State = (_,_,T,E,_,_,_),
+        regression(F,E,R),
+        is_entailed(T,R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

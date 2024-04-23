@@ -18,9 +18,6 @@ initially(p).
 
 rel_fluent(p).
 
-ctl_action(a).
-ctl_action(b).
-
 poss(a,p).
 poss(b,-p).
 
