@@ -79,4 +79,4 @@ senses(smell,adj(locRobot,locWumpus)).
 senses(senseBreeze,some(X,(adj(locRobot,X)*isPit(X)))).
 senses(senseGold,isGold(locRobot)).
 
-exo(scream).
+exo(scream,true).

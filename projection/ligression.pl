@@ -37,7 +37,8 @@ S is a sign (+ or -), F is a fluent template (fluent predicate applied
 to some variable arguments Vars), and E is an effect descriptor
 (formula with free variables Vars). This version is used for
 verification by abstraction on acyclic action theories. It is
-currently not supported for description logic action theories.
+currently not supported for description logic action theories. Also,
+functional fluents are not supported.
 
 @author  Jens Claßen
 @license GPLv2
@@ -61,6 +62,7 @@ currently not supported for description logic action theories.
 :- multifile user:rel_rigid/2.
 :- multifile user:poss/2.
 :- multifile user:poss/3.
+:- multifile user:exo/2.
 :- multifile user:causes_true/3.
 :- multifile user:causes_false/3.
 :- multifile user:def/2.
@@ -111,6 +113,10 @@ ligress(poss(A),E,R) :-
         user:poss(A,T,F1), !,
         types_cons(T,F2),
         conjoin([F1|F2],F),
+        ligress(F,E,R).
+
+ligress(exo(A),E,R) :-
+        user:exo(A,F), !,
         ligress(F,E,R).
 
 ligress(Atom,[],Atom) :- !.
