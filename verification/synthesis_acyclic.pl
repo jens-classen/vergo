@@ -89,49 +89,61 @@ init_construction(Program,Property) :-
         prop2tnf(Property,TNF),
         tnf2xnf(TNF,XNF),
         
-        create_initial_states(Program,Property,KB,XNF).
+        create_initial_states(Program,Property,KB,XNF),
+
+        report_initial_states(Program,Property).
 
 % create one initial state per satisfying assignment
 create_initial_states(P,F,KB,XNF) :-
         xnf_ass(XNF,Ls,Xs,Tail),
-        union2(KB,Ls,Fmls),
+        union2(KB,Ls,Fmls), % TODO: sort to keep consistent order?
         not(is_inconsistent(Fmls)),
-        
-        State = (P,F,Fmls,[],Xs,Tail,0),
-        
-        report_message_r(['Creating initial state: \n']),
-        report_state(State),
-
-        create_state_if_not_exists(State,_),
+        create_or_add_to_initial_state(P,F,Fmls,(Xs,Tail)),
         fail.
 create_initial_states(_,_,_,_).
 
-% construction step: remove non-tail node from fringe
+% output initial states
+report_initial_states(P,F) :-
+        abstract_state(State,true),
+        State = (P,F,_,_,_,_),
+        report_message_r(['Initial state:\n']),
+        report_state(State),
+        fail.
+report_initial_states(_,_).
+
+% add NextTail to existing initial state, or create new one
+create_or_add_to_initial_state(P,F,Fmls,NextTail) :-
+        retract(abstract_state((P,F,Fmls,[],NTs,0),true)), !,
+        assert(abstract_state((P,F,Fmls,[],[NextTail|NTs],0),true)).
+create_or_add_to_initial_state(P,F,Fmls,NextTail) :- !,
+        assert(abstract_state((P,F,Fmls,[],[NextTail],0),true)).
+
+% construction step: remove node from fringe
 construction_step(P,F) :-
         
         % if there is an abstract state at the fringe...
         abstract_state(State,true),
-        State = (P,F,Formulas,Effects,Next,Tail,NodeID),
+        State = (P,F,Formulas,Effects,NextTails,NodeID),
         
         % where none of the cases below applies...
         not(can_expand(State,_,_)),
         not(can_split_transition(P,F,Formulas,Effect,NodeID,_,_)),
         not(can_split_finality(P,F,Formulas,Effects,NodeID,_)),
         not(can_split_effectcond(P,F,Formulas,Effect,NodeID,_,_,_,_,_)),
-        not(can_split_tempsubfml(P,F,Formulas,Effect,Next,NodeID,_,_,_)),
+        not(can_split_tempsubfml(P,F,Formulas,Effect,NextTails,NodeID,_,_,_)),
         
         % then
         !,
         
         % this state is not a fringe state anymore
-        retract(abstract_state((P,F,Formulas,Effects,Next,Tail,NodeID),true)),
-        assert(abstract_state((P,F,Formulas,Effects,Next,Tail,NodeID),false)).
+        retract(abstract_state((P,F,Formulas,Effects,NextTails,NodeID),true)),
+        assert(abstract_state((P,F,Formulas,Effects,NextTails,NodeID),false)).
 
 % construction step: split over transition condition
 construction_step(P,F) :-
 
         % if there is an abstract state...        
-        abstract_state((P,F,Formulas,Effects,_Next,_Tail,NodeID),true),
+        abstract_state((P,F,Formulas,Effects,_NextTails,NodeID),true),
         
         % where we can split over a transition condition...
         can_split_transition(P,F,Formulas,Effects,NodeID,Action,
@@ -157,7 +169,7 @@ construction_step(P,F) :-
         % depending on Tail?
         
         % if there is an abstract state...        
-        abstract_state((P,F,Formulas,Effects,_Next,_Tail,NodeID),true),
+        abstract_state((P,F,Formulas,Effects,_NextTails,NodeID),true),
         
         % where we can split over a finality condition...
         can_split_finality(P,F,Formulas,Effects,NodeID,RegressedFinal),
@@ -178,7 +190,7 @@ construction_step(P,F) :-
 construction_step(P,F) :-
         
         % if there is an abstract state...
-        abstract_state((P,F,Formulas,Effects,_Next,_Tail,NodeID),true),
+        abstract_state((P,F,Formulas,Effects,_NextTails,NodeID),true),
         
         % where we can split over a transition's effect conditions...
         can_split_effectcond(P,F,Formulas,Effects,NodeID,
@@ -205,10 +217,10 @@ construction_step(P,F) :-
 construction_step(P,F) :-
         
         % if there is an abstract state...
-        abstract_state((P,F,Formulas,Effects,Next,_Tail,NodeID),true),
+        abstract_state((P,F,Formulas,Effects,NextTails,NodeID),true),
         
         % where we can split over a temporal subformula...
-        can_split_tempsubfml(P,F,Formulas,Effects,Next,NodeID,
+        can_split_tempsubfml(P,F,Formulas,Effects,NextTails,NodeID,
                              Atom,RegressedAtom,ResEffects),
                              
         % then
@@ -229,7 +241,7 @@ construction_step(P,F) :-
         
         % if there is an abstract state...
         abstract_state(State,true),
-        State = (P,F,_,_,_,_,_),
+        State = (P,F,_,_,_,_),
         
         % that can be expanded
         can_expand(State,Action,NewState),
@@ -249,22 +261,19 @@ construction_step(P,F) :-
         % and resulting transition
         assert(abstract_trans(State,Action,NewState)).
 
-report_state((_P,_F,Formulas,Effects,Next,Tail,NodeID)) :-
+% report a state to standard output
+report_state((_P,_F,Formulas,Effects,NextTails,NodeID)) :-
 
         report_message_r(['\t type       : ', Formulas, '\n',
                           '\t effects    : ', Effects, '\n',
-                          '\t next       : ', Next, '\n',
-                          '\t tail       : ', Tail, '\n',
+                          '\t next/tail  : ', NextTails, '\n',
                           '\t node       : ', NodeID, '\n']).
 
 % is it possible to create a new transition?
 can_expand(State,Action,NewState) :-
 
         % State is a state where...
-        State = (P,F,Formulas,Effects,Next,Tail,NodeID),
-
-        % tail does not hold,...
-        Tail = false,
+        State = (P,F,Formulas,Effects,NextTails,NodeID),
 
         % there is a possible outgoing transition...
         cg_edge(P,NodeID,Guard,Action,NewNodeID),
@@ -278,19 +287,26 @@ can_expand(State,Action,NewState) :-
         determine_effects(Formulas,Effects,Action,NewEffects),
         apply_effects(Effects,NewEffects,ResEffects),
 
-        % whose next formulas have an assignment...
-        tnf2xnf(Next,XNF),
-        xnf_ass(XNF,Ls,NewNext,NewTail),
+        % that yield certain new nexts and tails...
+        determine_nexttails(Formulas,ResEffects,NextTails,
+                            NewNextTails),
 
-        % whose regression is satisfied...
-        conjoin(Ls,LsF),
-        regression(LsF,ResEffects,RLsF),
-        is_entailed(Formulas,RLsF),
-
-        NewState = (P,F,Formulas,ResEffects,NewNext,NewTail,NewNodeID),
+        NewState = (P,F,Formulas,ResEffects,NewNextTails,NewNodeID),
 
         % and where the corresponding transition(s) do not yet exist
         not(abstract_trans(State,Action,NewState)).
+
+determine_nexttails(Formulas,ResEffects,NextTails,NewNextTails) :-
+        setof((NewNext,NewTail),
+              (member((Next,Tail),NextTails),
+               Tail = false,
+               tnf2xnf(Next,XNF),
+               xnf_ass(XNF,Ls,NewNext,NewTail),
+               conjoin(Ls,LsF),
+               regression(LsF,ResEffects,RLsF),
+               not(is_inconsistent([RLsF|Formulas]))),
+              NewNextTails), !.
+determine_nexttails(_Formulas,_ResEffects,_NextTails,[]) :- !.
 
 % is it possible to split over a transition condition?
 can_split_transition(P,_F,Formulas,Effects,NodeID,Action,
@@ -340,9 +356,9 @@ can_split_effectcond(P,_F,Formulas,Effects,NodeID,Action,Sign,Fluent,
         not(is_entailed(Formulas,-RegressedEffCondition)).
 
 % is it possible to split over an atom of a temporal subformula?
-can_split_tempsubfml(P,_F,Formulas,Effects,Next,NodeID,Atom,RegressedAtom,
-                     ResEffects) :-
-                             
+can_split_tempsubfml(P,_F,Formulas,Effects,NextTails,NodeID,Atom,
+                     RegressedAtom, ResEffects) :-
+
         % there is a possible outgoing transition...
         cg_edge(P,NodeID,Guard,Action,_NewNodeID),
         guardcond(Guard,Condition),
@@ -357,6 +373,7 @@ can_split_tempsubfml(P,_F,Formulas,Effects,Next,NodeID,Atom,RegressedAtom,
                         
         % and where there is a propositional assignment of the XNF
         % version of the temporal formulas
+        member2((Next,_Tail),NextTails),
         tnf2xnf(Next,XNF),
         xnf_ass(XNF,Ls,_,_),
         
@@ -372,38 +389,38 @@ can_split_tempsubfml(P,_F,Formulas,Effects,Next,NodeID,Atom,RegressedAtom,
 % split Formulas over RegressedCondition
 split(P,F,Formulas,RegressedCondition) :-
         simplify_fml(-RegressedCondition,NegRegressedCondition),
-        retract(abstract_state((P,F,Formulas,Effects,Next,Tail,NodeID),
+        retract(abstract_state((P,F,Formulas,Effects,NextTails,NodeID),
                                 Fringe)),
         assert(abstract_state((P,F,[RegressedCondition|Formulas],Effects,
-                               Next,Tail,NodeID),Fringe)),
+                               NextTails,NodeID),Fringe)),
         assert(abstract_state((P,F,[NegRegressedCondition|Formulas],Effects,
-                               Next,Tail,NodeID),Fringe)),
+                               NextTails,NodeID),Fringe)),
         fail.
 
 split(P,F,Formulas,RegressedCondition) :-
         simplify_fml(-RegressedCondition,NegRegressedCondition),
-        retract(abstract_trans((P,F,Formulas,Effects,Next,Tail,NodeID),
+        retract(abstract_trans((P,F,Formulas,Effects,NextTails,NodeID),
                                Action,
-                               (P,F,Formulas,NewEffects,NewNext,
-                                NewTail,NewNodeID))),
+                               (P,F,Formulas,NewEffects,NewNextTails,
+                                NewNodeID))),
         assert(abstract_trans((P,F,[RegressedCondition|Formulas],
-                               Effects,Next,Tail,NodeID),
+                               Effects,NextTails,NodeID),
                               Action,
                               (P,F,[RegressedCondition|Formulas],
-                               NewEffects,NewNext,NewTail,NewNodeID))),
+                               NewEffects,NewNextTails,NewNodeID))),
         assert(abstract_trans((P,F,[NegRegressedCondition|Formulas],
-                               Effects,Next,Tail,NodeID),
+                               Effects,NextTails,NodeID),
                               Action,
                               (P,F,[NegRegressedCondition|Formulas],
-                               NewEffects,NewNext,NewTail,NewNodeID))),
+                               NewEffects,NewNextTails,NewNodeID))),
         fail.
         
 split(P,F,Formulas,RegressedCondition) :-
         is_inconsistent([RegressedCondition|Formulas]),
         retractall(abstract_state((P,F,[RegressedCondition|Formulas],_,
-                                   _,_,_),_)),
+                                   _,_),_)),
         retractall(abstract_trans((P,F,[RegressedCondition|Formulas],_,
-                                   _,_,_),_,_)),
+                                   _,_),_,_)),
         fail.
         
 split(P,F,Formulas,RegressedCondition) :-
@@ -411,10 +428,10 @@ split(P,F,Formulas,RegressedCondition) :-
         is_inconsistent([NegRegressedCondition|Formulas]),
         retractall(abstract_state((P,F,
                                    [NegRegressedCondition|Formulas],_,
-                                   _,_,_),_)),
+                                   _,_),_)),
         retractall(abstract_trans((P,F,
                                    [NegRegressedCondition|Formulas],_,
-                                   _,_,_),_,_)),
+                                   _,_),_,_)),
         fail.
 
 split(_,_,_,_).
@@ -424,10 +441,11 @@ create_state_if_not_exists(State,Fringe) :-
         abstract_state(State,Fringe), !.
 create_state_if_not_exists(State,true) :- !,
         assert(abstract_state(State,true)).
+
 % is the abstract state final?
 is_final(State) :-
 
-        State = (P,_F,Formulas,Effects,_Next,_Tail,NodeID),
+        State = (P,_F,Formulas,Effects,_NextTails,NodeID),
         
         % determine the finality condition Final for NodeID
         cg_node(P,_SubProg,Final,NodeID),
@@ -439,13 +457,10 @@ is_final(State) :-
 % is the abstract state accepting?
 is_accepting(State) :-
 
-        State = (_P,_F,_Formulas,_Effects,Next,Tail,_NodeID),
-
-        % this is a tail state
-        Tail = true,
+        State = (_P,_F,_Formulas,_Effects,NextTails,_NodeID),
         
-        % next is empty
-        Next = [].
+        % there is a pair with Next=[] and Tail=true in NextTails
+        member2(([],true),NextTails).
 
 % build strategy from existing transition system
 build_strategy(P,F) :-
@@ -454,7 +469,7 @@ build_strategy(P,F) :-
 
 % label good leaves
 label_leaves(P,F) :-
-        State = (P,F,_,_,_,_,_),
+        State = (P,F,_,_,_,_),
         abstract_state(State,false),
         not(strategy_node(State,_)),
         is_final(State),
@@ -465,7 +480,7 @@ label_leaves(P,F) :-
 
 % label bad leaves
 label_leaves(P,F) :-
-        State = (P,F,_,_,_,_,_),
+        State = (P,F,_,_,_,_),
         abstract_state(State,false),
         not(abstract_trans(State,_,_)),
         not(strategy_node(State,good)),
@@ -478,7 +493,7 @@ label_leaves(_,_).
 
 % label bad state due to environment action
 label_inductively(P,F) :-
-        State = (P,F,_,_,_,_,_),
+        State = (P,F,_,_,_,_),
         abstract_state(State,false),
         strategy_node(NewState,bad),
         abstract_trans(State,Action,NewState),
@@ -490,7 +505,7 @@ label_inductively(P,F) :-
 
 % label bad state due to control actions
 label_inductively(P,F) :-
-        State = (P,F,_,_,_,_,_),
+        State = (P,F,_,_,_,_),
         abstract_state(State,false),
         not(strategy_node(State,_)),
         forall((abstract_trans(State,Action,NewState),
@@ -502,7 +517,7 @@ label_inductively(P,F) :-
 
 % label remaining states as good states
 label_inductively(P,F) :-
-        State = (P,F,_,_,_,_,_),
+        State = (P,F,_,_,_,_),
         abstract_state(State,false),
         not(strategy_node(State,_)),
         assert(strategy_node(State,good)),
