@@ -298,16 +298,16 @@ can_expand(State,Action,NewState) :-
         not(abstract_trans(State,Action,NewState)).
 
 determine_nexttails(Formulas,ResEffects,NextTails,NewNextTails) :-
-        setof((NewNext,NewTail),
-              (member((Next,Tail),NextTails),
-               Tail = false,
-               tnf2xnf(Next,XNF),
-               xnf_ass(XNF,Ls,NewNext,NewTail),
-               conjoin(Ls,LsF),
-               regression(LsF,ResEffects,RLsF),
-               not(is_inconsistent([RLsF|Formulas]))),
-              NewNextTails), !.
-determine_nexttails(_Formulas,_ResEffects,_NextTails,[]) :- !.
+        findall((NewNext,NewTail),
+                (member2((Next,Tail),NextTails),
+                 Tail = false,
+                 tnf2xnf(Next,XNF),
+                 xnf_ass(XNF,Ls,NewNext,NewTail),
+                 conjoin(Ls,LsF),
+                 regression(LsF,ResEffects,RLsF),
+                 not(is_inconsistent([RLsF|Formulas]))),
+                NewNextTails2),
+        sort(NewNextTails2,NewNextTails), !.
 
 % is it possible to split over a transition condition?
 can_split_transition(P,_F,Formulas,Effects,NodeID,Action,
