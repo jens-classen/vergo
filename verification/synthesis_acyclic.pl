@@ -97,7 +97,8 @@ init_construction(Program,Property) :-
 % create one initial state per satisfying assignment
 create_initial_states(P,F,KB,XNF) :-
         xnf_ass(XNF,Ls,Xs,Tail),
-        union2(KB,Ls,Fmls), % TODO: sort to keep consistent order?
+        union2(KB,Ls,Fmls2),
+        variant_sort(Fmls2,Fmls),
         not(is_inconsistent(Fmls)),
         create_or_add_to_initial_state(P,F,Fmls,(Xs,Tail)),
         fail.
@@ -299,7 +300,7 @@ can_expand(State,Action,NewState) :-
 
 determine_nexttails(Formulas,ResEffects,NextTails,NewNextTails) :-
         findall((NewNext,NewTail),
-                (member2((Next,Tail),NextTails),
+                (member((Next,Tail),NextTails),
                  Tail = false,
                  tnf2xnf(Next,XNF),
                  xnf_ass(XNF,Ls,NewNext,NewTail),
@@ -307,7 +308,7 @@ determine_nexttails(Formulas,ResEffects,NextTails,NewNextTails) :-
                  regression(LsF,ResEffects,RLsF),
                  not(is_inconsistent([RLsF|Formulas]))),
                 NewNextTails2),
-        sort(NewNextTails2,NewNextTails), !.
+        variant_sort(NewNextTails2,NewNextTails), !.
 
 % is it possible to split over a transition condition?
 can_split_transition(P,_F,Formulas,Effects,NodeID,Action,
