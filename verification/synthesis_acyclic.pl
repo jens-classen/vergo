@@ -17,7 +17,7 @@ pages 1109-1115, AAAI Press, 2016.
 @license GPLv2
 
  **/
-:- module('synthesis_acyclic', [synthesize/2]).
+:- module('synthesis_acyclic', [synthesize/2, ts_draw_graph/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
@@ -40,7 +40,8 @@ pages 1109-1115, AAAI Press, 2016.
 :- dynamic   
    abstract_state/2,
    abstract_trans/3,
-   strategy_node/2.
+   strategy_node/2,
+   state_id/2.
 
 :- multifile user:exo/2.
 :- multifile user:initially/1.
@@ -682,3 +683,87 @@ xnf_ass([-F|Fs],NLs,Xs,Tail) :-
         (member2(-F,Ls) -> NLs = Ls; NLs = [-F|Ls]).
 xnf_ass([],[],[],true).
 xnf_ass([],[],[],false).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Draw transition system
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/**
+  * ts_draw_graph(+Program,+Property) is det.
+  *
+  * Generates a dot file in the temp directory for drawing the
+  * transition system for the given program and property.
+  *
+  * @arg Program  the name of a program, defined by the user via a
+  *               fact over the predicate program/2
+  * @arg Property the name of a property, defined by the user via a
+  *               fact over the predicate property/2
+ */
+ts_draw_graph(P,F) :-
+        create_state_ids(P,F),
+        ts_dot_file(File,P,F),
+        open(File, write, Stream),
+        write(Stream, 'digraph G {\n'),
+        ts_write_nodes(Stream,P,F),
+        ts_write_edges(Stream,P,F),
+        write(Stream, '}\n'),
+        close(Stream).
+
+create_state_ids(P,F) :-
+        findall(State,
+                (State = (P,F,_,_,_,_),
+                 strategy_node(State,_Label)),
+                States),
+        retractall(state_id(_,_)),
+        create_state_ids2(States,0).
+create_state_ids2([],_N) :- !.
+create_state_ids2([State|States],N) :- !,
+        assert(state_id(State,N)),
+        report_message_r(['State ',N,': ']),
+        report_state(State),
+        N1 is N+1,
+        create_state_ids2(States,N1).
+
+% TODO: indicate initial, accepting/final
+
+ts_write_nodes(Stream,P,F) :-
+        State = (P,F,_,_,_,_),
+        strategy_node(State,Label),
+        state_id(State,ID),
+        write(Stream, '\t'),
+        write(Stream, ID),
+        write(Stream, ' [label=\"'),
+        write(Stream, ID),
+        (is_accepting(State) ->
+            write(Stream, '\u2713');
+            write(Stream, '')),
+        write(Stream, '\", '),
+        (is_final(State) ->
+            write(Stream, 'shape = doublecircle, ');
+            write(Stream, 'shape = circle, ')),
+        (Label=good -> write(Stream, 'color=\"green\"] ');
+                       write(Stream, 'color=\"red\"] ')),
+        write(Stream, ';\n'),
+        fail.
+ts_write_nodes(_Stream,_P,_F).
+
+ts_write_edges(Stream,P,F) :-
+        State1 = (P,F,_,_,_,_),
+        abstract_trans(State1,Action,State2),
+        state_id(State1,ID1),
+        state_id(State2,ID2),
+        write(Stream, '\t'),
+        write(Stream, ID1),
+        write(Stream, ' -> '),
+        write(Stream, ID2),
+        write(Stream, ' [label=\"'),
+        write(Stream, Action),
+        write(Stream, '\"];\n'),
+        fail.
+ts_write_edges(_ProgramName,_P,_F).
+
+ts_dot_file(File,P,F) :-
+        temp_dir(TempDir),
+        atomics_to_string([TempDir,'/',P,'_',F,'_graph.dot'],File).
