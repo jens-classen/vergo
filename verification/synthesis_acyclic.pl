@@ -40,8 +40,8 @@ pages 1109-1115, AAAI Press, 2016.
 :- dynamic   
    abstract_state/2,
    abstract_trans/3,
-   strategy_node/2,
-   state_id/2.
+   strategy_node/5,
+   next_id/3.
 
 :- multifile user:exo/2.
 :- multifile user:initially/1.
@@ -465,6 +465,9 @@ is_accepting(State) :-
 
 % build strategy from existing transition system
 build_strategy(P,F) :-
+        retractall(strategy_node(P,F,_,_,_)),
+        retractall(next_id(P,F,_)),
+        assert(next_id(P,F,0)),
         label_leaves(P,F),
         label_inductively(P,F).
 
@@ -472,11 +475,10 @@ build_strategy(P,F) :-
 label_leaves(P,F) :-
         State = (P,F,_,_,_,_),
         abstract_state(State,false),
-        not(strategy_node(State,_)),
+        not(strategy_node(P,F,State,_,_)),
         is_final(State),
         is_accepting(State),
-        assert(strategy_node(State,good)),
-        report_label(State,'GOOD (leaf)'),
+        label_state(P,F,State,good,'GOOD (leaf)'),
         fail.
 
 % label bad leaves
@@ -484,9 +486,8 @@ label_leaves(P,F) :-
         State = (P,F,_,_,_,_),
         abstract_state(State,false),
         not(abstract_trans(State,_,_)),
-        not(strategy_node(State,good)),
-        assert(strategy_node(State,bad)),
-        report_label(State,'BAD (leaf)'),
+        not(strategy_node(P,F,State,_,_)),
+        label_state(P,F,State,bad,'BAD (leaf)'),
         fail.
 
 % finish labelling leaves
@@ -496,42 +497,43 @@ label_leaves(_,_).
 label_inductively(P,F) :-
         State = (P,F,_,_,_,_),
         abstract_state(State,false),
-        strategy_node(NewState,bad),
+        strategy_node(P,F,NewState,bad,_),
         abstract_trans(State,Action,NewState),
-        not(strategy_node(State,_)),
+        not(strategy_node(P,F,State,_,_)),
         env_action(Action,State),
-        assert(strategy_node(State,bad)),
-        report_label(State,'BAD (env action)'),
+        label_state(P,F,State,bad,'BAD (env action)'),
         fail.
 
 % label bad state due to control actions
 label_inductively(P,F) :-
         State = (P,F,_,_,_,_),
         abstract_state(State,false),
-        not(strategy_node(State,_)),
+        not(strategy_node(P,F,State,_,_)),
         forall((abstract_trans(State,Action,NewState),
                 ctl_action(Action,State)),
-               strategy_node(NewState,bad)),
-        assert(strategy_node(State,bad)),
-        report_label(State,'BAD (ctl action)'),
+               strategy_node(P,F,NewState,bad,_)),
+        label_state(P,F,State,bad,'BAD (ctl action)'),
         fail.
 
 % label remaining states as good states
 label_inductively(P,F) :-
         State = (P,F,_,_,_,_),
         abstract_state(State,false),
-        not(strategy_node(State,_)),
-        assert(strategy_node(State,good)),
-        report_label(State,'GOOD (default)'),
+        not(strategy_node(P,F,State,_,_)),
+        label_state(P,F,State,good,'GOOD (default)'),
         fail.
 
 % finish induction
 label_inductively(_,_).
 
-% report a label to standard output
-report_label(State,LabelDescription) :-
-        report_message_r(['Labelling state:\n',
-                          '\t label      : ', LabelDescription, '\n']),
+% memorize label, assign ID, report state
+label_state(P,F,State,Label,Description) :-
+        retract(next_id(P,F,ID)),
+        ID1 is ID+1,
+        assert(strategy_node(P,F,State,Label,ID)),
+        assert(next_id(P,F,ID1)),
+        report_message_r(['Strategy state ', ID, ':\n',
+                          '\t label      : ', Description, '\n']),
         report_state(State).
 
 % control action = non-environment action
@@ -705,7 +707,6 @@ xnf_ass([],[],[],false).
   *               fact over the predicate property/2
  */
 ts_draw_graph(P,F) :-
-        create_state_ids(P,F),
         ts_dot_file(File,P,F),
         open(File, write, Stream),
         write(Stream, 'digraph G {\n'),
@@ -714,27 +715,11 @@ ts_draw_graph(P,F) :-
         write(Stream, '}\n'),
         close(Stream).
 
-create_state_ids(P,F) :-
-        findall(State,
-                (State = (P,F,_,_,_,_),
-                 strategy_node(State,_Label)),
-                States),
-        retractall(state_id(_,_)),
-        create_state_ids2(States,0).
-create_state_ids2([],_N) :- !.
-create_state_ids2([State|States],N) :- !,
-        assert(state_id(State,N)),
-        report_message_r(['State ',N,': ']),
-        report_state(State),
-        N1 is N+1,
-        create_state_ids2(States,N1).
-
 % TODO: indicate initial, accepting/final
 
 ts_write_nodes(Stream,P,F) :-
         State = (P,F,_,_,_,_),
-        strategy_node(State,Label),
-        state_id(State,ID),
+        strategy_node(P,F,State,Label,ID),
         write(Stream, '\t'),
         write(Stream, ID),
         write(Stream, ' [label=\"'),
@@ -755,8 +740,8 @@ ts_write_nodes(_Stream,_P,_F).
 ts_write_edges(Stream,P,F) :-
         State1 = (P,F,_,_,_,_),
         abstract_trans(State1,Action,State2),
-        state_id(State1,ID1),
-        state_id(State2,ID2),
+        strategy_node(P,F,State1,_,ID1),
+        strategy_node(P,F,State2,_,ID2),
         write(Stream, '\t'),
         write(Stream, ID1),
         write(Stream, ' -> '),
