@@ -633,10 +633,13 @@ tnf2xnf(L,R) :-
         conjoin(L,F),
         tnf2xnf(F,R).
 tnf2xnf(until(P1,P2),R) :- !,
-        tnf2xnf(P2+(P1*next(until(P1,P2))),R).
+        tnf2xnf(P1,R1),
+        tnf2xnf(P2,R2),
+        R = R2+(R1*next(until(R1,R2))).
 tnf2xnf(release(P1,P2),R) :- !,
-        tnf2xnf(P2*(P1+next(release(P1,P2))),R).
-tnf2xnf(next(P),next(P)) :- !.
+        tnf2xnf(P1,R1),
+        tnf2xnf(P2,R2),
+        R = R2*(R1+next(release(R1,R2))).
 tnf2xnf(F1*F2,R1*R2) :- !,
         tnf2xnf(F1,R1),
         tnf2xnf(F2,R2).
