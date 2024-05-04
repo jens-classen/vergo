@@ -310,9 +310,10 @@ can_expand(State,Action,NewState) :-
         determine_effects(Formulas,Effects,Action,NewEffects),
         apply_effects(Effects,NewEffects,ResEffects),
 
-        % that yield certain new nexts and tails...
+        % that yields a non-empty set of new nexts and tails...
         determine_nexttails(Formulas,ResEffects,NextTails,
                             NewNextTails),
+        NewNextTails \= [],
 
         NewState = (P,F,Formulas,ResEffects,NewNextTails,NewNodeID),
 
@@ -393,7 +394,7 @@ can_split_tempsubfml(P,_F,Formulas,Effects,NextTails,NodeID,Atom,
         % and that results in the new effect set 'ResEffects'
         determine_effects(Formulas,Effects,Action,NewEffects),
         apply_effects(Effects,NewEffects,ResEffects),
-                        
+
         % and where there is a propositional assignment of the XNF
         % version of the temporal formulas
         member((Next,_Tail),NextTails),
