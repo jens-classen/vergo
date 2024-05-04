@@ -6,6 +6,7 @@
 :- use_module('../../verification/synthesis_acyclic').
 :- use_module('../../lib/utils').
 :- use_module('../../logic/l').
+:- use_module('../../logic/cwa').
 
 :- discontiguous causes_true/3.
 :- discontiguous causes_false/3.
@@ -13,26 +14,25 @@
 :- dynamic(initially/1).
 :- dynamic(domain/2).
 
-initially(room('#r1')).
-% initially(room('#r2')).
+initially(all(X,dish(X)<=>F)) :- type_description(X,dish,F).
+initially(all(X,room(X)<=>F)) :- type_description(X,room,F).
 initially(all(X,at(X)<=>(X='#kitchen'))).
-initially(all(X,new(X)<=>(((X='#d1')+(X='#d2'))*all(Y,(-dirtyDish(X,Y)))*(-onRobot(X))))).
-% initially(all(X,new(X)<=>(((X='#d1')+(X='#d2'))))).
-% initially(all(X,new(X)<=>(X='#d1'))).
-% initially(all([X,Y],(-dirtyDish(X,Y)))).
-% initially(all(X,(-onRobot(X)))).
+initially(all(X,new(X)<=>(dish(X)*all(Y,(-dirtyDish(X,Y)))*(-onRobot(X))))).
+initially(all(X,onRobot(X)=>(dish(X)*(-some(Y,dirtyDish(X,Y)))))).
+initially(all([X,Y],dirtyDish(X,Y)=>(dish(X)*room(Y)*(-onRobot(X))))).
 
 rel_fluent(dirtyDish(_,_)).
 rel_fluent(onRobot(_)).
 rel_fluent(at(_)).
 rel_fluent(new(_)).
+rel_rigid(dish(_)).
 rel_rigid(room(_)).
 
 exo(requestDDR(_,_),true).
 
-poss(requestDDR(X,Y),new(X)*room(Y)).
-poss(load(_X,Y),at(Y)).
+poss(load(X,Y),dirtyDish(X,Y)*at(Y)).
 poss(unload(X),onRobot(X)*at('#kitchen')).
+poss(requestDDR(X,Y),new(X)*room(Y)).
 poss(goto(X),room(X)+(X='#kitchen')).
 
 causes_true(requestDDR(X,Y),dirtyDish(X,Y),true).
@@ -50,9 +50,8 @@ type(dish).
 type(room).
 
 domain(dish,'#d1').
-% domain(dish,'#d2').
+domain(dish,'#d2').
 domain(room,'#r1').
-% domain(room,'#r2').
 
 program(control,
         star([while(some(X,onRobot(X)),
@@ -77,19 +76,8 @@ program(exog,
 program(main,
         conc(control,exog)).
 
-program(testpr,star(nondet(goto('#kitchen'),goto('#r1')))).
-
-program(testpr2,[star(nondet(goto('#kitchen'),goto('#r1'))),
-                 test(onRobot('#d3'))]). % to get non-trivial final
-
 property(prop1,
          eventually(always(-some([X,Y],dirtyDish(X,Y))))).
-
-property(prop2,
-         eventually(at('#r1'))).  % for testing
-
-property(prop3,
-         always(at('#kitchen'))).  % for testing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Testing
@@ -140,4 +128,3 @@ check_result2(P,I,T) :-
 check_result2(P,_I,_T) :- !,
         report_message(info,['Outcome for ',P,
                              ' is different from what expected!']).
-
