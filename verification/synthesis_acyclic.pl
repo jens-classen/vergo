@@ -396,12 +396,12 @@ can_split_tempsubfml(P,_F,Formulas,Effects,NextTails,NodeID,Atom,
                         
         % and where there is a propositional assignment of the XNF
         % version of the temporal formulas
-        member2((Next,_Tail),NextTails),
+        member((Next,_Tail),NextTails),
         tnf2xnf(Next,XNF),
         xnf_ass(XNF,Ls,_,_),
         
         % that contains an atom...
-        member2(Atom,Ls),
+        member(Atom,Ls),
 
         % whose (negated) regressed version is not yet entailed by the
         % type formulas
