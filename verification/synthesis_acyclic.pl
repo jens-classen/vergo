@@ -17,7 +17,7 @@ pages 1109-1115, AAAI Press, 2016.
 @license GPLv2
 
  **/
-:- module('synthesis_acyclic', [synthesize/2, ts_draw_graph/2]).
+:- module('synthesis_acyclic', [synthesize/3, ts_draw_graph/2]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
@@ -41,7 +41,7 @@ pages 1109-1115, AAAI Press, 2016.
    abstract_state/2,
    abstract_trans/3,
    strategy_node/5,
-   next_id/3.
+   init_nexttails/3.
 
 :- multifile user:exo/2.
 :- multifile user:initially/1.
@@ -50,7 +50,7 @@ pages 1109-1115, AAAI Press, 2016.
 % TODO: include support for closed-world assumption?
 
 /**
-  * synthesize(+Program,+Property) is det.
+  * synthesize(+Program,+Property,-Strategy) is det.
   *
   * Synthesizes a strategy given a temporal property.
   *
@@ -58,17 +58,21 @@ pages 1109-1115, AAAI Press, 2016.
   *               fact over the predicate program/2
   * @arg Property the name of a property, defined by the user via a
   *               fact over the predicate property/2
+  * @arg Strategy the resulting strategy
  **/
-synthesize(Program,Property) :-
+synthesize(Program,Property,Strategy) :-
         init_construction(Program,Property),
         iterate_construction(Program,Property),
-        build_strategy(Program,Property).
+        build_strategy(Program,Property,Strategy).
 
 % iterate construction steps as long as possible
 iterate_construction(Program,Property) :-
         construction_step(Program,Property), !,
         iterate_construction(Program,Property).
-iterate_construction(_Program,_Property).
+% at the end, assign IDs to states
+iterate_construction(Program,Property) :-
+        assign_ids(Program,Property),
+        ts_report(Program,Property).
 
 % initial setup
 init_construction(Program,Property) :-
@@ -102,7 +106,16 @@ create_initial_states(P,F,KB,XNF) :-
         not(is_inconsistent(Fmls)),
         create_or_add_to_initial_state(P,F,Fmls,(Xs,Tail)),
         fail.
-create_initial_states(_,_,_,_).
+create_initial_states(P,F,_,_) :-
+        memorize_initial_nexttails(P,F).
+
+% memorize initial next/tail pairs to identify initial states
+memorize_initial_nexttails(P,F) :-
+        abstract_state(State,true),
+        State = (P,F,_,_,NextTails,_),
+        assert(init_nexttails(P,F,NextTails)),
+        fail.
+memorize_initial_nexttails(_,_).
 
 % output initial states
 report_initial_states(P,F) :-
@@ -270,6 +283,14 @@ report_state((_P,_F,Formulas,Effects,NextTails,NodeID)) :-
                           '\t effects    : ', Effects, '\n',
                           '\t next/tail  : ', NextTails, '\n',
                           '\t node       : ', NodeID, '\n']).
+
+% report state properties to standard output
+report_state_props(State) :-
+
+        (is_accepting(State) -> R1=['[accepting]\n'];R1=['\n']),
+        (is_final(State) -> R2=['[final]'|R1];R2=R1),
+        (is_init(State) -> R=['\t[initial]'|R2];R=['\t'|R2]),
+        report_message_r(R).
 
 % is it possible to create a new transition?
 can_expand(State,Action,NewState) :-
@@ -464,78 +485,10 @@ is_accepting(State) :-
         % there is a pair with Next=[] and Tail=true in NextTails
         member2(([],true),NextTails).
 
-% build strategy from existing transition system
-build_strategy(P,F) :-
-        retractall(strategy_node(P,F,_,_,_)),
-        retractall(next_id(P,F,_)),
-        assert(next_id(P,F,0)),
-        label_leaves(P,F),
-        label_inductively(P,F).
-
-% label good leaves
-label_leaves(P,F) :-
-        State = (P,F,_,_,_,_),
-        abstract_state(State,false),
-        not(strategy_node(P,F,State,_,_)),
-        is_final(State),
-        is_accepting(State),
-        label_state(P,F,State,good,'GOOD (leaf)'),
-        fail.
-
-% label bad leaves
-label_leaves(P,F) :-
-        State = (P,F,_,_,_,_),
-        abstract_state(State,false),
-        not(abstract_trans(State,_,_)),
-        not(strategy_node(P,F,State,_,_)),
-        label_state(P,F,State,bad,'BAD (leaf)'),
-        fail.
-
-% finish labelling leaves
-label_leaves(_,_).
-
-% label bad state due to environment action
-label_inductively(P,F) :-
-        State = (P,F,_,_,_,_),
-        abstract_state(State,false),
-        strategy_node(P,F,NewState,bad,_),
-        abstract_trans(State,Action,NewState),
-        not(strategy_node(P,F,State,_,_)),
-        env_action(Action,State),
-        label_state(P,F,State,bad,'BAD (env action)'),
-        fail.
-
-% label bad state due to control actions
-label_inductively(P,F) :-
-        State = (P,F,_,_,_,_),
-        abstract_state(State,false),
-        not(strategy_node(P,F,State,_,_)),
-        forall((abstract_trans(State,Action,NewState),
-                ctl_action(Action,State)),
-               strategy_node(P,F,NewState,bad,_)),
-        label_state(P,F,State,bad,'BAD (ctl action)'),
-        fail.
-
-% label remaining states as good states
-label_inductively(P,F) :-
-        State = (P,F,_,_,_,_),
-        abstract_state(State,false),
-        not(strategy_node(P,F,State,_,_)),
-        label_state(P,F,State,good,'GOOD (default)'),
-        fail.
-
-% finish induction
-label_inductively(_,_).
-
-% memorize label, assign ID, report state
-label_state(P,F,State,Label,Description) :-
-        retract(next_id(P,F,ID)),
-        ID1 is ID+1,
-        assert(strategy_node(P,F,State,Label,ID)),
-        assert(next_id(P,F,ID1)),
-        report_message_r(['Strategy state ', ID, ':\n',
-                          '\t label      : ', Description, '\n']),
-        report_state(State).
+% is the abstract state an initial state?
+is_init(State) :-
+        State = (P,F,_,[],NextTails,0),
+        init_nexttails(P,F,NextTails). % TODO: save inside state?
 
 % control action = non-environment action
 ctl_action(A,State) :-
@@ -547,6 +500,17 @@ env_action(A,State) :-
         State = (_,_,T,E,_,_,_),
         regression(F,E,R),
         is_entailed(T,R).
+
+% assign IDs after finishing construction
+assign_ids(P,F) :-
+        assign_ids(P,F,0).
+assign_ids(P,F,N) :-
+        S = (P,F,_,_,_),
+        retract(abstract_state(S,false)), !,
+        assert(abstract_state(S,N)),
+        N1 is N+1,
+        assign_ids(P,F,N1).
+assign_ids(_P,_F,_N).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -692,6 +656,41 @@ xnf_ass([],[],[],false).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Report (display) transition system
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ts_report(P,F) :-
+        report_message_r(['================================================']),
+        report_message_r(['Transition system for ',P,', ',F,':']),
+        ts_report_nodes(P,F),
+        ts_report_edges(P,F),
+        report_message_r(['================================================']).
+
+ts_report_nodes(P,F) :-
+        ts_report_nodes(P,F,0).
+ts_report_nodes(P,F,N) :-
+        S = (P,F,_,_,_,_),
+        abstract_state(S,N), !,
+        report_message_r(['State #', N, ':\n']),
+        report_state(S),
+        report_state_props(S),
+        N1 is N+1,
+        ts_report_nodes(P,F,N1).
+ts_report_nodes(_P,_F,_N).
+
+ts_report_edges(P,F) :-
+        S1 = (P,F,_,_,_,_),
+        S2 = (P,F,_,_,_,_),
+        abstract_trans(S1,A,S2),
+        abstract_state(S1,N1),
+        abstract_state(S2,N2),
+        report_message_r([N1,' --[', A, ']--> ', N2]),
+        fail.
+ts_report_edges(_P,_F).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Draw transition system
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -716,11 +715,11 @@ ts_draw_graph(P,F) :-
         write(Stream, '}\n'),
         close(Stream).
 
-% TODO: indicate initial, accepting/final
+% TODO: indicate initial
 
 ts_write_nodes(Stream,P,F) :-
         State = (P,F,_,_,_,_),
-        strategy_node(P,F,State,Label,ID),
+        abstract_state(State,ID),
         write(Stream, '\t'),
         write(Stream, ID),
         write(Stream, ' [label=\"'),
@@ -730,10 +729,8 @@ ts_write_nodes(Stream,P,F) :-
             write(Stream, '')),
         write(Stream, '\", '),
         (is_final(State) ->
-            write(Stream, 'shape = doublecircle, ');
-            write(Stream, 'shape = circle, ')),
-        (Label=good -> write(Stream, 'color=\"green\"] ');
-                       write(Stream, 'color=\"red\"] ')),
+            write(Stream, 'shape = doublecircle]');
+            write(Stream, 'shape = circle]')),
         write(Stream, ';\n'),
         fail.
 ts_write_nodes(_Stream,_P,_F).
@@ -741,8 +738,8 @@ ts_write_nodes(_Stream,_P,_F).
 ts_write_edges(Stream,P,F) :-
         State1 = (P,F,_,_,_,_),
         abstract_trans(State1,Action,State2),
-        strategy_node(P,F,State1,_,ID1),
-        strategy_node(P,F,State2,_,ID2),
+        abstract_state(State1,ID1),
+        abstract_state(State2,ID2),
         write(Stream, '\t'),
         write(Stream, ID1),
         write(Stream, ' -> '),
@@ -756,3 +753,143 @@ ts_write_edges(_ProgramName,_P,_F).
 ts_dot_file(File,P,F) :-
         temp_dir(TempDir),
         atomics_to_string([TempDir,'/',P,'_',F,'_graph.dot'],File).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Determine strategy
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+build_strategy(P,F,Pi) :-
+        guess_hypothesis(P,F,H),
+        check_hypothesis(P,F,H,Pi), !.
+
+guess_hypothesis(P,F,H) :-
+        guess_hypothesis(P,F,H,0).
+guess_hypothesis(P,F,[N|H],N) :-
+        abstract_state(S,N),
+        S = (P,F,_,_,_,_),
+        is_final(S),
+        is_accepting(S),
+        N1 is N+1,
+        guess_hypothesis(P,F,H,N1).
+guess_hypothesis(P,F,H,N) :-
+        abstract_state(S,N),
+        S = (P,F,_,_,_,_),
+        N1 is N+1,
+        guess_hypothesis(P,F,H,N1).
+guess_hypothesis(P,F,[],N) :-
+        S = (P,F,_,_,_,_),
+        not(abstract_state(S,N)).
+
+check_hypothesis(P,F,H,Pi) :-
+        report_message_r(['Trying to build strategy using hypothesis: ', H]),
+        G = H,
+        determine_r(P,F,H,R),
+        determine_q(P,F,H,Q),
+        iterate_over_q(P,F,H,G,R,RRes,Q,[],Pi), !,
+        report_message_r(['Checking strategy...']),
+        check_r(P,F,H,RRes),
+        report_message_r(['Success! Strategy is:\n', Pi]).
+
+determine_r(_P,_F,[],[]) :- !.
+determine_r(P,F,[N|H],[N|R]) :-
+        S = (P,F,_,_,_),
+        abstract_state(S,N),
+        not((abstract_trans(S,A,_),
+             env_action(A,S))), !,
+        determine_r(P,F,H,R).
+determine_r(P,F,[_|H],R) :- !,
+        determine_r(P,F,H,R).
+
+determine_q(P,F,H,Q) :-
+        findall(N1,
+                (member(N2,H),
+                 S2 = (P,F,_,_,_,_),
+                 S1 = (P,F,_,_,_,_),
+                 abstract_state(S2,N2),
+                 abstract_trans(S1,_,S2),
+                 abstract_state(S1,N1)),
+                Q).
+
+iterate_over_q(_P,_F,_H,_G,R,R,[],Pi,Pi) :- !.
+iterate_over_q(P,F,H,G,R,RRes,[N|Q],PiAcc,Pi) :-
+        S = (P,F,_,_,_),
+        abstract_state(S,N),
+        is_final(S),
+        not(is_accepting(S)),
+        not((abstract_trans(S,A,_),
+             ctl_action(A,S))), !,
+        iterate_over_q(P,F,H,G,R,RRes,Q,PiAcc,Pi).
+iterate_over_q(P,F,H,G,R,RRes,[N|Q],PiAcc,Pi) :-
+        member(N,R), !,
+        iterate_over_q(P,F,H,G,R,RRes,Q,PiAcc,Pi).
+iterate_over_q(P,F,H,G,R,RRes,[N|Q],PiAcc,Pi) :-
+        env_successors(P,F,N,ES),
+        ES \= [],
+        subset2(ES,G), !,
+        union2(G,[N],G2),
+        union2(R,[N],R2),
+        all_successors(P,F,N,AS),
+        intersection2(AS,G,ASG),
+        union2(PiAcc,[(N,ASG)],PiAcc2),
+        all_predecessors(P,F,N,AP),
+        union2(Q,AP,Q2),
+        iterate_over_q(P,F,H,G2,R2,RRes,Q2,PiAcc2,Pi).
+iterate_over_q(P,F,H,G,R,RRes,[N|Q],PiAcc,Pi) :-
+        env_successors(P,F,N,ES),
+        ES = [],
+        S = (P,F,_,_,_,_),
+        abstract_state(S,N),
+        abstract_trans(S,A,S2),
+        S2 = (P,F,_,_,_,_),
+        abstract_state(S2,N2),
+        ctl_action(A,S),
+        member(N2,G), !,
+        union2(G,[N],G2),
+        union2(R,[N],R2),
+        all_successors(P,F,N,AS),
+        intersection2(AS,G,ASG),
+        union2(PiAcc,[(N,ASG)],PiAcc2),
+        all_predecessors(P,F,N,AP),
+        union2(Q,AP,Q2),
+        iterate_over_q(P,F,H,G2,R2,RRes,Q2,PiAcc2,Pi).
+iterate_over_q(P,F,H,G,R,RRes,[_|Q],PiAcc,Pi) :- !,
+        iterate_over_q(P,F,H,G,R,RRes,Q,PiAcc,Pi).
+
+all_successors(P,F,N,R) :-
+        S = (P,F,_,_,_),
+        abstract_state(S,N),
+        findall(N2,(abstract_trans(S,_,S2),
+                    S2 = (P,F,_,_,_,_),
+                    abstract_state(S2,N2)), R).
+env_successors(P,F,N,R) :-
+        S = (P,F,_,_,_,_),
+        abstract_state(S,N),
+        findall(N2,(abstract_trans(S,A,S2),
+                    env_action(A,S2),
+                    S2 = (P,F,_,_,_,_),
+                    abstract_state(S2,N2)), R).
+ctl_successors(P,F,N,R) :-
+        S = (P,F,_,_,_,_),
+        abstract_state(S,N),
+        findall(N2,(abstract_trans(S,A,S2),
+                    ctl_action(A,S2),
+                    S2 = (P,F,_,_,_,_),
+                    abstract_state(S2,N2)), R).
+all_predecessors(P,F,N,R) :-
+        S = (P,F,_,_,_,_),
+        abstract_state(S,N),
+        findall(N2,(abstract_trans(S2,_,S),
+                    S2 = (P,F,_,_,_,_),
+                    abstract_state(S2,N2)), R).
+
+check_r(P,F,H,R) :- !,
+        subset2(H,R),
+        all_initials(P,F,S0),
+        subset2(S0,R).
+
+all_initials(P,F,S0) :-
+        findall(N,(S = (P,F,_,_,_,_),
+                   abstract_state(S,N),
+                   is_init(S)), S0).
