@@ -142,10 +142,10 @@ construction_step(P,F) :-
         
         % where none of the cases below applies...
         not(can_expand(State,_,_)),
-        not(can_split_transition(P,F,Formulas,Effect,NodeID,_,_)),
+        not(can_split_transition(P,F,Formulas,Effects,NodeID,_,_)),
         not(can_split_finality(P,F,Formulas,Effects,NodeID,_)),
-        not(can_split_effectcond(P,F,Formulas,Effect,NodeID,_,_,_,_,_)),
-        not(can_split_tempsubfml(P,F,Formulas,Effect,NextTails,NodeID,_,_,_)),
+        not(can_split_effectcond(P,F,Formulas,Effects,NodeID,_,_,_,_,_)),
+        not(can_split_tempsubfml(P,F,Formulas,Effects,NextTails,NodeID,_,_,_)),
         
         % then
         !,
