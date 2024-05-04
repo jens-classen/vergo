@@ -497,7 +497,7 @@ ctl_action(A,State) :-
 % environment action = exogenous actions defined in BAT
 env_action(A,State) :-
         user:exo(A,F),
-        State = (_,_,T,E,_,_,_),
+        State = (_,_,T,E,_,_),
         regression(F,E,R),
         is_entailed(T,R).
 
