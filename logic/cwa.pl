@@ -31,7 +31,8 @@ equivalent list of type constraint formulas, where types are
 represented as unary predicates. untype/2 removes typed quantifiers by
 re-writing them using standard first order syntax (treating types as
 unary predicates). get_types/3 looks up the types of variables in a
-list of typed variables.
+list of typed variables. type_description/3 produces a formula listing
+all elements of a given type.
 
 @author  Jens Claßen
 @license GPLv2
@@ -39,8 +40,8 @@ list of typed variables.
  **/
 :- module(cwa, [apply_cwa/3, eval_cwa/2, cwa_fml/1,
                 is_type/1, is_type_element/2, is_instance/2,
-                untype/2, types_cons/2,
-                get_types/3]).
+                untype/2, types_cons/2, get_types/3,
+                type_description/3]).
 
 :- use_module('../kbs/l_kb').
 :- use_module('../lib/utils').
@@ -127,11 +128,7 @@ apply_cwa(_KB,F,R) :-
         F =.. [Type,Var],
         var(Var),
         is_type(Type), !,
-        findall((Var,Unifier),
-                (is_type_element(Type,Ele),
-                 unifiable(Var,Ele,Unifier)),
-                Instances),
-        describe_instances(Var,Instances,R).
+        type_description(Var,Type,R).
 apply_cwa(KB,F1,R) :-
         def(F1,F2), !,
         apply_cwa(KB,F2,R).
@@ -541,3 +538,24 @@ get_type(Var,[X-T|_XTs],T) :-
 get_type(Var,[_-_|XTs],T) :- !,
         get_type(Var,XTs,T).
 get_type(_Var,[],_T) :- !, fail.
+
+/**
+  * type_description(+Var,+Type,-Result) is det.
+  *
+  * Given a variable and a type, returns a formula with free variable
+  * Var describing Type.
+  *
+  * For example, if the domain of type 'location' consists of #l1,#l2,
+  * #l3, type_description(X,location,Result) will yield
+  * Result = (X=#l1)+(X=#l2)+(X=#l3).
+  *
+  * @arg Var    a variable
+  * @arg Type   a type
+  * @arg Result a formula describing the elements of Type with Var
+  **/
+type_description(Var,Type,R) :-
+        findall((Var,Unifier),
+                (is_type_element(Type,Ele),
+                 unifiable(Var,Ele,Unifier)),
+                Instances),
+        describe_instances(Var,Instances,R).
