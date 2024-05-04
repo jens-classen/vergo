@@ -114,6 +114,23 @@ property by the model checker, call then e.g.
 
     ?- verify(prop5).
 
+### Synthesis by Abstraction
+
+For the local-effect case, consider the `dish_robot` domain in the
+`examples` directory. Look at the file `dish_robot_bat_syn.pl` and how
+actions, fluents, programs and temporal properties are defined in
+it. From within the directory, call SWI-Prolog, and consult the file
+containing the action theory:
+
+    ?- [dish_robot_bat_syn].
+
+Next, start the construction of the abstract transition system via
+
+    ?- synthesize(main,prop1).
+
+and observe the output. For an example of an acyclic action theory,
+consider the `warehouse_robot` domain in the `examples` directory.
+
 ## Directories
 
 The code is divided into the following subdirectories:
