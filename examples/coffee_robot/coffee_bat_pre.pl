@@ -12,16 +12,17 @@
 :- discontiguous rel_fluent/1.
 :- discontiguous def/2.
 
+initially(-holdingCoffee).
+initially(all(X,-hasCoffee(X))).
 initially(empty).
-initially(all(A,-occ(A))).
 
 rel_fluent(holdingCoffee).
 rel_fluent(queue(_,_)).
-rel_fluent(occ(_)).
+rel_fluent(hasCoffee(_)).
 
 poss(wait,true).
-poss(requestCoffee(P),-(P='#e')*lastFree).
-poss(selectRequest(P),-(P='#e')*isFirst(P)).
+poss(requestCoffee(P),-(P='#e')*last('#e')).
+poss(selectRequest(P),-(P='#e')*first(P)).
 poss(pickupCoffee,-holdingCoffee).
 poss(bringCoffee(_P),holdingCoffee).
 
@@ -33,15 +34,15 @@ causes_false(requestCoffee(P),queue(Xo,Yo),some([X,Y],queue(Xo,Yo)*enqueue(Xo,Yo
 causes_true(selectRequest(P),queue(X,Y),some([Xo,Yo],queue(Xo,Yo)*dequeue(Xo,Yo,P,X,Y))).
 causes_false(selectRequest(P),queue(Xo,Yo),some([X,Y],queue(Xo,Yo)*dequeue(Xo,Yo,P,X,Y))).
 
-causes_true(A,occ(B),(A=B)).
-causes_false(A,occ(B),-(A=B)).
+causes_true(bringCoffee(P),hasCoffee(P),true).
+causes_false(requestCoffee(P),hasCoffee(P),true).
 
-def(isFirst(P),
+def(first(P),
     some(P2,queue(P,P2))).
 def(empty,    
     queue('#e','#e')).
-def(lastFree,
-    some(P,queue(P,'#e'))).
+def(last(P),
+    some(P2,queue(P2,P))).
 def(full,
     some([P1,P2],(-(P1='#e'))*(-(P2='#e'))*queue(P1,P2))).
 def(enqueue(Xo,Yo,P,X,Y),
@@ -50,12 +51,7 @@ def(enqueue(Xo,Yo,P,X,Y),
 def(dequeue(Xo,Yo,P,X,Y), 
     some(X2,(Xo=P)*(Yo=X2)*(X=X2)*(Y='#e'))).
 
-exo(requestCoffee(_),true).
-
-% use_sink_states.     % do not use sink states for termination+failure
-% use_path_labels.     % assume a path always exists
-
-program(coffee,
+program(agt,
         loop(if(-empty,
                 pick(P,[selectRequest(P),
                         pickupCoffee,
@@ -66,32 +62,16 @@ program(coffee,
             )
        ).
 
-program(exog,
-        loop(pick(A,[test(exo(A)),A]))).
-
-program(exog_finite,
-        star(pick(X,requestCoffee(X)))).
+program(env,
+        loop(pick(P,requestCoffee(P)))).
 
 program(main,
-        conc(coffee,exog)).
+        conc(agt,env)).
 
 property(prop1,
          main,
-         somepath(next(empty))).
+         somepath(until(empty,holdingCoffee))).
 
 property(prop2,
          main,
-         somepath(until(empty,holdingCoffee))).
-
-property(prop3,
-         main,
-         allpaths(always(occ(requestCoffee(X))
-                         =>eventually(occ(selectRequest(X)))))).
-
-property(prop4,
-         main,
-         somepath(always(-some(P,occ(selectRequest(P)))))).
-
-property(prop5,
-         exog_finite,
-         postcond(full)).
+         somepath(always(-some(P,hasCoffee(P))))).
