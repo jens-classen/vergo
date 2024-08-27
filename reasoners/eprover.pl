@@ -41,7 +41,8 @@ eprover(ListOfAxioms,Conjecture) :-
         temp_file(File),
         writeTPTPFile(ListOfAxioms, Conjecture, File),
         process_create(path('eprover'), 
-                       ['--auto',         % use prover as black box
+                       [%'--auto',        % don't use: might make
+                                          % prover incomplete!
                         '--tptp3-format', % use latest TPTP format
                         '--silent',       % almost no output
                         File],            % input file
