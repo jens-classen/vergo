@@ -61,11 +61,14 @@ expected_rank(ex2,A,0,
 %               A=eat('#pizza','#hands')). % (*)
 expected_rank(ex2,A,1,
               some(X,A=eat(X,'#hands'))).
+% expected_rank(ex2,A,2,
+%               some(Y,(A=eat('#pizza',Y))*(-(Y='#hands'))) +
+%               some(X,(A=eat(X,'#hands'))*(-(X='#pizza')))).
 expected_rank(ex2,A,2,
-              some(Y,(A=eat('#pizza',Y))*(-(Y='#hands'))) +
-              some(Y,(A=eat(X,'#hands'))*(-(X='#pizza')))).
+              some(Y,(A=eat('#pizza',Y))*(-(Y='#hands')))). % (**)
 
 % (*): This condition reported in the paper is actually too strong.
+% (**): This condition reported in the paper is actually too weak.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Chisholm's Paradox
