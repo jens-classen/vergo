@@ -12,6 +12,8 @@
 :- discontiguous rel_fluent/1.
 :- discontiguous def/2.
 
+:- fol:set_reasoner(vampire).
+
 rel_fluent(hasCoffee(_)).
 rel_fluent(holdingCoffee).
 rel_fluent(queue(_,_)).
