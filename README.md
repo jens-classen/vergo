@@ -186,7 +186,7 @@ The code is divided into the following subdirectories:
 
 ## Dependencies
 
-Vergo uses SWI-Prolog (currently version 9.3.2). Furthermore, there
+Vergo uses SWI-Prolog (currently version 9.0.4). Furthermore, there
 are the following dependencies to external tools and systems:
 
 1. **Theorem Prover** (required)
@@ -196,16 +196,20 @@ are the following dependencies to external tools and systems:
 
    1. E Prover
 
-      By default, the system expects the 'eprover' executable is
+      By default, the system expects the 'eprover' executable to be
       visible in PATH. The system has been developed and tested with
-      the (currently) most recent version "2.0 Turzum". E can be
-      downloaded from
+      the (currently) most recent version "E 3.2 Puttabong
+      Moondrop". E can be downloaded from
 
       http://www.eprover.org 
 
-      and installed manually. For some distributions such as Fedora,
-      there are also prepackaged versions. Installation on Fedora
-      then for example is via
+      and installed manually. For some distributions such as Debian
+      and Fedora, there are also prepackaged versions. Installation on
+      Debian then for example is via
+
+          $ sudo apt-get install eprover
+
+      and on Fedora via
 
           $ sudo yum install E.x86_64
 
@@ -213,7 +217,7 @@ are the following dependencies to external tools and systems:
 
       Alternatively, Vampire can be used instead of E. This similarly
       requires that the 'vampire' executable binary (last tested
-      stable version: 4.2.2) is visible in PATH. Vampire is available
+      stable version: 4.9) is visible in PATH. Vampire is available
       under
 
       https://vprover.github.io/index.html    

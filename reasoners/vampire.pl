@@ -59,9 +59,9 @@ vampire(_ListOfAxioms,_Conjecture,_Result) :-
         abort.
 
 get_vampire_result(String, refutation) :-
-        sub_string(String,_,_,_N,"Refutation found."), !.
+        sub_string(String,_,_,_N,"Refutation"), !.
 get_vampire_result(String, satisfiable) :-
-        sub_string(String,_,_,_N,"Satisfiable!"), !.
+        sub_string(String,_,_,_N,"Satisfiable"), !.
 get_vampire_result(String,_) :- !,
         temp_file(File),
         report_message(error,['Unexpected Vampire output:']),
