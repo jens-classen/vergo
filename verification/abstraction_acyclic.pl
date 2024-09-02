@@ -31,11 +31,25 @@ Benjamin Zarrieß and Jens Claßen:
 On the Decidability of Verifying LTL Properties of Golog Programs. 
 Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 2013.
 
+By default, an internal implementation of the standard CTL model
+checking algorithm is applied to the propositionalized, abstract
+transition system. It is possible to use an external model checking
+tool in the form of NuSMV instead. For this purpose, have the 'nusmv'
+executable visible in PATH, and set the model checker via
+set_modelchecker/1. However, note that there is no significant
+performance advantage to be expected due to the fact that the states
+and transitions of the abstract transition system need to be
+enumerated explicitly, so a fast symbolic model checker cannot really
+play to its strengths here.
+
 @author  Jens Claßen
 @license GPLv2
 
  **/
-:- module('abstraction_acyclic', [compute_abstraction/1, verify/3]).
+:- module('abstraction_acyclic', [compute_abstraction/1,
+                                  verify/3,
+                                  get_modelchecker/1,
+                                  set_modelchecker/1]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
@@ -64,9 +78,11 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
    map_number_of_subformulas/2,
    map_number_of_actions/2,
    map_number_of_states/2,
+   map_holds_subformula/3,
    abstract_state/5,
    abstract_trans/7,
-   property_subformula/2.
+   property_subformula/2,
+   modelchecker/1.
 
 % use_sink_states.
 
@@ -84,9 +100,15 @@ Technical Report 13-10, Chair of Automata Theory, TU Dresden, Dresden, Germany, 
   *                  fact over the predicate program/2
  **/
 compute_abstraction(ProgramName) :-
+        modelchecker(nusmv),
         construct_abstract_transition_system(ProgramName),
         construct_propositional_mapping(ProgramName),
         translate_to_smv(ProgramName), !.
+
+compute_abstraction(ProgramName) :-
+        modelchecker(internal),
+        construct_abstract_transition_system(ProgramName),
+        construct_propositional_mapping(ProgramName), !.
 
 /**
   * verify(+ProgramName,+PropertyName,-TruthValue) is det.
@@ -105,13 +127,26 @@ compute_abstraction(ProgramName) :-
   *                   'false' if not
  **/
 verify(ProgramName,PropertyName,TruthValue) :-
-       map_property(ProgramName,N,PropertyName,Property),
-       call_smv(ProgramName, N, TruthValue, Type, Actions),
-       report_message_r(['Verified: \n',
-                       '\t Property            : ', Property, '\n',
-                       '\t Truth Value         : ', TruthValue, '\n',
-                       '\t Counterexample Type : ', Type, '\n',
-                       '\t Counterexample Trace: ', Actions, '\n']).        
+        modelchecker(nusmv),
+        map_property(ProgramName,N,PropertyName,_),
+        property(PropertyName,ProgramName,Property),
+        call_smv(ProgramName, N, TruthValue, Type, Actions),
+        report_message_r(['Verified: \n',
+                          '\t Property            : ', Property, '\n',
+                          '\t Truth Value         : ', TruthValue, '\n',
+                          '\t Counterexample Type : ', Type, '\n',
+                          '\t Counterexample Trace: ', Actions, '\n']).
+
+verify(ProgramName,PropertyName,TruthValue) :-
+        modelchecker(internal),
+        property(PropertyName,ProgramName,Property),
+        check_ctl(ProgramName,PropertyName,StateSet),
+        stateset_initial(ProgramName,Initial),
+        (subset(Initial,StateSet) ->
+            TruthValue = true; TruthValue = false),
+        report_message_r(['Verified: \n',
+                          '\t Property            : ', Property, '\n',
+                          '\t Truth Value         : ', TruthValue, '\n']).
 
 construct_abstract_transition_system(P) :-
         init_construction(P),
@@ -357,6 +392,148 @@ create_state_if_not_exists(P,Formulas,Effects,NodeID) :-
 create_state_if_not_exists(P,Formulas,Effects,NodeID) :- !,
         assert(abstract_state(P,Formulas,Effects,NodeID,true)).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Model Checker
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% default: internal model checker
+modelchecker(internal).
+% modelchecker(nusmv).
+
+set_modelchecker(X) :-
+        member(X,[internal,nusmv]), !,
+        retract(modelchecker(_)),
+        assert(modelchecker(X)).
+
+get_modelchecker(X) :-
+        modelchecker(X).
+
+% TODO: counterexamples
+
+/**
+  * check_ctl(+Program,+Property,-StateSet)
+  *
+  * Performs the classical CTL model checking on Program (whose
+  * transition system and propositional mapping must have been
+  * constructed) and Property. Result is a list of IDs of satisfying
+  * abstract states.
+  **/
+check_ctl(Program,PropertyName,StateSet) :-
+        map_property(Program,_,PropertyName,Property), !,
+        check_ctl(Program,Property,StateSet).
+
+check_ctl(Program,Fml,StateSet) :-
+        map_subformula(Program,Fml,_), !,
+        findall(State,map_holds_subformula(Program,State,Fml),StateSet).
+
+check_ctl(_Program,false,[]) :- !.
+check_ctl(Program,true,StateSet) :- !,
+        findall(State,map_state(Program,State,_,_,_),StateSet).
+
+check_ctl(Program,-Fml,StateSet) :- !,
+        check_ctl(Program,Fml,StateSet1),
+        findall(State,(map_state(Program,State,_,_,_),
+                       not(member(State,StateSet1))),StateSet).
+
+check_ctl(Program,Fml1*Fml2,StateSet) :- !,
+        check_ctl(Program,Fml1,StateSet1),
+        check_ctl(Program,Fml2,StateSet2),
+        intersection(StateSet1,StateSet2,StateSet).
+
+check_ctl(Program,Fml1+Fml2,StateSet) :- !,
+        check_ctl(Program,Fml1,StateSet1),
+        check_ctl(Program,Fml2,StateSet2),
+        union(StateSet1,StateSet2,StateSet).
+
+check_ctl(Program,Fml1=>Fml2,StateSet) :- !,
+        check_ctl(Program,(-Fml1)+Fml2,StateSet).
+
+check_ctl(Program,Fml2<=Fml1,StateSet) :- !,
+        check_ctl(Program,(-Fml1)+Fml2,StateSet).
+
+check_ctl(Program,Fml1<=>Fml2,StateSet) :- !,
+        check_ctl(Program,(Fml1=>Fml2)*(Fml2=>Fml1),StateSet).
+
+check_ctl(Program,somepath(next(Fml)),StateSet) :- !,
+        check_ctl(Program,Fml,StateSet1),
+        check_ex(Program,StateSet1,StateSet).
+
+check_ctl(Program,somepath(always(Fml)),StateSet) :- !,
+        check_ctl(Program,Fml,StateSet1),
+        check_eg(Program,StateSet1,StateSet).
+
+check_ctl(Program,somepath(until(Fml1,Fml2)),StateSet) :- !,
+        check_ctl(Program,Fml1,StateSet1),
+        check_ctl(Program,Fml2,StateSet2),
+        check_eu(Program,StateSet1,StateSet2,StateSet).
+
+check_ctl(Program,somepath(eventually(Fml)),StateSet) :- !,
+        check_ctl(Program,somepath(until(true,Fml)),StateSet).
+
+check_ctl(Program,allpaths(next(Fml)),StateSet) :- !,
+        check_ctl(Program,-somepath(next(-Fml)),StateSet).
+
+check_ctl(Program,allpaths(always(Fml)),StateSet) :- !,
+        check_ctl(Program,-somepath(until(true,-Fml)),StateSet).
+
+check_ctl(Program,allpaths(eventually(Fml)),StateSet) :- !,
+        check_ctl(Program,allpaths(until(true,Fml)),StateSet).
+
+check_ctl(Program,allpaths(until(Fml1,Fml2)),StateSet) :- !,
+        check_ctl(Program,
+                  -somepath(until(-Fml2,(-Fml1)*(-Fml2))),
+                  StateSet1),
+        check_ctl(Program,
+                  -somepath(always(-Fml2)),
+                  StateSet2),
+        intersection(StateSet1,StateSet2,StateSet).
+
+preimage(Program,StateSet1,StateSet) :- !,
+        findall(S,
+                (member(S1,StateSet1),
+                 map_trans(Program,S,_,S1)),
+                StateSet).
+
+statesets_not_equivalent(StateSet1,StateSet2) :-
+        sort(StateSet1,S1),
+        sort(StateSet2,S2),
+        S1 \= S2.
+
+stateset_initial(Program,StateSet) :- !,
+        findall(S,map_state(Program,S,_,[],0),StateSet).
+
+check_ex(Program,StateSet1,StateSet) :- !,
+        preimage(Program,StateSet1,StateSet).
+
+check_eg(Program,StateSet1,StateSet) :- !,
+        False = [],
+        check_eg_iterate(Program,False,StateSet1,StateSet).
+check_eg_iterate(Program,Sold,Scur,Sres) :-
+        statesets_not_equivalent(Sold,Scur), !,
+        preimage(Program,Scur,Spre),
+        intersection(Scur,Spre,Snew),
+        check_eg_iterate(Program,Scur,Snew,Sres).
+check_eg_iterate(_Program,_Sold,Scur,Scur) :- !.
+
+check_eu(Program,StateSet1,StateSet2,StateSet) :- !,
+        findall(State,map_state(Program,State,_,_,_),True),
+        check_eu_iterate(Program,StateSet1,True,StateSet2,StateSet).
+check_eu_iterate(Program,S1,Sold,Scur,Sres) :-
+        statesets_not_equivalent(Sold,Scur), !,
+        preimage(Program,Scur,Spre),
+        intersection(S1,Spre,Stmp),
+        union(Scur,Stmp,Snew),
+        check_eu_iterate(Program,S1,Scur,Snew,Sres).
+check_eu_iterate(_Program,_S1,_Sold,Scur,Scur) :- !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Graphical Representation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % draw transition system using dot
 % TODO: doesn't work, need node labels w/o brackets etc.
 %       ==> use pt_draw_graph instead for now
@@ -489,15 +666,16 @@ no_temporal_operators(F) :-
 
 construct_propositional_mapping(ProgramName) :-
         
-        retractall(map_property(_,_,_,_)),
-        retractall(map_subformula(_,_,_)),
-        retractall(map_action(_,_,_)),
-        retractall(map_state(_,_,_,_,_)),
-        retractall(map_trans(_,_,_,_)),
-        retractall(map_number_of_properties(_,_)),
-        retractall(map_number_of_subformulas(_,_)),
-        retractall(map_number_of_actions(_,_)),
-        retractall(map_number_of_states(_,_)),
+        retractall(map_property(ProgramName,_,_,_)),
+        retractall(map_subformula(ProgramName,_,_)),
+        retractall(map_action(ProgramName,_,_)),
+        retractall(map_state(ProgramName,_,_,_,_)),
+        retractall(map_trans(ProgramName,_,_,_)),
+        retractall(map_number_of_properties(ProgramName,_)),
+        retractall(map_number_of_subformulas(ProgramName,_)),
+        retractall(map_number_of_actions(ProgramName,_)),
+        retractall(map_number_of_states(ProgramName,_)),
+        retractall(map_holds_subformula(ProgramName,_,_)),
         
         % determine properties
         findall((Prop,PropName),
@@ -522,7 +700,13 @@ construct_propositional_mapping(ProgramName) :-
         propositionalize_states(ProgramName),
         
         % determine transitions
-        propositionalize_transitions(ProgramName).
+        propositionalize_transitions(ProgramName),
+
+        % determine satisfied subformulas
+        propositionalize_subformula_sat(ProgramName),
+
+        % determine propositionalized properties
+        propositionalize_properties(ProgramName,0).
 
 memorize_properties(P,[(Prop,Name)|Properties],N) :-
         assert(map_property(P,N,Name,Prop)),
@@ -565,6 +749,59 @@ propositionalize_transitions(P) :-
         assert(map_trans(P,S1,A,S2)),
         fail.
 propositionalize_transitions(_P).
+
+propositionalize_subformula_sat(P) :-
+        map_state(P,N,Formulas,Effects,_NodeID),
+        map_subformula(P,M,Formula),
+        regression(Formula,Effects,RegressedFormula),
+        is_entailed(Formulas,RegressedFormula),
+        assert(map_holds_subformula(P,N,M)),
+        fail.
+propositionalize_subformula_sat(_P).
+
+propositionalize_properties(P,N) :-
+        retract(map_property(P,N,Name,Prop)), !,
+        propositionalize_property(P,Prop,Prop2),
+        assert(map_property(P,N,Name,Prop2)),
+        N1 is N+1,
+        propositionalize_properties(P,N1).
+propositionalize_properties(_P,_N).
+
+propositionalize_property(P,somepath(F),somepath(F1)) :- !,
+        propositionalize_property(P,F,F1).
+propositionalize_property(P,allpaths(F),allpaths(F1)) :- !,
+        propositionalize_property(P,F,F1).
+propositionalize_property(P,always(F),always(F1)) :- !,
+        propositionalize_property(P,F,F1).
+propositionalize_property(P,eventually(F),eventually(F1)) :- !,
+        propositionalize_property(P,F,F1).
+propositionalize_property(P,until(F1,F2),until(F3,F4)) :- !,
+        propositionalize_property(P,F1,F3),
+        propositionalize_property(P,F2,F4).
+propositionalize_property(P,next(F),next(F1)) :- !,
+        propositionalize_property(P,F,F1).
+propositionalize_property(P,F,F1) :-
+        no_temporal_operators(F), !,
+        simplify_fml(F,FS),
+        map_subformula(P,N,FS),
+        F1 = N.
+propositionalize_property(P,F1*F2,F3*F4) :- !,
+        propositionalize_property(P,F1,F3),
+        propositionalize_property(P,F2,F4).
+propositionalize_property(P,F1+F2,F3+F4) :- !,
+        propositionalize_property(P,F1,F3),
+        propositionalize_property(P,F2,F4).
+propositionalize_property(P,F1=>F2,F3=>F4) :- !,
+        propositionalize_property(P,F1,F3),
+        propositionalize_property(P,F2,F4).
+propositionalize_property(P,F1<=F2,F3<=F4) :- !,
+        propositionalize_property(P,F1,F3),
+        propositionalize_property(P,F2,F4).
+propositionalize_property(P,F1<=>F2,F3<=>F4) :- !,
+        propositionalize_property(P,F1,F3),
+        propositionalize_property(P,F2,F4).
+propositionalize_property(P,-F,F1) :- !,
+        propositionalize_property(P,F,F1).
 
 % draw propositionalized transition system using dot
 pt_draw_graph(P) :-
@@ -678,18 +915,16 @@ writeDefine(P,Stream) :-
         writeDefineSubformulas(P,Stream).
 
 writeDefineSubformulas(P,Stream) :-
-        map_subformula(P,F,Formula),
+        map_subformula(P,F,_Formula),
         write(Stream, '   '),
         write(Stream, F),
         write(Stream, ' :=\n'),
-        writeSubformulaDefinition(P,Stream,Formula),
+        writeSubformulaDefinition(P,Stream,F),
         fail.
 writeDefineSubformulas(_,_).
 
-writeSubformulaDefinition(P,Stream,Formula) :-
-        map_state(P,N,Formulas,Effects,_NodeID),
-        regression(Formula,Effects,RegressedFormula),
-        is_entailed(Formulas,RegressedFormula),
+writeSubformulaDefinition(P,Stream,F) :-
+        map_holds_subformula(P,N,F),
         write(Stream, '     state = '),
         write(Stream, N),
         write(Stream, ' |\n'),
@@ -704,74 +939,71 @@ writeSpecs(P,Stream) :-
         write(Stream, ' SPEC NAME '),
         write(Stream, PropertyName),
         write(Stream, ' := '),
-        writeSpecProperty(P,Stream,Property),
+        writeSpecProperty(Stream,Property),
         write(Stream, ';\n'),
         fail.
 writeSpecs(_,_).
 
-writeSpecProperty(P,Stream,F) :-
-        no_temporal_operators(F), !,
-        simplify_fml(F,FS),
-        property_subformula(P,FS),
-        map_subformula(P,FormulaN,FM), FS =@= FM, !,
-        write(Stream, FormulaN).
-writeSpecProperty(P,Stream,P1*P2) :- !,
+writeSpecProperty(Stream,F) :-
+        atom(F),
+        write(Stream, F).
+writeSpecProperty(Stream,P1*P2) :- !,
         write(Stream,'('),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream,' & '),
-        writeSpecProperty(P,Stream,P2),
+        writeSpecProperty(Stream,P2),
         write(Stream, ')').
-writeSpecProperty(P,Stream,P1+P2) :- !,
+writeSpecProperty(Stream,P1+P2) :- !,
         write(Stream,'('),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream,' | '),
-        writeSpecProperty(P,Stream,P2),
+        writeSpecProperty(Stream,P2),
         write(Stream, ')').
-writeSpecProperty(P,Stream,P1=>P2) :- !,
+writeSpecProperty(Stream,P1=>P2) :- !,
         write(Stream,'('),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream,' -> '),
-        writeSpecProperty(P,Stream,P2),
+        writeSpecProperty(Stream,P2),
         write(Stream, ')').
-writeSpecProperty(P,Stream,P1<=P2) :- !,
+writeSpecProperty(Stream,P1<=P2) :- !,
         write(Stream,'('),
-        writeSpecProperty(P,Stream,P2),
+        writeSpecProperty(Stream,P2),
         write(Stream,' -> '),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream, ')').
-writeSpecProperty(P,Stream,P1<=>P2) :- !,
+writeSpecProperty(Stream,P1<=>P2) :- !,
         write(Stream,'('),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream,' <-> '),
-        writeSpecProperty(P,Stream,P2),
+        writeSpecProperty(Stream,P2),
         write(Stream, ')').
-writeSpecProperty(P,Stream,-P1) :- !,
+writeSpecProperty(Stream,-P1) :- !,
         write(Stream,'!('),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream, ')').
-writeSpecProperty(P,Stream,somepath(P1)) :- !,
+writeSpecProperty(Stream,somepath(P1)) :- !,
         write(Stream,'E'),
-        writeSpecProperty(P,Stream,P1).
-writeSpecProperty(P,Stream,allpaths(P1)) :- !,
+        writeSpecProperty(Stream,P1).
+writeSpecProperty(Stream,allpaths(P1)) :- !,
         write(Stream,'A'),
-        writeSpecProperty(P,Stream,P1).
-writeSpecProperty(P,Stream,always(P1)) :- !,
+        writeSpecProperty(Stream,P1).
+writeSpecProperty(Stream,always(P1)) :- !,
         write(Stream,'G('),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream, ')').
-writeSpecProperty(P,Stream,eventually(P1)) :- !,
+writeSpecProperty(Stream,eventually(P1)) :- !,
         write(Stream,'F('),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream, ')').
-writeSpecProperty(P,Stream,until(P1,P2)) :- !,
+writeSpecProperty(Stream,until(P1,P2)) :- !,
         write(Stream,' [ '),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream,' U '),
-        writeSpecProperty(P,Stream,P2),
+        writeSpecProperty(Stream,P2),
         write(Stream,' ] ').
-writeSpecProperty(P,Stream,next(P1)) :- !,
+writeSpecProperty(Stream,next(P1)) :- !,
         write(Stream,'X('),
-        writeSpecProperty(P,Stream,P1),
+        writeSpecProperty(Stream,P1),
         write(Stream, ')').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

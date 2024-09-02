@@ -257,17 +257,28 @@ are the following dependencies to external tools and systems:
 
 2. **Model Checker**
 
-   To use verification based on abstraction and model checking, we
-   require that the 'nusmv' executable is visible in PATH. The system
-   has been developed and tested with the (currently) most recent
-   version 2.6.0, which can be downloaded from
+   For verification based on abstraction, it is possible (though not
+   required) to use the NuSMV model checker. By default, an internal
+   implementation of a CTL model checking algorithm is utilized. Since
+   states of the abstract transition system have to enumerated, there
+   is no real performance advantage in using a fast symbolic model
+   checker. However, the internal method currently does not support
+   the computation of counterexamples or witnesses, but NuSMV does.
+
+   For employing NuSMV, we require that the 'nusmv' executable is
+   visible in PATH. Then set the model checker by calling
+
+          ?- abstraction_acyclic:set_modelchecker(nusmv).
+
+   The system has been developed and tested with the (currently) most
+   recent version 2.6.0, which can be downloaded from
 
    http://nusmv.fbk.eu
 
    and installed manually according to the installation instructions
    given there.
 
-   So far, NuSMV is the only model checker supported.
+   So far, NuSMV is the only external model checker supported.
 
 3. **Graphviz/dot**
 
