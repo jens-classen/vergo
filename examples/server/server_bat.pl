@@ -31,7 +31,7 @@ actions and a non-complete (open world) initial theory.
 **/
 :- use_module('../../verification/abstraction_acyclic',
               [compute_abstraction/1,
-               verify/2 as verify_abstraction]).
+               verify/3 as verify_abstraction]).
 :- use_module('../../verification/characteristic_graphs_guards').
 :- use_module('../../lib/utils').
 :- use_module('../../logic/l').
@@ -134,7 +134,7 @@ test(abstraction) :- !,
         check_prop(prop8).
 
 check_prop(P) :-
-        verify_abstraction(P,T),
+        verify_abstraction(main,P,T),
         check_result(P,T), !.
 
 check_result(P,T) :-

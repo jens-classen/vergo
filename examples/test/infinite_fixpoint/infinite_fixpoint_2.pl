@@ -33,4 +33,4 @@ property(prop1,
 
 run_infinite :-
         construct_characteristic_graph(main),
-        verify(main,prop1).
+        verify(main,prop1,_).

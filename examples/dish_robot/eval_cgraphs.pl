@@ -2,7 +2,10 @@
 :- dynamic(domain/2).
 
 :- use_module('../../lib/utils').
-:- use_module('../../verification/fixpoint_ctl').
+:- use_module('../../verification/fixpoint_ctl',
+              [construct_characteristic_graph/1,
+               verify/3 as verify_f]).
+:- use_module('../../verification/characteristic_graphs_guards').
 
 :- ['dish_robot_bat'].
 
@@ -27,11 +30,11 @@ experiment(Rooms,Dishes,InitialTheory,FileName,TimeOutC,TimeOutP) :-
              TC1 = 'n/a', TC2 = 'n/a', TC3 = 'n/a', TC4 = 'n/a', TC5 = 'n/a');
             (number_of_nodes(Nodes),
              number_of_edges(Edges),
-             measure_time_with_limit(verify(main,prop1),TimeOutP,TW1,TC1),
-             measure_time_with_limit(verify(main,prop2),TimeOutP,TW2,TC2),
-             measure_time_with_limit(verify(main,prop3),TimeOutP,TW3,TC3),
-             measure_time_with_limit(verify(main,prop4),TimeOutP,TW4,TC4),
-             measure_time_with_limit(verify(main,prop5),TimeOutP,TW5,TC5))),
+             measure_time_with_limit(verify_f(main,prop1,_Truth1),TimeOutP,TW1,TC1),
+             measure_time_with_limit(verify_f(main,prop2,_Truth2),TimeOutP,TW2,TC2),
+             measure_time_with_limit(verify_f(main,prop3,_Truth3),TimeOutP,TW3,TC3),
+             measure_time_with_limit(verify_f(main,prop4,_Truth4),TimeOutP,TW4,TC4),
+             measure_time_with_limit(verify_f(main,prop5,_Truth5),TimeOutP,TW5,TC5))),
         Row = [Time,
                Rooms,
                Dishes,

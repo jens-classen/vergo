@@ -149,7 +149,7 @@ test(abstraction_without_initial_kb) :- !,
 :- end_tests('abstraction_local-effect_dl').
 
 check_prop(P,I) :-
-        verify(P,T),
+        verify(main,P,T),
         check_result(P,I,T), !.
 
 check_result(P,I,T) :-

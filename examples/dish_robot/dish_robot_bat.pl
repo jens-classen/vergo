@@ -145,7 +145,7 @@ set_domains(1) :-
         assert(user:domain(room,'#r1')).
 
 check_prop(P,I) :-
-        verify(P,T),
+        verify(main,P,T),
         check_result(P,I,T), !.
 
 check_result(P,I,T) :-

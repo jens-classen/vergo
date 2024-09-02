@@ -92,7 +92,7 @@ Next, construct the characteristic graph via
 and observe the output. The actual verification for one of the
 properties is initiated e.g. through
 
-    ?- verify(main,prop4).
+    ?- verify(main,prop4,Truth).
 
 ### Verification by Abstraction
 
@@ -112,7 +112,7 @@ Next, start the construction of the abstract transition system via
 and observe the output (this may take some time). To actually verify a
 property by the model checker, call then e.g.
 
-    ?- verify(prop5).
+    ?- verify(main,prop5,Truth).
 
 ### Synthesis by Abstraction
 

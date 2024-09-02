@@ -29,7 +29,7 @@ included in this directory.
 
 :- use_module('../../verification/abstraction_acyclic',
               [compute_abstraction/1,
-               verify/2 as verify_abstraction]).
+               verify/3 as verify_abstraction]).
 :- use_module('../../lib/utils').
 :- use_module('../../logic/l').
 

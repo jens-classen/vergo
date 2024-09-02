@@ -17,7 +17,7 @@ conditions and pick operators.
 @license GPLv2
 
  **/
-:- module(fixpoint_ctl, [verify/2]).
+:- module(fixpoint_ctl, [verify/3]).
 
 :- use_module('../lib/utils').
 :- use_module('../lib/env').
@@ -53,7 +53,7 @@ conditions and pick operators.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * verify(+ProgramName,+PropertyName) is det.
+  * verify(+ProgramName,+PropertyName,-TruthValue) is det.
   *
   * Verifies the property of the given name for the program of the
   * given name on the previously created characteristic graph.
@@ -64,8 +64,10 @@ conditions and pick operators.
   *                   fact over the predicate program/2
   * @arg PropertyName the name of a property, defined by the user via a
   *                   fact over the predicate property/3
+  * @arg TruthValue   'true' if the property is satisfied,
+  *                   'false' if not
  **/
-verify(Program,Property) :- !,
+verify(Program,Property,TruthValue) :- !,
         report_message(['Verifying property \'', Property,
                         '\' for program \'', Program, '\'...']),
         check_ctl(Program,Property,LabelSet),

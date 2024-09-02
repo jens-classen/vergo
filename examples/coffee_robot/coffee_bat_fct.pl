@@ -10,7 +10,7 @@
 :- use_module('../../verification/fixpoint_ctl_thesis',
               [construct_characteristic_graph/1 as
                construct_characteristic_graph_thesis,
-               verify/2 as verify_thesis]).
+               verify/3 as verify_thesis]).
                
 :- use_module('../../lib/utils').
 :- use_module('../../logic/def').
