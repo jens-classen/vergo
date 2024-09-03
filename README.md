@@ -265,7 +265,7 @@ are the following dependencies to external tools and systems:
    checker. However, the internal method currently does not support
    the computation of counterexamples or witnesses, but NuSMV does.
 
-   For employing NuSMV, we require that the 'nusmv' executable is
+   For employing NuSMV, we require that the 'NuSMV' executable is
    visible in PATH. Then set the model checker by calling
 
           ?- abstraction_acyclic:set_modelchecker(nusmv).

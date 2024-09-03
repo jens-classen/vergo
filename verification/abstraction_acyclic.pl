@@ -144,9 +144,13 @@ verify(ProgramName,PropertyName,TruthValue) :-
         stateset_initial(ProgramName,Initial),
         (subset(Initial,StateSet) ->
             TruthValue = true; TruthValue = false),
+        determine_counterexample(ProgramName,PropertyName,TruthValue,
+                                 Type,Actions),
         report_message_r(['Verified: \n',
                           '\t Property            : ', Property, '\n',
-                          '\t Truth Value         : ', TruthValue, '\n']).
+                          '\t Truth Value         : ', TruthValue, '\n',
+                          '\t Counterexample Type : ', Type, '\n',
+                          '\t Counterexample Trace: ', Actions, '\n']).
 
 construct_abstract_transition_system(P) :-
         init_construction(P),
@@ -410,8 +414,6 @@ set_modelchecker(X) :-
 get_modelchecker(X) :-
         modelchecker(X).
 
-% TODO: counterexamples
-
 /**
   * check_ctl(+Program,+Property,-StateSet)
   *
@@ -527,6 +529,129 @@ check_eu_iterate(Program,S1,Sold,Scur,Sres) :-
         union(Scur,Stmp,Snew),
         check_eu_iterate(Program,S1,Scur,Snew,Sres).
 check_eu_iterate(_Program,_S1,_Sold,Scur,Scur) :- !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Counterexamples
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+determine_counterexample(P,PropName,Truth,Type,Actions) :-
+        map_property(P,_N,PropName,Prop),
+        counterexample(P,Prop,Truth,Type,Actions), !.
+
+counterexample(_P,allpaths(_),true,nil,nil) :- !.
+counterexample(P,allpaths(always(F)),false,Type,Actions) :- !,
+        witness_prefix(P,true,-F,Type,Actions).
+counterexample(P,allpaths(until(F1,F2)),false,Type,Actions) :- !,
+        witness_lasso(P,F1*(-F2),Type,Actions);
+        witness_prefix(P,F1*(-F2),(-F1)*(-F2),Type,Actions).
+counterexample(P,allpaths(eventually(F)),false,Type,Actions) :- !,
+        witness_lasso(P,-F,Type,Actions).
+
+counterexample(P,somepath(F),false,Type,[]) :- !,
+        witness_type(P,somepath(F),Type).
+counterexample(P,somepath(always(F)),true,Type,Actions) :- !,
+        witness_lasso(P,F,Type,Actions).
+counterexample(P,somepath(until(F1,F2)),true,Type,Actions) :- !,
+        witness_prefix(P,F1,F2,Type,Actions).
+counterexample(P,somepath(eventually(F)),true,Type,Actions) :- !,
+        witness_prefix(P,true,F,Type,Actions).
+
+counterexample(P,-F,false,Type,Actions) :- !,
+        counterexample(P,F,true,Type,Actions).
+counterexample(P,-F,true,Type,Actions) :- !,
+        counterexample(P,F,false,Type,Actions).
+
+counterexample(P,F,false,Type,[]) :-
+        ( F=(_*_); F=(_+_); F=(_=>_); F=(_<=_); F=(_<=>_); 
+          F=true; F=false ), !,
+        witness_type(P,F,Type).
+counterexample(_P,F,true,nil,nil) :- 
+        ( F=(_*_); F=(_+_); F=(_=>_); F=(_<=_); F=(_<=>_);
+          F=true; F=false ), !.
+
+witness_lasso(P,F,Type,Actions) :-
+        check_ctl(P,F,FStates),
+        stateset_initial(P,IStates),
+        map_number_of_states(P,Limit),
+        ids_always(P,IStates,IStates,FStates,Solution,1,Limit),
+        extract_lasso(P,Solution,Type,Actions).
+
+ids_always(P,[IState|IStates],AllIStates,FStates,Solution,N,Limit) :-
+        (member(IState,FStates),
+         ids_always2(P,[IState],FStates,Solution,N));
+        ids_always(P,IStates,AllIStates,FStates,Solution,N,Limit).
+ids_always(P,[],AllIStates,FStates,Solution,N,Limit) :-
+        N < Limit, !,
+        N1 is N+1,
+        ids_always(P,AllIStates,AllIStates,FStates,Solution,N1,Limit).
+ids_always2(_P,[State|Path],_FStates,[State|Path],0) :-
+        member(State,Path), !.
+ids_always2(P,[State|Path],FStates,Solution,N) :-
+        N > 0,
+        map_trans(P,State,A,NewState),
+        member(NewState,FStates),
+        map_action(P,A,Action),
+        N1 is N-1,
+        ids_always2(P,[NewState,do(Action),State|Path],FStates,Solution,N1).
+
+extract_lasso(P,[State|Path],Type,Actions) :-
+        map_state(P,State,Type,_,_),
+        extract_lasso2(P,State,Path,[],Actions).
+extract_lasso2(P,State,[do(A),State2|Path],Prefix,Actions) :-
+        State \= State2, !,
+        extract_lasso2(P,State,Path,[A|Prefix],Actions).
+extract_lasso2(P,State,[do(A),State2|Path],Prefix,Actions) :-
+        State == State2, !,
+        extract_lasso3(P,Path,[loop([A|Prefix])],Actions).
+extract_lasso3(P,[do(A),_State|Path],Prefix,Actions) :-
+        extract_lasso3(P,Path,[A|Prefix],Actions).
+extract_lasso3(_P,[],Actions,Actions).
+
+witness_prefix(P,F1,F2,Type,Actions) :-
+        check_ctl(P,F1,F1States),
+        check_ctl(P,F2,F2States),
+        stateset_initial(P,IStates),
+        map_number_of_states(P,Limit),
+        ids_until(P,IStates,IStates,F1States,F2States,Solution,0,
+                  Limit),
+        extract_prefix(P,Solution,Type,Actions).
+
+ids_until(P,[IState|IStates],AllIStates,F1States,F2States,Solution,N,
+          Limit) :-
+        ids_until2(P,[IState],F1States,F2States,Solution,N);
+        ids_until(P,IStates,AllIStates,F1States,F2States,Solution,N,
+                  Limit).
+ids_until(P,[],AllIStates,F1States,F2States,Solution,N,Limit) :-
+        N < Limit, !,
+        N1 is N+1,
+        ids_until(P,AllIStates,AllIStates,F1States,F2States,Solution,
+                  N1,Limit).
+ids_until2(_P,[State|Path],_F1States,F2States,[State|Path],0) :-
+        member(State,F2States), !.
+ids_until2(P,[State|Path],F1States,F2States,Solution,N) :-
+        N > 0,
+        member(State,F1States),
+        map_trans(P,State,A,NewState),
+        map_action(P,A,Action),
+        N1 is N-1,
+        ids_until2(P,[NewState,do(Action),State|Path],F1States,
+                   F2States,Solution,N1).
+
+extract_prefix(P,[State|Path],Type,Actions) :-
+        map_state(P,State,Type,_,_),
+        extract_prefix2(P,Path,[],Actions).
+extract_prefix2(P,[do(A),_State|Path],Prefix,Actions) :-
+        extract_prefix2(P,Path,[A|Prefix],Actions).
+extract_prefix2(_P,[],Actions,Actions).
+
+witness_type(P,F,Type) :-
+        check_ctl(P,F,States),
+        stateset_initial(P,Init),
+        member(S,Init),
+        not(member(S,States)),
+        map_state(P,S,Type,_,_).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

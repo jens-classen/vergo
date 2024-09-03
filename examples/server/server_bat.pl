@@ -29,9 +29,7 @@ actions and a non-complete (open world) initial theory.
 @license GPLv2
 
 **/
-:- use_module('../../verification/abstraction_acyclic',
-              [compute_abstraction/1,
-               verify/3 as verify_abstraction]).
+:- use_module('../../verification/abstraction_acyclic').
 :- use_module('../../verification/characteristic_graphs_guards').
 :- use_module('../../lib/utils').
 :- use_module('../../logic/l').
@@ -120,9 +118,10 @@ expected_outcome(prop6,true).
 expected_outcome(prop7,true).
 expected_outcome(prop8,false).
 
-:- begin_tests('abstraction_acyclic').
+:- begin_tests('abstraction_acyclic_nusmv').
 
 test(abstraction) :- !,
+        set_modelchecker(nusmv),
         compute_abstraction(main),
         check_prop(prop1),
         check_prop(prop2),
@@ -133,8 +132,26 @@ test(abstraction) :- !,
         check_prop(prop7),
         check_prop(prop8).
 
+:- end_tests('abstraction_acyclic_nusmv').
+
+:- begin_tests('abstraction_acyclic_internal').
+
+test(abstraction) :- !,
+        set_modelchecker(internal),
+        compute_abstraction(main),
+        check_prop(prop1),
+        check_prop(prop2),
+        check_prop(prop3),
+        check_prop(prop4),
+        check_prop(prop5),
+        check_prop(prop6),
+        check_prop(prop7),
+        check_prop(prop8).
+
+:- end_tests('abstraction_acyclic_internal').
+
 check_prop(P) :-
-        verify_abstraction(main,P,T),
+        verify(main,P,T),
         check_result(P,T), !.
 
 check_result(P,T) :-
@@ -147,7 +164,6 @@ check_result2(P,_T) :- !,
         report_message(info,['Outcome for ',P,
                              ' is different from what expected!\n']).
 
-:- end_tests('abstraction_acyclic').
 
 :- begin_tests('acyclic_effects').
 

@@ -101,9 +101,10 @@ expected_outcome(prop3,no,false).
 expected_outcome(prop4,no,true).
 expected_outcome(prop5,no,false).
 
-:- begin_tests('abstraction_local-effect').
+:- begin_tests('abstraction_local-effect_nusmv').
 
-test(abstraction_with_initial_kb) :- !,
+test(abstraction_with_initial_kb_nusmv) :- !,
+        set_modelchecker(nusmv),
         set_initial_kb(true),
         set_domains(2),
         compute_abstraction(main),
@@ -113,7 +114,8 @@ test(abstraction_with_initial_kb) :- !,
         check_prop(prop4,yes),
         check_prop(prop5,yes).
 
-test(abstraction_without_initial_kb) :- !,
+test(abstraction_without_initial_kb_nusmv) :- !,
+        set_modelchecker(nusmv),
         set_initial_kb(false),
         set_domains(1),
         compute_abstraction(main),
@@ -123,7 +125,33 @@ test(abstraction_without_initial_kb) :- !,
         check_prop(prop4,no),
         check_prop(prop5,no).
 
-:- end_tests('abstraction_local-effect').
+:- end_tests('abstraction_local-effect_nusmv').
+
+:- begin_tests('abstraction_local-effect_internal').
+
+test(abstraction_with_initial_kb_internal) :- !,
+        set_modelchecker(internal),
+        set_initial_kb(true),
+        set_domains(2),
+        compute_abstraction(main),
+        check_prop(prop1,yes),
+        check_prop(prop2,yes),
+        check_prop(prop3,yes),
+        check_prop(prop4,yes),
+        check_prop(prop5,yes).
+
+test(abstraction_without_initial_kb_internal) :- !,
+        set_modelchecker(internal),
+        set_initial_kb(false),
+        set_domains(1),
+        compute_abstraction(main),
+        check_prop(prop1,no),
+        check_prop(prop2,no),
+        check_prop(prop3,no),
+        check_prop(prop4,no),
+        check_prop(prop5,no).
+
+:- end_tests('abstraction_local-effect_internal').
 
 set_initial_kb(WithKB) :-
         retractall(user:initially(_)),
