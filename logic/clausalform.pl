@@ -28,7 +28,7 @@
 %       introduced during conversion 
 
 fml2nnf((F1<=>F2),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
-        fml2nnf((-F1+F2)*(F1+(F2)),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
+        fml2nnf((-F1+F2)*(F1+(-F2)),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
 fml2nnf((F1=>F2),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
         fml2nnf((-F1+F2),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
 fml2nnf((F1<=F2),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
