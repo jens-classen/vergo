@@ -103,11 +103,11 @@ skol_next(A1,A2) :-
 
 % convert NNF into CNF by distributing disjunctions over conjunctions
 nnf2cnf((F1*F2)+F3,(Fml1*Fml2)) :- !,
-        nnf2cnf((F1|F3),Fml1),
-        nnf2cnf((F2|F3),Fml2).
+        nnf2cnf((F1+F3),Fml1),
+        nnf2cnf((F2+F3),Fml2).
 nnf2cnf(F1+(F2*F3),(Fml1*Fml2)) :- !,
-        nnf2cnf((F1|F2),Fml1),
-        nnf2cnf((F1|F3),Fml2).
+        nnf2cnf((F1+F2),Fml1),
+        nnf2cnf((F1+F3),Fml2).
 nnf2cnf((F1+F2),Fml) :- !,
         nnf2cnf(F1,Fml1),
         nnf2cnf(F2,Fml2),
