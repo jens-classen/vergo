@@ -80,6 +80,8 @@ fml2nnf(-all(Vars,F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
         fml2nnf(some(Vars,-F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
 fml2nnf(-some(Vars,F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
         fml2nnf(all(Vars,-F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
+fml2nnf(-true,false,_FreeV,[],[],[],SkolS,SkolS,[]) :- !.
+fml2nnf(-false,true,_FreeV,[],[],[],SkolS,SkolS,[]) :- !.
 
 fml2nnf(Lit,Lit,_FreeV,[],[],[],SkolS,SkolS,[]).
 
@@ -138,6 +140,11 @@ cnf2clauses(F1*F2,Clauses) :- !,
         cnf2clauses(F1,Clauses1),
         cnf2clauses(F2,Clauses2),
         append(Clauses1,Clauses2,Clauses).
+cnf2clauses(true+true,[]) :- !.
+cnf2clauses(true+F,[Clause]) :- !,
+        cnf2clauses(F,[Clause]).
+cnf2clauses(F+true,[Clause]) :- !,
+        cnf2clauses(F,[Clause]).
 cnf2clauses(F1+F2,[Clause]) :- !,
         cnf2clauses(F1,[Clause1]),
         cnf2clauses(F2,[Clause2]),
@@ -153,6 +160,11 @@ dnf2clauses(F1+F2,Clauses) :- !,
         dnf2clauses(F1,Clauses1),
         dnf2clauses(F2,Clauses2),
         append(Clauses1,Clauses2,Clauses).
+dnf2clauses(false*false,[]) :- !.
+dnf2clauses(false*F,[Clause]) :- !,
+        dnf2clauses(F,[Clause]).
+dnf2clauses(F*false,[Clause]) :- !,
+        dnf2clauses(F,[Clause]).
 dnf2clauses(F1*F2,[Clause]) :- !,
         dnf2clauses(F1,[Clause1]),
         dnf2clauses(F2,[Clause2]),
