@@ -49,11 +49,17 @@ fml2nnf((F1+F2),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
         append(AllVars1,AllVars2,AllVars),
         append(Skol1,Skol2,Skol),
         Fml=(Fml1+Fml2).
+fml2nnf(all(Var,F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :-
+        var(Var), !,
+        fml2nnf(all([Var],F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
 fml2nnf(all(Vars,F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :- !,
         append(Vars,FreeV,FreeV1),
         fml2nnf(F,Fml,FreeV1,Unis1,Exis,AllVars1,SkolS1,SkolS2,Skol),
         append(Vars,Unis1,Unis),
         append(Vars,AllVars1,AllVars).
+fml2nnf(some(Var,F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol) :-
+        var(Var), !,
+        fml2nnf(some([Var],F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,Skol).
 fml2nnf(some([Var|Vars],F),Fml,FreeV,Unis,Exis,AllVars,SkolS1,SkolS2,[(Var,NewSymbol)|Skol1]) :- !,
         NewSymbol =.. [SkolS1|FreeV],
         skol_next(SkolS1,SkolS3),
