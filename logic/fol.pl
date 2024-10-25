@@ -55,7 +55,6 @@ above handles. The default reasoner is eprover.
                 equivalent/2,
                 get_reasoner/1,
                 set_reasoner/1,
-                check_equivalence/2,
                 simplify/2,
                 disjoin/2,
                 conjoin/2,
@@ -177,16 +176,6 @@ equivalent(Formula1,Formula2,vampire) :-
         vampire_equivalent(Formula1,Formula2).
 equivalent(Formula1,Formula2,fo2solver) :-
         fo2solver_equivalent(Formula1,Formula2).
-
-% check for equivalence, abort if fails
-% useful as assertion for debugging purposes
-check_equivalence(F2,F3) :-
-        equivalent(F2,F3), !.
-check_equivalence(F2,F3) :-  !,
-        report_message(error,['Not equivalent: ']),
-        report_message(error,['Fml1 = ', F2]),
-        report_message(error,['Fml2 = ', F3]),
-        gtrace.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Formula Simplification
