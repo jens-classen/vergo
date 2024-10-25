@@ -602,12 +602,6 @@ construct_conjuncts(D,Pre,[Conjunct|Conjuncts]) :- !,
         construct_conjuncts(DCons,Pre,Conjuncts),
         append([DCon,['\n'],DCons],D).
 
-conjuncts(F1*F2,Conjuncts) :- !,
-        conjuncts(F1,Con1),
-        conjuncts(F2,Con2),
-        append(Con1,Con2,Conjuncts).
-conjuncts(F,[F]) :- !.
-
 construct_formula2(D,F) :-
         def(F,Def), !,
         construct_formula2(D,Def).
