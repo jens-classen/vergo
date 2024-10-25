@@ -134,7 +134,7 @@ progress(local_effect,KB1,Action,KB2) :-
                  append([InstAxioms,InstSSA],DisjunctFmls),
                  conjoin(DisjunctFmls,DisjunctC),
                  minimize(DisjunctC,Disjunct),
-                 consistent_l([Disjunct],true)),
+                 consistent([Disjunct])),
                 Disjuncts),
         disjoin(Disjuncts,Fml1),
         minimize(Fml1,Fml2),
@@ -207,7 +207,7 @@ mentions_fluent(_,_) :- !, fail.
 % model: consistent set of literals over some set of atoms
 is_model(Lits,Atoms) :-
         is_model2(Lits,Atoms),
-        consistent_l(Lits,true).
+        consistent(Lits).
 is_model2([],[]).
 is_model2([Atom|Lits],[Atom|Atoms]) :-
         is_model2(Lits,Atoms).
@@ -217,7 +217,7 @@ is_model2([-Atom|Lits],[Atom|Atoms]) :-
 % consistent with KB: negation not entailed
 consistent_with_kb(KB,Fmls) :-
         conjoin(Fmls,Fml),
-        entails_kb(KB,-Fml,false).
+        not(entails_kb(KB,-Fml)).
 
 % apply ligression to all formulas and minimize
 apply_model_axioms(Theta,KB,Axioms,Fmls) :-
@@ -238,7 +238,7 @@ apply_model_ssa(Theta,KB,Action,Fmls) :-
                  ligress(Condition,Theta,LCondition),
                  apply_cwa(KB,LCondition,LCCondition),
                  minimize(all(Vars,(Fluent <=> LCCondition)),Fml),
-                 valid_l(Fml,false)),
+                 not(valid(Fml))),
                 Fmls).
 
 % all actions must be local-effect

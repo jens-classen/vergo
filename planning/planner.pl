@@ -126,13 +126,13 @@ expand(G,Path,Goal,Limit,Solution) :-
         expand2(G,Path,Goal,Limit,Solution).
 expand2(_G,Path,Goal,_Limit,Solution) :-
         % goal found
-        entails_kb(Path,Goal,true),
+        entails_kb(Path,Goal),
         Solution = Path.
 expand2(G,Path,Goal,Limit,Solution) :-
         % expand by one action
         poss(Action,Args,Precondition),
         is_instance(Args,Action),
-        entails_kb(Path,Precondition,true),
+        entails_kb(Path,Precondition),
         progress(Path,Action,[Action|Path]),
         Cost = 1,
         expand(G+Cost,[Action|Path],Goal,Limit,Solution).

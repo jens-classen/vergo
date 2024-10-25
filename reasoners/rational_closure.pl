@@ -17,7 +17,7 @@ discourse, of which propositional logic is a subset.
 
  **/
 
-:- module(rational_closure, [rc_entails/4,
+:- module(rational_closure, [rc_entails/3,
                              construct_ranking/2,
                              print_ranking/1,
                              rc_rank/3,
@@ -49,16 +49,15 @@ rc_rank(KB,Fml,R) :-
         min_non_exceptional_rank(KB,Fml,R).
 
 /**
- * rc_entails(++KBID,+Left,+Right,-Result) is det
+ * rc_entails(++KBID,+Left,+Right) is det
  *
- * Returns the truth value Result of whether the conditional
- * 'Left~>Right' is entailed by the specified conditional KB.
+ * Succeeds iff the conditional 'Left~>Right' is entailed by the
+ * specified conditional KB.
  */
-rc_entails(KB,Left,Right,true) :-
+rc_entails(KB,Left,Right) :-
         min_non_exceptional_rank(KB,Left,K),
         rcpart(KB,K,Rules),
         exceptional(Left*(-Right),Rules), !.
-rc_entails(_KB,_Left,_Right,false).
 
 min_non_exceptional_rank(KB,Fml,K) :-
         min_non_exceptional_rank(KB,Fml,0,K).
@@ -111,7 +110,7 @@ exceptional_rules(RulesEx,Rules) :-
                  exceptional(B,Rules)),
                 RulesEx).
 exceptional(Fml,Rules) :-
-        inconsistent_l([Fml|Rules],true).
+        inconsistent([Fml|Rules]).
 
 materialize([],[]).
 materialize([(B~>H)|Rules],[(B=>H)|RulesM]) :-

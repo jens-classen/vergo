@@ -17,17 +17,16 @@ e.g. '#1', '#2', '#bob'.
 
  **/
 
-:- module(l, [entails_l/3,
-              inconsistent_l/2,
-              consistent_l/2,
-              valid_l/2,
-              equivalent_l/3,
+:- module(l, [entails/2,
+              inconsistent/1,
+              consistent/1,
+              valid/1,
+              equivalent/2,
               is_std_name/1,
-              simplify_l/2]).
+              simplify/2]).
 
 :- reexport('../logic/fol', [get_reasoner/1,
                              set_reasoner/1,
-                             simplify/2,
                              conjuncts/2,
                              conjoin/2,
                              disjuncts/2,
@@ -43,63 +42,54 @@ e.g. '#1', '#2', '#bob'.
 
 :- use_module('../logic/cwa').
 :- use_module('../logic/una').
-:- use_module('../logic/fol').
+:- use_module('../logic/fol', [entails/2 as fol_entails,
+                               inconsistent/1 as fol_inconsistent,
+                               simplify/2 as fol_simplify]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check formula against set of formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                            
-entails_l(Formulas,Fml,Truth) :-
+
+entails(Formulas,Fml) :-
         get_names_axioms_from_fmls(uni,[Fml|Formulas],StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
-        entails(FormulasWithAxioms,Fml), !,
-        Truth = true.
-entails_l(_Formulas,_Fml,Truth) :- !,
-        Truth = false.
+        fol_entails(FormulasWithAxioms,Fml), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check inconsistency of set of formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                            
-inconsistent_l(Formulas,Truth) :-
+
+inconsistent(Formulas) :-
         get_names_axioms_from_fmls(uni,Formulas,StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
-        inconsistent(FormulasWithAxioms), !,
-        Truth = true.
-inconsistent_l(_Formulas,Truth) :- !,
-        Truth = false.
+        fol_inconsistent(FormulasWithAxioms), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check consistency of set of formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                            
-consistent_l(Formulas,true) :-
-        inconsistent_l(Formulas,false), !.
-consistent_l(Formulas,false) :-
-        inconsistent_l(Formulas,true), !.
+
+consistent(Formulas) :-
+        not(inconsistent(Formulas)), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check validity of formula
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                            
-valid_l(Formula,Truth) :-
-        entails_l([true],Formula,Truth), !.
+
+valid(Formula) :-
+        entails([true],Formula), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check equivalence of two formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                            
-equivalent_l(Formula1,Formula2,Truth) :-
-        entails_l([Formula1],Formula2,true),
-        entails_l([Formula2],Formula1,true), !,
-        Truth = true.
-equivalent_l(_Formula1,_Formula2,Truth) :- !,
-        Truth = false.
+
+equivalent(Formula1,Formula2) :-
+        entails([Formula1],Formula2),
+        entails([Formula2],Formula1), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Formula simplification
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-simplify_l(F,R) :-
+simplify(F,R) :-
         apply_una(F,F2),
-        simplify(F2,R).
+        fol_simplify(F2,R).

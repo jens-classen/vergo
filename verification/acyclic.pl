@@ -28,14 +28,17 @@ pages 1109-1115, AAAI Press, 2016.
 :- use_module('../lib/utils').
 
 :- use_module('../logic/cwa').
-:- use_module('../logic/l', [entails_l/3, inconsistent_l/2, simplify_l/2,
+:- use_module('../logic/l', [entails/2 as entails_l,
+                             inconsistent/1 as inconsistent_l,
+                             simplify/2 as simplify_l,
                              conjoin/2, conjuncts/2, free_variables/2,
                              op(1130, xfy, <=>),
                              op(1110, xfy, <=),
                              op(1110, xfy, =>)]).
 
-:- use_module('../logic/dl', [entails_dl/3, inconsistent_dl/2,
-                              simplify/2 as simplify_dl]).
+:- use_module('../logic/dl', [entails/2 as entails_dl,
+                             inconsistent/1 as inconsistent_dl,
+                             simplify/2 as simplify_dl]).
 
 :- use_module('../logic/fobdd', [minimize/2 as minimize_l]).
 
@@ -319,21 +322,17 @@ is_inconsistent(Formulas) :- !,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 is_entailed(l,Formulas,Formula) :-
-        entails_l(Formulas,Formula,Truth), !,
-        Truth = true.
+        entails_l(Formulas,Formula), !.
 
 is_inconsistent(l,Formulas) :-
-        inconsistent_l(Formulas,Truth), !,
-        Truth = true.
+        inconsistent_l(Formulas), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DL reasoning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 is_entailed(dl,Formulas,Formula) :-
-        entails_dl(Formulas,Formula,Truth), !,
-        Truth = true.
+        entails_dl(Formulas,Formula), !.
 
 is_inconsistent(dl,Formulas) :-
-        inconsistent_dl(Formulas,Truth), !,
-        Truth = true.
+        inconsistent_dl(Formulas), !.

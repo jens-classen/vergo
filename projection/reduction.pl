@@ -45,7 +45,7 @@ reduce(KB,know(Fml),Result) :- !,
 reduce(_KB,Fml,Fml) :- !.
                              
 resolve(KB,Fml,[],Result) :- !,
-        entails_kb(KB,Fml,Result).
+        (entails_kb(KB,Fml) -> Result=true;Result=false).
 resolve(KB,Fml,[Var|Vars],Result) :- !,
         get_kb_std_names(KB,KNames),
         get_fml_std_names(Fml,FNames),

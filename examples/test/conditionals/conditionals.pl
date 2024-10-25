@@ -27,16 +27,16 @@ test(pearl1990) :-
 
 check_entailments(pearl1990) :- !,
         % 0-entailments
-        assertion(entails_kb(kb,    p*b ~> (-f), true)),
-        assertion(entails_kb(kb,     f  ~> (-p), true)),
-        assertion(entails_kb(kb,     b  ~> (-p), true)),
-        assertion(entails_kb(kb,    p*a ~>   b , true)),
+        assertion(    entails_kb(kb,    p*b ~> (-f))),
+        assertion(    entails_kb(kb,     f  ~> (-p))),
+        assertion(    entails_kb(kb,     b  ~> (-p))),
+        assertion(    entails_kb(kb,    p*a ~>   b )),
         % 1-entailments
-        assertion(entails_kb(kb,   (-b) ~> (-p), true)),
-        assertion(entails_kb(kb,   (-f) ~> (-b), true)),
-        assertion(entails_kb(kb,     b  ~>   m , true)),
-        assertion(entails_kb(kb,   (-m) ~> (-b), true)),
-        assertion(entails_kb(kb, p*(-w) ~>   b , true)),
-        assertion(entails_kb(kb,     p  ~>   w , false)),
-        assertion(entails_kb(kb, p*(-a) ~> (-f), false)),
-        assertion(entails_kb(kb, p*(-a) ~>   w , false)).
+        assertion(    entails_kb(kb,   (-b) ~> (-p))),
+        assertion(    entails_kb(kb,   (-f) ~> (-b))),
+        assertion(    entails_kb(kb,     b  ~>   m )),
+        assertion(    entails_kb(kb,   (-m) ~> (-b))),
+        assertion(    entails_kb(kb, p*(-w) ~>   b )),
+        assertion(not(entails_kb(kb,     p  ~>   w))),
+        assertion(not(entails_kb(kb, p*(-a) ~> (-f)))),
+        assertion(not(entails_kb(kb, p*(-a) ~>   w ))).

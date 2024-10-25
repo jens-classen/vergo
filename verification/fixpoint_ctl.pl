@@ -214,7 +214,7 @@ labelsets_not_equivalent(Program,LabelSet1,LabelSet2) :-
         cg_node(Program,_P,_F,NodeID),
         label(Program,NodeID,Psi1,LabelSet1),
         label(Program,NodeID,Psi2,LabelSet2),
-        equivalent_l(Psi1,Psi2,false).
+        not(equivalent(Psi1,Psi2)).
 
 labelset_initial(Program,LabelSet,Formula) :- !,
         label(Program,0,Formula,LabelSet).

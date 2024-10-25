@@ -14,9 +14,9 @@ starting with '#', e.g. '#1', '#2', '#bob'.
 
  **/
 
-:- module(dl, [entails_dl/3,
-               inconsistent_dl/2,
-               consistent_dl/2,
+:- module(dl, [entails/2,
+               inconsistent/1,
+               consistent/1,
                get_fml_std_names/2,
                simplify/2]).
 
@@ -24,8 +24,14 @@ starting with '#', e.g. '#1', '#2', '#bob'.
 :- reexport('../logic/una', [get_fml_std_names/2]).
 
 :- use_module('../lib/utils').
+:- use_module('../logic/l', [op(1130, xfy, <=>),
+                             op(1110, xfy, <=),
+                             op(1110, xfy, =>)]).
 :- use_module('../logic/una').
-:- use_module('../reasoners/konclude').
+:- use_module('../reasoners/konclude',
+              [entails/3 as entails_konclude,
+               inconsistent/2 as inconsistent_konclude,
+               consistent/2 as consistent_konclude]).
 
 :- discontiguous simplify/2.
 
@@ -33,34 +39,25 @@ starting with '#', e.g. '#1', '#2', '#bob'.
 % Check formula against set of formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
-entails_dl(Formulas,Fml,Truth) :-
+entails(Formulas,Fml) :-
         get_fml_std_names([Fml|Formulas],Names),
-        entails(Formulas,Names,Fml), !,
-        Truth = true.
-entails_dl(_Formulas,_Fml,Truth) :- !,
-        Truth = false.
+        entails_konclude(Formulas,Names,Fml), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check inconsistency of set of formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
-inconsistent_dl(Formulas,Truth) :-
+inconsistent(Formulas) :-
         get_fml_std_names(Formulas,Names),
-        inconsistent(Formulas,Names), !,
-        Truth = true.
-inconsistent_dl(_Formulas,Truth) :- !,
-        Truth = false.
+        inconsistent_konclude(Formulas,Names), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check consistency of set of formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             
-consistent_dl(Formulas,Truth) :-
+consistent(Formulas) :-
         get_fml_std_names(Formulas,Names),
-        consistent(Formulas,Names), !,
-        Truth = true.
-consistent_dl(_Formulas,Truth) :- !,
-        Truth = false.
+        consistent_konclude(Formulas,Names), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper predicates

@@ -78,9 +78,9 @@ check_kb_entails_expected_fmls(KB) :-
                check_kb_entails_expected_fml(KB,Fml)).
 
 check_kb_entails_expected_fml(KB,Fml) :-
-        entails_kb(KB,Fml,Truth),
+        (entails_kb(KB,Fml) -> Truth=true;Truth=false),
         report_entailment(Fml,Truth),
-        assertion(entails_kb(KB,Fml,true)).
+        assertion(entails_kb(KB,Fml)).
 
 report_entailment(Fml,true) :-
         report_message(['Formula ', Fml,
@@ -95,9 +95,9 @@ check_expected_fmls_entail_kb(KB) :-
                check_fmls_entail_axiom(Fmls,Axiom)).
 
 check_fmls_entail_axiom(Fmls,Axiom) :-
-        entails_l(Fmls,Axiom,Truth),
+        (entails(Fmls,Axiom) -> Truth=true;Truth=false),
         report_entailment2(Axiom,Truth),
-        assertion(entails_l(Fmls,Axiom,true)).
+        assertion(entails(Fmls,Axiom)).
 
 report_entailment2(Fml,true) :-
         report_message(['KB Formula ', Fml,

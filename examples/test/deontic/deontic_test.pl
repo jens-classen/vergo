@@ -120,9 +120,9 @@ check_ranks(Ex) :-
 check_ranks(_).
 
 report_equivalence(A,R,Psi1,Psi2) :-
-        valid_l(all(A,(Psi1<=>Psi2)),Truth), !,
+        (valid(all(A,(Psi1<=>Psi2))) -> Truth=true;Truth=false), !,
         report_equivalence2(R,Psi1,Truth),
-        assertion(valid_l(all(A,(Psi1<=>Psi2)),true)).
+        assertion(valid(all(A,(Psi1<=>Psi2)))).
 report_equivalence2(R,_Psi,true) :- !,
         report_message(['Condition for rank ', R, ' is as expected.']).
 report_equivalence2(R,Psi,_) :- !,

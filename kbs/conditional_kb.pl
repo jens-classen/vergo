@@ -14,7 +14,7 @@ be any fully grounded Prolog term, e.g. a name such as 'kb1'.
 
 */
 :- module('conditional_kb', [initialize_kb/1,
-                             entails_kb/3,
+                             entails_kb/2,
                              print_kb/1,
                              rank/3,
                              get_reasoner/1,
@@ -95,39 +95,38 @@ initialize_kb(KBID) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * entails_kb(++KBID,+Fml,-Truth) is det.
+  * entails_kb(++KBID,+Fml) is det.
   *
-  * Returns the truth value of whether the provided formula is
-  * entailed in conditional logic by the given knowledge base.
+  * Succeeds iff the provided formula is entailed in conditional logic
+  * by the given knowledge base.
   *
   * @arg KBID  the identifier (handle) of the KB in question, must be
   *            a ground term
   * @arg Fml   a term representing a formula (may be a conditional)
-  * @arg Truth 'true' if the formula is entailed, 'false' if not
  **/
-entails_kb(KB,(B~>H),Truth) :-
+entails_kb(KB,(B~>H)) :-
         reasoner(rational_closure),
         expand_defs(B,BP),
         expand_defs(H,HP),
-        rc_entails(KB,BP,HP,Truth), !.
+        rc_entails(KB,BP,HP), !.
 
-entails_kb(KB,Fml,Truth) :-
+entails_kb(KB,Fml) :-
         reasoner(rational_closure),
         Fml \= (_~>_),
         expand_defs(Fml,FmlP),
-        rc_entails(KB,true,FmlP,Truth), !.
+        rc_entails(KB,true,FmlP), !.
 
-entails_kb(KB,(B~>H),Truth) :-
+entails_kb(KB,(B~>H)) :-
         reasoner(system_z),
         expand_defs(B,BP),
         expand_defs(H,HP),
-        one_entails(KB,BP,HP,Truth), !.
+        one_entails(KB,BP,HP), !.
 
-entails_kb(KB,Fml,Truth) :-
+entails_kb(KB,Fml) :-
         reasoner(system_z),
         Fml \= (_~>_),
         expand_defs(Fml,FmlP),
-        one_entails(KB,true,FmlP,Truth), !.
+        one_entails(KB,true,FmlP), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Rank of a formula

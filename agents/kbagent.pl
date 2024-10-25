@@ -86,7 +86,7 @@ ask(Fml,Truth) :- !,
         history_r(H),
         regress_s(H,Fml,Fml2),
         reduce_s(Fml2,Result),
-        entails_kb(kb,Result,Truth).
+        (entails_kb(kb,Result) -> Truth=true; Truth=false).
 
 tell(Fml) :- !,
         history_r(H),

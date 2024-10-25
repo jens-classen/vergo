@@ -19,7 +19,7 @@ discourse, of which propositional logic is a subset.
 
  **/
 
-:- module(system_z, [one_entails/4,
+:- module(system_z, [one_entails/3,
                      construct_partition/2,
                      print_partition/1,
                      z_rank/3,
@@ -43,16 +43,15 @@ discourse, of which propositional logic is a subset.
 %TODO: zero-entailment
 
 /**
- * one_entails(++KBID,+Left,+Right,-Result) is det
+ * one_entails(++KBID,+Left,+Right) is det
  *
- * Returns the truth value Result of whether the conditional
- * 'Left~>Right' is 1-entailed by the specified conditional KB.
+ * Succeeds if the conditional 'Left~>Right' is 1-entailed by the
+ * specified conditional KB.
  */
-one_entails(KB,Left,Right,true) :-
+one_entails(KB,Left,Right) :-
         z_rank(KB,Left*Right,I1),
         z_rank(KB,Left*(-Right),I2),
         I1 < I2, !.
-one_entails(_,_,_,false).
 
 /**
  * z_rank(++KBID,+Fml,-Rank) is det
@@ -122,7 +121,7 @@ tolerated_rules(RuleSet,ToleratedRuleSet) :- !,
                 ToleratedRuleSet).        
 tolerates(RuleSetMat,(Body=>Head)) :- !,
         conjoin([Body,Head|RuleSetMat],F),
-        consistent_l([F],true).
+        consistent([F]).
 tolerates(RuleSet,Fml) :- !,
         tolerates(RuleSet,(Fml=>true)).
 

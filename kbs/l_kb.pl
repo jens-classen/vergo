@@ -26,7 +26,7 @@ facts of the dynamic predicate kb_axiom/2.
 */
 :- module(l_kb, [initialize_kb/1,
                  kb_axiom/2,
-                 entails_kb/3,
+                 entails_kb/2,
                  extend_kb_by/2,
                  print_kb/1,
                  get_kb_std_names/2,
@@ -91,31 +91,29 @@ kb_axiom(userdb,F) :- % work on fact in user space directly
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-  * entails_kb(++KBID,+Fml,-Truth) is det.
+  * entails_kb(++KBID,+Fml) is det.
   *
-  * Returns the truth value of whether the provided formula is
-  * entailed in logic L by the given knowledge base. Parts of the
-  * formula that are subject to the closed-world and unique names
-  * assumption will first be evaluated, before the query is handed
-  * over to the theorem prover.
+  * Succeeds if the provided formula is entailed in logic L by the
+  * given knowledge base. Parts of the formula that are subject to the
+  * closed-world and unique names assumption will first be evaluated,
+  * before the query is handed over to the theorem prover.
   *
   * @arg KBID  the identifier (handle) of the KB in question, must be
   *            a ground term
   * @arg Fml   a term representing a formula
-  * @arg Truth 'true' if the formula is entailed, 'false' if not
  **/
-entails_kb(KB,Fml,Truth) :-
+entails_kb(KB,Fml) :-
         apply_cwa(KB,Fml,FmlP), % includes macro expansion
-        entails_kb2(KB,FmlP,Truth).
+        entails_kb2(KB,FmlP).
 
 % don't call theorem prover on 'true'
-entails_kb2(_KB,true,true) :- !.
+entails_kb2(_KB,true) :- !.
 % call theorem prover only on non-trivial formula
-entails_kb2(KB,Fml,Truth) :-
+entails_kb2(KB,Fml) :-
         findall(IniFml,
                 initial_axiom(KB,IniFml),
                 KBAxioms),
-        entails_l(KBAxioms,Fml,Truth), !.
+        entails(KBAxioms,Fml), !.
 
 initial_axiom(KB,F) :-
         kb_axiom(KB,F2),
@@ -160,7 +158,7 @@ print_kb(_KB).
   * @arg Fml   a term representing a formula
  **/
 extend_kb_by(KB,Fml) :-
-        entails_kb(KB,Fml,true), !.
+        entails_kb(KB,Fml), !.
 extend_kb_by(KB,Fml) :- !,
         add_to_kb(KB,Fml).
 

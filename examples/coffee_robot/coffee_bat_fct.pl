@@ -189,6 +189,7 @@ expected_max_iteration(main,prop2,2).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- begin_tests(fixpoint_ctl).
 
+
 test(checkeu) :-
         test_prog_prop(main,prop2).
 
@@ -274,9 +275,9 @@ actual_label(Prog,Prop,I,N,Psi) :-
 
 report_equivalence(I,N,Psi1,Psi2) :-
         expand_defs(Psi1,Psi3),
-        equivalent_l(Psi3,Psi2,Equiv), !,
+        (equivalent(Psi3,Psi2) -> Equiv=true;Equiv=false), !,
         report_equivalence2(I,N,Psi1,Equiv),
-        assertion(equivalent_l(Psi3,Psi2,true)).
+        assertion(equivalent(Psi3,Psi2)).
 report_equivalence2(I,N,_Psi1,true) :- !,
         report_message(['Label for node ', N, ' in iteration ', I,
                         ' is as expected.']).

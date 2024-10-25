@@ -147,15 +147,15 @@ exceptional_rules(A,RulesEx,Rules,MatRules) :-
 exceptional(A,L~>_,MatRules) :-
         gprogram_formula(A,L,LFml),
         minimize(some(A,LFml*MatRules),Fml1),
-        equivalent_l(Fml1,false,true).
+        equivalent(Fml1,false).
 exceptional(A,L'~a>'_,MatRules) :-
         gprogram_formula(A,[L,any],LFml),
         minimize(some(A,LFml*MatRules),Fml1),
-        equivalent_l(Fml1,false,true).
+        equivalent(Fml1,false).
 exceptional(A,L'~b>'_,MatRules) :-
         gprogram_formula(A,[any,L],LFml),
         minimize(some(A,LFml*MatRules),Fml1),
-        equivalent_l(Fml1,false,true).
+        equivalent(Fml1,false).
 
 materialize_rules(A,Rules,R) :- !,
         materialize_rules2(A,Rules,MRules),
@@ -355,7 +355,7 @@ cost_axioms_action([Axiom]) :-
 %         action_rank(A,I,Cond1),
 %         simplify_fml(Cond1,Cond),
 %         Cond \= false, % todo: non-static case?
-%         valid_l(Cond,true),
+%         valid(Cond),
 %         action_cost_fct(A,Args,Fct),
 %         Axiom = initially(Fct=I).
 
