@@ -17,7 +17,7 @@ PhD Thesis, Department of Computer Science, RWTH Aachen University,
 :- module(transfinal_thesis, [step/6, trans/6, trans/4, final/2]).
 
 :- use_module('../logic/cwa').
-:- use_module('../logic/fol', [conjoin/2]).
+:- use_module('../logic/l', [conjoin/2]).
 :- use_module('program_simplify').
 
 :- multifile user:ignore_preconditions/0.

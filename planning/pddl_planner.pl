@@ -48,9 +48,6 @@ References:
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
-:- use_module('../logic/fol', [op(1130, xfy, <=>),
-                               op(1110, xfy, <=),
-                               op(1110, xfy, =>)]).
 :- use_module(library(pio)).
 
 :- multifile user:goal/2.

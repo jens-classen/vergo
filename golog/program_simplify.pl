@@ -10,7 +10,7 @@ This module provides functionality for simplifying Golog programs.
  **/
 :- module(program_simplify, [simplify_program/2, progdef/2]).
 
-:- use_module('../logic/fol', [simplify/2]).
+:- use_module('../logic/l', [simplify/2]).
 
 :- multifile user:program/2.
 

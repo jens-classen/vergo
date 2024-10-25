@@ -52,7 +52,7 @@ References:
 
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
-:- use_module('../logic/fol').
+:- use_module('../logic/l').
 
 :- dynamic requirement/1.
 

@@ -28,9 +28,6 @@ So far, action costs and metrics are not supported.
 :- use_module('../lib/env').
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
-:- use_module('../logic/fol', [op(1130, xfy, <=>),
-                               op(1110, xfy, <=),
-                               op(1110, xfy, =>)]).
 :- use_module('../projection/progression').
 
 :- multifile user:goal/2.

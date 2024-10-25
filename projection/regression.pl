@@ -9,7 +9,7 @@
 
 :- use_module('../lib/utils').
 :- use_module('../logic/cwa').
-:- use_module('../logic/fol').
+:- use_module('../logic/l').
 :- use_module('../logic/una').
 
 :- multifile user:rel_fluent/1.

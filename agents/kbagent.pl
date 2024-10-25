@@ -60,9 +60,9 @@ the size of regressed formulas manageable (cf. the 'fobdd' module).
 :- use_module('../golog/program_simplify').
 :- use_module('../golog/transfinal_guards').
 
-:- reexport('../logic/fol', [op(1130, xfy, <=>),
-                             op(1110, xfy, <=),
-                             op(1110, xfy, =>)]).
+:- reexport('../logic/l', [op(1130, xfy, <=>),
+                           op(1110, xfy, <=),
+                           op(1110, xfy, =>)]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interaction Operations

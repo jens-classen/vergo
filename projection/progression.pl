@@ -14,7 +14,6 @@
 :- use_module('../logic/cwa').
 :- use_module('../logic/def').
 :- use_module('../logic/fobdd').
-:- use_module('../logic/fol').
 :- use_module('../logic/una').
 
 :- multifile user:progression_style/3.

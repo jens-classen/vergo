@@ -1,5 +1,5 @@
 :- use_module('../../agents/kbagent').
-:- use_module('../../logic/fol').
+:- use_module('../../logic/l').
 :- use_module('../../lib/utils').
 
 rel_rigid(teach(_,_)).
