@@ -17,7 +17,9 @@ e.g. '#1', '#2', '#bob'.
 
  **/
 
-:- module(l, [entails/2,
+:- module(l, [get_reasoner/1,
+              set_reasoner/1,
+              entails/2,
               inconsistent/1,
               consistent/1,
               valid/1,
@@ -25,9 +27,7 @@ e.g. '#1', '#2', '#bob'.
               is_std_name/1,
               simplify/2]).
 
-:- reexport('../logic/fol', [get_reasoner/1,
-                             set_reasoner/1,
-                             conjuncts/2,
+:- reexport('../logic/fol', [conjuncts/2,
                              conjoin/2,
                              disjuncts/2,
                              disjoin/2,
@@ -42,15 +42,38 @@ e.g. '#1', '#2', '#bob'.
 
 :- use_module('../logic/cwa').
 :- use_module('../logic/una').
-:- use_module('../logic/fol', [entails/2 as fol_entails,
+:- use_module('../logic/fol', [get_reasoner/1 as fol_get_reasoner,
+                               set_reasoner/1 as fol_set_reasoner,
+                               entails/2 as fol_entails,
                                inconsistent/1 as fol_inconsistent,
                                simplify/2 as fol_simplify]).
+
+:- dynamic(reasoner/1).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Reasoner
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% default: FOL prover
+reasoner(fol).
+
+set_reasoner(X) :-
+        fol_set_reasoner(X), !,
+        retract(reasoner(_)),
+        assert(reasoner(fol)).
+
+get_reasoner(X) :-
+        not(reasoner(fol)), !,
+        reasoner(X).
+get_reasoner(X) :-
+        fol_get_reasoner(X), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check formula against set of formulas
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 entails(Formulas,Fml) :-
+        reasoner(fol),
         get_names_axioms_from_fmls(uni,[Fml|Formulas],StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
         fol_entails(FormulasWithAxioms,Fml), !.
@@ -60,6 +83,7 @@ entails(Formulas,Fml) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 inconsistent(Formulas) :-
+        reasoner(fol),
         get_names_axioms_from_fmls(uni,Formulas,StdNameAxioms),
         union(Formulas,StdNameAxioms,FormulasWithAxioms),
         fol_inconsistent(FormulasWithAxioms), !.
