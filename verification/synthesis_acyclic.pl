@@ -625,8 +625,9 @@ xnf_ass(F,Ls,Xs,Tail) :-
 xnf_ass([F1*F2|Fs],Ls,Xs,Tail) :-
         xnf_ass([F1,F2|Fs],Ls,Xs,Tail).
 xnf_ass([F1+F2|Fs],Ls,Xs,Tail) :-
-        xnf_ass([F1|Fs],Ls,Xs,Tail);
-        xnf_ass([F2|Fs],Ls,Xs,Tail).
+        xnf_ass([F1,-F2|Fs],Ls,Xs,Tail);
+        xnf_ass([-F1,F2|Fs],Ls,Xs,Tail);
+        xnf_ass([F1,F2|Fs],Ls,Xs,Tail).
 xnf_ass([-(F1*F2)|Fs],Ls,Xs,Tail) :-
         xnf_ass([(-F1)+(-F2)|Fs],Ls,Xs,Tail).
 xnf_ass([-(F1+F2)|Fs],Ls,Xs,Tail) :-
