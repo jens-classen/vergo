@@ -262,8 +262,7 @@ are the following dependencies to external tools and systems:
    implementation of a CTL model checking algorithm is utilized. Since
    states of the abstract transition system have to enumerated, there
    is no real performance advantage in using a fast symbolic model
-   checker. However, the internal method currently does not support
-   the computation of counterexamples or witnesses, but NuSMV does.
+   checker.
 
    For employing NuSMV, we require that the 'NuSMV' executable is
    visible in PATH. Then set the model checker by calling
