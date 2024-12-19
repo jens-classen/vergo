@@ -337,6 +337,11 @@ are the following dependencies to external tools and systems:
 
 ## References
 
+1. Till Hofmann and Jens Claßen: <br/>
+   **LTLf Synthesis on First-Order Agent Programs in Nondeterministic Environments.** <br/>
+   In *Proc. AAAI*, 2025.
+   [[PDF]](http://www.jens-classen.net/pub/HofmannClassen2025.pdf)
+
 1. Jens Claßen: <br/>
    **Symbolic Verification of Golog Programs with First-Order BDDs.** <br/>
    In *Proc. KR*, 2018.
