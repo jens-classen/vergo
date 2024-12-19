@@ -24,11 +24,13 @@ theorem prover.
    Writes the formulas in ListOfAxioms and +Conjecture in TPTP
    syntax to file named FileName, to be solved by a theorem prover. */
 writeTPTPFile(ListOfAxioms, Conjecture, FileName) :-
+        set_prolog_flag(gc, false), % ensure consistent variable names
         open(FileName, write, Stream),
         writeTimeStamp(Stream),
         writeAxioms(Stream, ListOfAxioms, 0),
         writeConjecture(Stream, Conjecture, conjecture),
-	close(Stream).
+	close(Stream),
+        set_prolog_flag(gc, true).
 
 writeTimeStamp(Stream) :-
         local_time_and_date_as_string(TimeS),
@@ -58,7 +60,7 @@ writeConjecture(Stream, Conjecture, Name) :-
         write(Stream, ', conjecture, '),
         write_formula(Stream, Conjecture),
         write(Stream, ').\n').
-        
+
 write_formula(Stream, F1<=>F2) :-
         write_binary_formula(Stream, F1, '<=>', F2).
 write_formula(Stream, F1=>F2) :-
