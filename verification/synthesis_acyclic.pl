@@ -94,19 +94,41 @@ init_construction(Program,Property) :-
         prop2tnf(Property,TNF),
         tnf2xnf(TNF,XNF),
         
-        create_initial_states(Program,Property,KB,XNF),
+        % generate initial states from temporal property
+        create_initial_state(Program,Property,KB),
+        split_initial_states(Program,Property,XNF),
+        annotate_initial_states(Program,Property,XNF),
 
         report_initial_states(Program,Property).
 
-% create one initial state per satisfying assignment
-create_initial_states(P,F,KB,XNF) :-
+% create single initial state from initial KB
+create_initial_state(P,F,KB) :-
+        assert(abstract_state((P,F,KB,[],[],0),true)).
+
+% split initial states by assignments for temporal property
+split_initial_states(P,F,XNF) :-
+        xnf_ass(XNF,Ls,_Xs,_Tail),
+        abstract_state(State,true),
+        State = (P,F,Formulas,[],_,0),
+        conjoin(Ls,L),
+        not(is_entailed(Formulas,L)),
+        not(is_entailed(Formulas,-L)),
+        split(P,F,Formulas,L), !,
+        split_initial_states(P,F,XNF).
+split_initial_states(_,_,_).
+
+% annotate initial states with next/tail pairs
+annotate_initial_states(P,F,XNF) :-
         xnf_ass(XNF,Ls,Xs,Tail),
-        union2(KB,Ls,Fmls2),
-        variant_sort(Fmls2,Fmls),
-        not(is_inconsistent(Fmls)),
-        create_or_add_to_initial_state(P,F,Fmls,(Xs,Tail)),
-        fail.
-create_initial_states(P,F,_,_) :-
+        abstract_state(State,true),
+        State = (P,F,Formulas,[],NextTails,0),
+        conjoin(Ls,L),
+        is_entailed(Formulas,L),
+        not(member2((Xs,Tail),NextTails)), !,
+        retract(abstract_state((P,F,Formulas,[],NextTails,0),true)),
+        assert(abstract_state((P,F,Formulas,[],[(Xs,Tail)|NextTails],0),true)),
+        annotate_initial_state(P,F,XNF).
+annotate_initial_states(P,F,_) :-
         memorize_initial_nexttails(P,F).
 
 % memorize initial next/tail pairs to identify initial states
