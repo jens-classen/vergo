@@ -124,10 +124,10 @@ annotate_initial_states(P,F,XNF) :-
         State = (P,F,Formulas,[],NextTails,0),
         conjoin(Ls,L),
         is_entailed(Formulas,L),
-        not(member2((Xs,Tail),NextTails)), !,
+        not(member2((Xs,Tail),NextTails)),
         retract(abstract_state((P,F,Formulas,[],NextTails,0),true)),
         assert(abstract_state((P,F,Formulas,[],[(Xs,Tail)|NextTails],0),true)),
-        annotate_initial_state(P,F,XNF).
+        fail.
 annotate_initial_states(P,F,_) :-
         memorize_initial_nexttails(P,F).
 
