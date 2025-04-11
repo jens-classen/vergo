@@ -96,12 +96,11 @@ properties is initiated e.g. through
 
 ### Verification by Abstraction
 
-This verification method additionally requires a model checker (see
-[dependencies](#dependencies) below). For the local-effect case,
-consider the `dish_robot` domain in the `examples` directory. Look at
-the file `dish_robot_bat.pl` and how actions, fluents, programs and
-temporal properties are defined in it. From within the directory, call
-SWI-Prolog, and consult the file containing the action theory:
+For the local-effect case, consider the `dish_robot` domain in the
+`examples` directory. Look at the file `dish_robot_bat.pl` and how
+actions, fluents, programs and temporal properties are defined in
+it. From within the directory, call SWI-Prolog, and consult the file
+containing the action theory:
 
     ?- [dish_robot_bat].
 
@@ -113,6 +112,11 @@ and observe the output (this may take some time). To actually verify a
 property by the model checker, call then e.g.
 
     ?- verify(main,prop5,Truth).
+
+The abstraction method also supports the more general acyclic
+theories, but currently there is no example domain for their
+verification. See the `warehouse_robot` domain for an example on
+_synthesis_ for acyclic theories.
 
 ### Synthesis by Abstraction
 
